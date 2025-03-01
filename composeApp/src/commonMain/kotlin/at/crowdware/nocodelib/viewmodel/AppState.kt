@@ -58,9 +58,11 @@ class AppState() {
         var data = ""
         if (license.isEmpty()) {
             licenseType = LicenseType.UNDEFINED
+            println("license is empty")
             return
         }
         try {
+            println("license: $license")
             data = decryptStringGCM(license.trim())
         } catch (e: Exception) {
             e.printStackTrace()
