@@ -108,19 +108,51 @@ fun loadAppState(path: String) {
     if(!configDirectory.exists()) {
         configDirectory.mkdirs()
     }
-    try {
-        val jsonState = configFile.readText()
-        val state = Json.decodeFromString<State>(jsonState)
-        if (appState != null) {
-            appState.theme = state.theme
-            appState.license = state.license
-            appState.lastProject = state.lastProject
-            appState.windowX = state.windowX
-            appState.windowY = state.windowY
-            appState.windowWidth = state.windowWidth
-            appState.windowHeight = state.windowHeight
+    
+    // Set default values
+    if (appState != null) {
+        appState.theme = "Dark"
+        appState.license = ""
+        appState.lastProject = ""
+        appState.windowX = 100
+        appState.windowY = 100
+        appState.windowWidth = 1024
+        appState.windowHeight = 768
+    }
+    
+    // Try to load saved state if it exists
+    if (configFile.exists()) {
+        try {
+            val jsonState = configFile.readText()
+            val state = Json.decodeFromString<State>(jsonState)
+            if (appState != null) {
+                appState.theme = state.theme
+                appState.license = state.license
+                appState.lastProject = state.lastProject
+                appState.windowX = state.windowX
+                appState.windowY = state.windowY
+                appState.windowWidth = state.windowWidth
+                appState.windowHeight = state.windowHeight
+            }
+        } catch (e: Exception) {
+            println("Error loading app state: ${e.message}")
+            e.printStackTrace()
+            // Continue with default values set above
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
+    } else {
+        // Create a default state file
+        if (appState != null) {
+            saveAppState(
+                State(
+                    windowHeight = appState.windowHeight,
+                    windowWidth = appState.windowWidth,
+                    windowX = appState.windowX ?: 100,
+                    windowY = appState.windowY ?: 100,
+                    lastProject = "",
+                    theme = "Dark",
+                    license = ""
+                ), path
+            )
+        }
     }
 }

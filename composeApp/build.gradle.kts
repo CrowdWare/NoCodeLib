@@ -28,8 +28,6 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "1.9.0"
-    `java-library`
-    `maven-publish`
 }
 
 repositories {
@@ -97,25 +95,7 @@ kotlin {
 
 
 group = "at.crowdware"
-//version = "$version"
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "at.crowdware"
-            artifactId = "nocodelib"
-            version = "$version"
-            
-            from(components["java"])
-        }
-    }
-    repositories {
-        maven {
-            name = "LocalRepo"
-            url = uri("${rootProject.buildDir}/repo")
-        }
-    }
-}
+// version is already defined above
 
 tasks.named("assemble") {
     mustRunAfter("generateConstantsFile")
