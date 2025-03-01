@@ -133,7 +133,7 @@ tasks.register("generateConstantsFile") {
         val versionFile = outputDir.resolve("Constants.kt")
         versionFile.parentFile.mkdirs()
         versionFile.writeText("""
-            package at.crowdware.nocodelib
+            package at.crowdware.nocode
 
             object Version {
                 const val version = "$versionValue"
