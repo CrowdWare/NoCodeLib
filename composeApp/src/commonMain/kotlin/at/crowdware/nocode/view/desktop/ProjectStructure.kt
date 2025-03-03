@@ -293,11 +293,11 @@ fun projectStructure(currentProject: ProjectState) {
                 onClick = { node ->
                     var clsName = ""
                     if (node.title.value == "Page") {
-                        clsName = "at.crowdware.nocodelib.utils.Page"
+                        clsName = "at.crowdware.nocode.utils.Page"
                     } else if (node.title.value == "Ebook") {
-                        clsName = "at.crowdware.nocodelib.utils.Ebook"
+                        clsName = "at.crowdware.nocode.utils.Ebook"
                     } else {
-                        clsName = "at.crowdware.nocodelib.utils.UIElement\$${node.title.value}Element"
+                        clsName = "at.crowdware.nocode.utils.UIElement\$${node.title.value}Element"
                     }
                     try {
                         val clazz = Class.forName(clsName).kotlin
