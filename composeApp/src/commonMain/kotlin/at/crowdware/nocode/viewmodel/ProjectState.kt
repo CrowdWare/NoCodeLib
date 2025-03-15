@@ -476,6 +476,13 @@ abstract class ProjectState {
                 children = mutableStateListOf(),
                 expanded = mutableStateOf(false)
             )
+            is UIElement.EmbedElement -> TreeNode(
+                title = mutableStateOf("Embed"),
+                type = NodeType.OTHER,
+                path ="",
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(false)
+            )
         }
     }
 

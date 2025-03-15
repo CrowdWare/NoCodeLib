@@ -396,6 +396,12 @@ sealed class UIElement {
         @StringAnnotation("The name of the skybox texture file to be rendered. KTX files can be rendered. Sample: **environment: forest.ktx**")
         val skybox: String
     ) : UIElement()
+
+    @ElementAnnotation("With a **Embed** element you can embed content from a another source.")
+    data class EmbedElement(
+        @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
+        val url: String
+    ) : UIElement()
 }
 
 data class Padding(val top: Int, val right: Int, val bottom: Int, val left: Int)

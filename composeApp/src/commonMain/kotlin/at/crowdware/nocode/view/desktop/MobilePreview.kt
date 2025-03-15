@@ -388,6 +388,9 @@ fun RenderUIElement(element: UIElement) {
         is SceneElement -> {
             at.crowdware.nocode.view.desktop.dynamicScene(modifier = Modifier, element.width, element.height)
         }
+        is EmbedElement -> {
+            dynamicEmbedFromUrl(modifier = Modifier, element.url)
+        }
         else -> {
             println("Unknown element: $element")
         }
@@ -468,6 +471,9 @@ fun RowScope.RenderUIElement(element: UIElement) {
                     Modifier
                 }, element.width, element.height
             )
+        }
+        is EmbedElement -> {
+            dynamicEmbedFromUrl(modifier = Modifier, url = element.url)
         }
         else -> {
             println("Unsupported element: $element")
@@ -551,6 +557,9 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
                     Modifier
                 }, element.width, element.height
             )
+        }
+        is EmbedElement -> {
+            dynamicEmbedFromUrl(modifier = Modifier, element.url)
         }
         else -> {
             println("Unsupported element: $element")
@@ -925,6 +934,8 @@ expect fun dynamicSoundfromAssets(filename: String)
 expect fun dynamicVideofromAssets(modifier: Modifier = Modifier, filename: String)
 @Composable
 expect fun dynamicVideofromUrl(modifier: Modifier = Modifier)
+@Composable
+expect fun dynamicEmbedFromUrl(modifier: Modifier = Modifier, url: String)
 @Composable
 expect fun dynamicYoutube(modifier: Modifier = Modifier)
 @Composable
