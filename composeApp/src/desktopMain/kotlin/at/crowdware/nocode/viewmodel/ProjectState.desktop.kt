@@ -45,6 +45,8 @@ actual fun getNodeType(path: String): NodeType {
 actual suspend fun loadFileContent(path: String, uuid: String, pid: String): String {
     val file = File(path)
     return try {
+        if(!file.exists())
+            return ""
         file.readText()
     } catch (e: IOException) {
         throw IOException("Error reading file: ${e.message}", e)
