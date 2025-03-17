@@ -335,9 +335,10 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                         )
                         elements.add(scene)
                     }
-                    "Embed" -> {
-                        val embed = UIElement.EmbedElement(url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "")
-                        elements.add(embed)
+                    "LazyColumn" -> {
+                        val lazy = UIElement.LazyColumnElement(url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "")
+                        parseNestedElements(extractChildElements(element), lazy.uiElements as MutableList<UIElement>)
+                        elements.add(lazy)
                     }
                 }
             }

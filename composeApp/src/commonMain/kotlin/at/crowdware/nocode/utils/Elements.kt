@@ -397,10 +397,11 @@ sealed class UIElement {
         val skybox: String
     ) : UIElement()
 
-    @ElementAnnotation("With a **Embed** element you can embed content from a another source.")
-    data class EmbedElement(
+    @ElementAnnotation("With a **LazyColumn** element you can add a vertical list and fill it with data from a json data source.")
+    data class LazyColumnElement(
         @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
-        val url: String
+        val url: String,
+        val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }
 

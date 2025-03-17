@@ -116,15 +116,6 @@ actual fun dynamicVideofromUrl(modifier: Modifier) {
     )
 }
 
-@Composable
-actual fun dynamicEmbedFromUrl(modifier: Modifier, url: String) {
-    Image(
-        painter = painterResource("images/embed.png"),
-        contentDescription = "Description of the image",
-        modifier = modifier.fillMaxWidth()
-    )
-}
-
 actual fun loadPage(pageId: String) {
     val ps = GlobalProjectState.projectState
     // TODO choose right folder e.g. pages-de, pages-en

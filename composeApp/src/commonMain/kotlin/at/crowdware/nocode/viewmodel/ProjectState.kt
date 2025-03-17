@@ -476,8 +476,8 @@ abstract class ProjectState {
                 children = mutableStateListOf(),
                 expanded = mutableStateOf(false)
             )
-            is UIElement.EmbedElement -> TreeNode(
-                title = mutableStateOf("Embed"),
+            is UIElement.LazyColumnElement -> TreeNode(
+                title = mutableStateOf("LazyColumn"),
                 type = NodeType.OTHER,
                 path ="",
                 children = mutableStateListOf(),

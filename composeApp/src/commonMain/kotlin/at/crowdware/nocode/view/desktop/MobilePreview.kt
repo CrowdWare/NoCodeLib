@@ -352,6 +352,13 @@ fun renderRow(element: RowElement) {
 }
 
 @Composable
+fun renderLazyColumn(element: LazyColumnElement) {
+    for (childElement in element.uiElements) {
+        RenderUIElement(childElement)
+    }
+}
+
+@Composable
 fun RenderUIElement(element: UIElement) {
     when (element) {
         is TextElement -> {
@@ -368,6 +375,9 @@ fun RenderUIElement(element: UIElement) {
         }
         is RowElement -> {
             renderRow(element)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(element)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(modifier = Modifier, element)
@@ -387,9 +397,6 @@ fun RenderUIElement(element: UIElement) {
         }
         is SceneElement -> {
             at.crowdware.nocode.view.desktop.dynamicScene(modifier = Modifier, element.width, element.height)
-        }
-        is EmbedElement -> {
-            dynamicEmbedFromUrl(modifier = Modifier, element.url)
         }
         else -> {
             println("Unknown element: $element")
@@ -414,6 +421,9 @@ fun RowScope.RenderUIElement(element: UIElement) {
         }
         is RowElement -> {
             renderRow(element)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(element)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
@@ -472,9 +482,6 @@ fun RowScope.RenderUIElement(element: UIElement) {
                 }, element.width, element.height
             )
         }
-        is EmbedElement -> {
-            dynamicEmbedFromUrl(modifier = Modifier, url = element.url)
-        }
         else -> {
             println("Unsupported element: $element")
         }
@@ -498,6 +505,9 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
         }
         is RowElement -> {
             renderRow(element)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(element)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
@@ -557,9 +567,6 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
                     Modifier
                 }, element.width, element.height
             )
-        }
-        is EmbedElement -> {
-            dynamicEmbedFromUrl(modifier = Modifier, element.url)
         }
         else -> {
             println("Unsupported element: $element")
@@ -934,8 +941,6 @@ expect fun dynamicSoundfromAssets(filename: String)
 expect fun dynamicVideofromAssets(modifier: Modifier = Modifier, filename: String)
 @Composable
 expect fun dynamicVideofromUrl(modifier: Modifier = Modifier)
-@Composable
-expect fun dynamicEmbedFromUrl(modifier: Modifier = Modifier, url: String)
 @Composable
 expect fun dynamicYoutube(modifier: Modifier = Modifier)
 @Composable
