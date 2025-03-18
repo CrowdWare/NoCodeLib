@@ -483,6 +483,13 @@ abstract class ProjectState {
                 children = mutableStateListOf(),
                 expanded = mutableStateOf(false)
             )
+            is UIElement.LazyRowElement -> TreeNode(
+                title = mutableStateOf("LazyRow"),
+                type = NodeType.OTHER,
+                path ="",
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(false)
+            )
         }
     }
 

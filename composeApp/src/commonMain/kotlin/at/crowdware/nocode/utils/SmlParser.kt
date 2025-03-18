@@ -340,6 +340,11 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                         parseNestedElements(extractChildElements(element), lazy.uiElements as MutableList<UIElement>)
                         elements.add(lazy)
                     }
+                    "LazyRow" -> {
+                        val lazy = UIElement.LazyColumnElement(url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "")
+                        parseNestedElements(extractChildElements(element), lazy.uiElements as MutableList<UIElement>)
+                        elements.add(lazy)
+                    }
                 }
             }
         }

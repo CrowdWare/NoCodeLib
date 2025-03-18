@@ -321,13 +321,14 @@ fun renderButton(modifier: Modifier, element: ButtonElement) {
 }
 
 @Composable
-fun renderColumn(element: ColumnElement) {
-    Column(modifier = Modifier.padding(
+fun renderColumn(modifier: Modifier, element: ColumnElement) {
+    Column(modifier = modifier
+        .padding(
         top = element.padding.top.dp,
         bottom = element.padding.bottom.dp,
         start = element.padding.left.dp,
         end = element.padding.right.dp
-    )/*.fillMaxWidth()*/) {
+    )) {
         for (childElement in element.uiElements) {
             RenderUIElement(childElement)
         }
@@ -359,6 +360,13 @@ fun renderLazyColumn(element: LazyColumnElement) {
 }
 
 @Composable
+fun renderLazyRow(element: LazyRowElement) {
+    for (childElement in element.uiElements) {
+        RenderUIElement(childElement)
+    }
+}
+
+@Composable
 fun RenderUIElement(element: UIElement) {
     when (element) {
         is TextElement -> {
@@ -371,7 +379,7 @@ fun RenderUIElement(element: UIElement) {
             renderButton(modifier = Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
@@ -417,7 +425,7 @@ fun RowScope.RenderUIElement(element: UIElement) {
             renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.weight(1f), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
@@ -501,7 +509,7 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
             renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(if(element.weight > 0) Modifier.weight(element.weight.toFloat())else Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
@@ -509,8 +517,11 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
         is LazyColumnElement -> {
             renderLazyColumn(element)
         }
+        is LazyRowElement -> {
+            renderLazyRow(element)
+        }
         is ImageElement -> {
-            at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
+            dynamicImageFromAssets(
                 modifier = if (element.weight > 0) {
                     Modifier.weight(element.weight.toFloat())
                 } else {

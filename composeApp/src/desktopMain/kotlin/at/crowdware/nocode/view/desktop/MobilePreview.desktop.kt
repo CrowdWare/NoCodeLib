@@ -20,9 +20,7 @@
 package at.crowdware.nocode.view.desktop
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -47,7 +45,7 @@ import java.net.URI
 
 @Composable
 actual fun dynamicImageFromAssets(modifier: Modifier, element: UIElement.ImageElement) {
-    dynamicImageFromAssets(modifier, element.src, element.scale, element.link, 0, 0)
+    dynamicImageFromAssets(modifier, element.src, element.scale, element.link, element.width, element.height)
 }
 
 @Composable
@@ -76,7 +74,11 @@ actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String
                 "none" -> ContentScale.None
                 else -> ContentScale.Fit
             },
-            modifier = if(width == 0)(modifier.fillMaxWidth()) else (modifier.fillMaxWidth(width/100f))
+            //modifier = if(width == 0)(modifier.fillMaxWidth()) else (modifier.fillMaxWidth(width/100f))
+            modifier = modifier
+                .then(if (width == 0) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(width / 100f))
+                .then(if (height == 0) Modifier.wrapContentHeight() else Modifier.fillMaxHeight(height / 100f))
+
         )
     } else {
         Text(text = "Image not found: ${src}", style = TextStyle(color = MaterialTheme.colors.onPrimary))

@@ -403,6 +403,13 @@ sealed class UIElement {
         val url: String,
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
+
+    @ElementAnnotation("With a **LazyRow** element you can add a horizontal list and fill it with data from a json data source.")
+    data class LazyRowElement(
+        @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
+        val url: String,
+        val uiElements: MutableList<UIElement> = mutableListOf()
+    ) : UIElement()
 }
 
 data class Padding(val top: Int, val right: Int, val bottom: Int, val left: Int)
