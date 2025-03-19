@@ -115,8 +115,8 @@ abstract class ProjectState {
         createApp: Boolean
     )
 
-    fun createEbook(title: String, folder: String) {
-        book?.let { CreateEbook.start(title, folder, this.folder, it) }
+    fun createEbook(title: String, folder: String, langs: List<String>) {
+        book?.let { CreateEbook.start(title, folder, this.folder, it, langs) }
     }
 
     fun createHTML(folder: String) {

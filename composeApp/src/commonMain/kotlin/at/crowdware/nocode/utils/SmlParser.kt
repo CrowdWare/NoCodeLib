@@ -336,12 +336,20 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                         elements.add(scene)
                     }
                     "LazyColumn" -> {
-                        val lazy = UIElement.LazyColumnElement(url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "")
+                        val lazy = UIElement.LazyColumnElement(
+                            url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "",
+                            //width = (properties["width"] as? PropertyValue.IntValue)?.value ?: 0,
+                            weight = (properties["weight"] as? PropertyValue.IntValue)?.value ?: 0
+                        )
                         parseNestedElements(extractChildElements(element), lazy.uiElements as MutableList<UIElement>)
                         elements.add(lazy)
                     }
                     "LazyRow" -> {
-                        val lazy = UIElement.LazyColumnElement(url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "")
+                        val lazy = UIElement.LazyRowElement(
+                            url = (properties["url"] as? PropertyValue.StringValue)?.value ?: "",
+                            height = (properties["height"] as? PropertyValue.IntValue)?.value ?: 0,
+                            //weight = (properties["weight"] as? PropertyValue.IntValue)?.value ?: 0
+                        )
                         parseNestedElements(extractChildElements(element), lazy.uiElements as MutableList<UIElement>)
                         elements.add(lazy)
                     }

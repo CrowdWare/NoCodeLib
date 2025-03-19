@@ -401,6 +401,8 @@ sealed class UIElement {
     data class LazyColumnElement(
         @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
         val url: String,
+        @WeightAnnotation
+        val weight: Int,
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 
@@ -408,6 +410,8 @@ sealed class UIElement {
     data class LazyRowElement(
         @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
         val url: String,
+        @IntAnnotation
+        val height: Int,
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }

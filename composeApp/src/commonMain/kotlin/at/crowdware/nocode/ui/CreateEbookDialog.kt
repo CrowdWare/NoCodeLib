@@ -20,11 +20,12 @@
 package at.crowdware.nocode.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
@@ -40,9 +41,11 @@ fun createEbookDialog(
     name: TextFieldValue,
     onNameChange: (TextFieldValue) -> Unit,
     folder: TextFieldValue,
+    lang: String,
     onFolderChange: (TextFieldValue) -> Unit,
     onDismissRequest: () -> Unit,
-    onCreateRequest: () -> Unit
+    //onCreateRequest: () -> Unit
+    onCreateRequest: (List<String>) -> Unit
 ) {
     if(GlobalAppState.appState?.licenseType == LicenseType.UNDEFINED) {
         AlertDialog(
@@ -83,6 +86,7 @@ fun createEbookDialog(
                 }
             })
     } else {
+        val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
         AlertDialog(
             onDismissRequest = onDismissRequest,
             title = {
@@ -93,6 +97,25 @@ fun createEbookDialog(
                     InputRow(label = "Name:", value = name, onValueChange = onNameChange)
                     Spacer(modifier = Modifier.height(16.dp))
                     InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
+
+                    val languageList = lang.split(",").map { it.trim() }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Languages")
+                    Column {
+                        languageList.forEach { lang ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(4.dp)
+                            ) {
+                                Checkbox(
+                                    checked = checkedStates[lang] ?: false,
+                                    onCheckedChange = { isChecked -> checkedStates[lang] = isChecked }
+                                )
+                                Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -103,7 +126,11 @@ fun createEbookDialog(
                 }
                 Button(
                     enabled = name.text.isNotEmpty() && folder.text.isNotEmpty(),
-                    onClick = onCreateRequest,
+                    onClick = {
+                        // Filtere nur die aktivierten Sprachen heraus und übergebe sie
+                        val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
+                        onCreateRequest(selectedLanguages)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = ExtendedTheme.colors.accentColor,
                         contentColor = ExtendedTheme.colors.onAccentColor
