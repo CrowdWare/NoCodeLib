@@ -125,10 +125,10 @@ abstract class ProjectState {
         app?.let { CreateHTML.start(folder, this.folder, it) }
     }
 
-    fun createCourse(folder: String) {
+    fun createCourse(folder: String, lang: String) {
         app!!.deployDirHtml  = folder
         save(app!!)
-        app?.let { CreateCourse.start(folder, this.folder, it) }
+        app?.let { CreateCourse.start(folder, this.folder, it, lang) }
     }
 
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
