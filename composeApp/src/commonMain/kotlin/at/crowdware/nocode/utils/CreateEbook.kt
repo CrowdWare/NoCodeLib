@@ -46,36 +46,38 @@ import kotlin.io.path.createTempDirectory
 
 class CreateEbook {
     companion object {
-        fun start(title: String, folder: String, source: String, book: Ebook) {
+        fun start(title: String, folder: String, source: String, book: Ebook, langs: List<String>) {
             val dir = File(folder)
             dir.mkdirs()
 
-            val tempDir = createTempDirectory().toFile()
-            val guid = UUID.randomUUID().toString()
+            for(lang in langs) {
+                val tempDir = createTempDirectory().toFile()
+                val guid = UUID.randomUUID().toString()
 
-            File(tempDir, "EPUB/parts").mkdirs()
-            File(tempDir, "EPUB/images").mkdirs()
-            File(tempDir, "EPUB/css").mkdirs()
-            File(tempDir, "META-INF").mkdirs()
+                File(tempDir, "EPUB/parts").mkdirs()
+                File(tempDir, "EPUB/images").mkdirs()
+                File(tempDir, "EPUB/css").mkdirs()
+                File(tempDir, "META-INF").mkdirs()
 
-            copyAssets(book.theme, tempDir)
-            copyImages(tempDir, source)
-            writeContainer(tempDir)
-            writeMimetype(tempDir)
-            generatePackage(tempDir, book, guid)
-            val toc = generateParts(tempDir, book, source)
-            generateToc(tempDir, book, toc)
+                copyAssets(book.theme, tempDir)
+                copyImages(tempDir, source)
+                writeContainer(tempDir)
+                writeMimetype(tempDir)
+                generatePackage(tempDir, book, guid, lang, langs.size > 1)
+                val toc = generateParts(tempDir, book, source, lang = lang, multiLang = langs.size > 1)
+                generateToc(tempDir, book, toc, lang)
 
-            val files = getAllFiles(tempDir)
+                val files = getAllFiles(tempDir)
 
-            ZipOutputStream(Files.newOutputStream(Paths.get("$folder/$title.epub"))).use { zip ->
-                files.forEach { file ->
-                    zip.putNextEntry(ZipEntry(file.relativeTo(tempDir).path))
-                    zip.write(file.readBytes())
-                    zip.closeEntry()
+                ZipOutputStream(Files.newOutputStream(Paths.get("$folder/$title-$lang.epub"))).use { zip ->
+                    files.forEach { file ->
+                        zip.putNextEntry(ZipEntry(file.relativeTo(tempDir).path))
+                        zip.write(file.readBytes())
+                        zip.closeEntry()
+                    }
                 }
+                tempDir.deleteRecursively()
             }
-            tempDir.deleteRecursively()
         }
 
 
@@ -165,11 +167,11 @@ class CreateEbook {
                     "</container>", Charsets.UTF_8)
         }
 
-        fun generatePackage(dir: File, book: Ebook, guid: String) {
+        fun generatePackage(dir: File, book: Ebook, guid: String, lang: String, multiLang: Boolean) {
             val context = mutableMapOf<String, Any>()
 
             context["uuid"] = guid
-            context["lang"] = book.language
+            context["lang"] = lang
             context["title"] = book.name
             context["date"] = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             context["version"] = Version.version
@@ -220,7 +222,10 @@ class CreateEbook {
             val classLoader = Thread.currentThread().contextClassLoader
 
             // Path inside the resources (e.g., "themes/<theme>/assets")
-            val resourcePath = "themes/${book.theme}/layout/package.opf"
+            var packageName = "package"
+            if (multiLang)
+                packageName += "-$lang"
+            val resourcePath = "themes/${book.theme}/layout/$packageName.opf"
             val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
             val data = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("File not found: $resourcePath")
 
@@ -233,23 +238,24 @@ class CreateEbook {
             File(outputPath.toUri()).writeText(renderedXml, Charsets.UTF_8)
         }
 
-        fun generateParts(dir: File, book: Ebook, source: String): List<Map<String, Any>> {
+        fun generateParts(dir: File, book: Ebook, source: String, lang: String, multiLang: Boolean): List<Map<String, Any>> {
             val toc = mutableListOf<Map<String, Any>>()
             val item = mutableMapOf<String, Any>(
                 "href" to "toc.xhtml",
-                "name" to if (book.language == "de") "Inhaltsverzeichnis" else "Table of Contents",
+                "name" to if (lang == "de") "Inhaltsverzeichnis" else "Table of Contents",  // TODO: more languages to support
                 "id" to "nav",
                 "parts" to mutableListOf<Any>()
             )
             toc.add(item)
 
             val path = Paths.get("").toAbsolutePath().toString()
-
+            var partsFolder = "parts"
+            if (multiLang)
+                partsFolder += "-" + lang
             for (part in book.parts) {
                 if (!part.pdfOnly) {
                     val context = mutableMapOf<String, Any>()
-                    val partSourcePath = Paths.get(source, "parts", part.src).toFile()
-
+                    val partSourcePath = Paths.get(source, partsFolder, part.src).toFile()
                     val text = partSourcePath.readText(Charsets.UTF_8)
                     val name = part.src.substringBefore(".").replace(" ", "-").lowercase()
 
@@ -306,11 +312,11 @@ class CreateEbook {
                 .replace("<td align=\"left\"", "<td class=\"left\"")
         }
 
-        fun generateToc(dir: File, book: Ebook, parts: List<Map<String, Any>>) {
+        fun generateToc(dir: File, book: Ebook, parts: List<Map<String, Any>>, lang: String) {
             val currentProject = GlobalProjectState.projectState
             val context = mutableMapOf<String, Any>()
 
-            context["lang"] = book.language
+            context["lang"] = lang
             context["title"] = book.name
             context["date"] = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             context["version"] = Version.version
@@ -318,7 +324,7 @@ class CreateEbook {
             context["creatorLink"] = book.creatorLink
             context["bookLink"] = book.bookLink
             context["generator"] = "FreeBookDesigner v." + Version.version
-            if (book.language == "de") {
+            if (lang == "de") {
                 if (currentProject != null) {
                     context["publishedby"] = "Publiziert von"
                     context["publisher"] = GlobalAppState.appState?.license_publisher.toString()
@@ -364,7 +370,7 @@ class CreateEbook {
                 context["licenseTextD"] = "."
             }
 
-            context["pageTitle"] = if (book.language == "de") "Inhaltsverzeichnis" else "Table of Contents"
+            context["pageTitle"] = if (lang == "de") "Inhaltsverzeichnis" else "Table of Contents"
             if (parts.size > 0)
                 context["parts"] = parts
 

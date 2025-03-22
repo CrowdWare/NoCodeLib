@@ -310,9 +310,9 @@ fun renderButton(modifier: Modifier, element: ButtonElement) {
     else
         colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor("primary"), contentColor = hexToColor("onPrimary"))
     Button(
-        modifier = modifier.fillMaxWidth()
-            .then(if(element.width > 0) Modifier.width(element.width.dp)else Modifier)
-            .then(if(element.height > 0) Modifier.height(element.height.dp)else Modifier),
+        modifier = Modifier
+            .then(if (element.width > 0) Modifier.width(element.width.dp) else modifier)
+            .then(if(element.height > 0) Modifier.height(element.height.dp) else modifier),
         colors = colors,
         onClick =  { handleButtonClick(element.link) }
     ) {
@@ -321,13 +321,14 @@ fun renderButton(modifier: Modifier, element: ButtonElement) {
 }
 
 @Composable
-fun renderColumn(element: ColumnElement) {
-    Column(modifier = Modifier.padding(
+fun renderColumn(modifier: Modifier, element: ColumnElement) {
+    Column(modifier = modifier
+        .padding(
         top = element.padding.top.dp,
         bottom = element.padding.bottom.dp,
         start = element.padding.left.dp,
         end = element.padding.right.dp
-    )/*.fillMaxWidth()*/) {
+    )) {
         for (childElement in element.uiElements) {
             RenderUIElement(childElement)
         }
@@ -352,6 +353,24 @@ fun renderRow(element: RowElement) {
 }
 
 @Composable
+fun renderLazyColumn(modifier: Modifier, element: LazyColumnElement) {
+    Column(modifier = modifier) {
+        for (childElement in element.uiElements) {
+            RenderUIElement(childElement)
+        }
+    }
+}
+
+@Composable
+fun renderLazyRow(element: LazyRowElement) {
+    Row (modifier = if(element.height > 0) Modifier.height(element.height.dp) else Modifier) {
+        for (childElement in element.uiElements) {
+            RenderUIElement(childElement)
+        }
+    }
+}
+
+@Composable
 fun RenderUIElement(element: UIElement) {
     when (element) {
         is TextElement -> {
@@ -361,13 +380,19 @@ fun RenderUIElement(element: UIElement) {
             renderMarkdown(element)
         }
         is ButtonElement -> {
-            renderButton(modifier = Modifier, element)
+            renderButton(modifier = Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = Modifier, element = element)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(modifier = Modifier, element)
@@ -404,13 +429,19 @@ fun RowScope.RenderUIElement(element: UIElement) {
             renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
         }
         is ButtonElement -> {
-            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
+            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.weight(1f), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
@@ -485,16 +516,22 @@ fun ColumnScope.RenderUIElement(element: UIElement) {
             renderMarkdown(element)
         }
         is ButtonElement -> {
-            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
+            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(element)
+            renderColumn(if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element)
         }
         is RowElement -> {
             renderRow(element)
         }
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element)
+        }
         is ImageElement -> {
-            at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
+            dynamicImageFromAssets(
                 modifier = if (element.weight > 0) {
                     Modifier.weight(element.weight.toFloat())
                 } else {

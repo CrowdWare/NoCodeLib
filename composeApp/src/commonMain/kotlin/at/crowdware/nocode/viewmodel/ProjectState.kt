@@ -115,8 +115,8 @@ abstract class ProjectState {
         createApp: Boolean
     )
 
-    fun createEbook(title: String, folder: String) {
-        book?.let { CreateEbook.start(title, folder, this.folder, it) }
+    fun createEbook(title: String, folder: String, langs: List<String>) {
+        book?.let { CreateEbook.start(title, folder, this.folder, it, langs) }
     }
 
     fun createHTML(folder: String) {
@@ -471,6 +471,20 @@ abstract class ProjectState {
             )
             is UIElement.Subtopic ->  TreeNode(
                 title = mutableStateOf("Subtopic"),
+                type = NodeType.OTHER,
+                path ="",
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(false)
+            )
+            is UIElement.LazyColumnElement -> TreeNode(
+                title = mutableStateOf("LazyColumn"),
+                type = NodeType.OTHER,
+                path ="",
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(false)
+            )
+            is UIElement.LazyRowElement -> TreeNode(
+                title = mutableStateOf("LazyRow"),
                 type = NodeType.OTHER,
                 path ="",
                 children = mutableStateListOf(),

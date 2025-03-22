@@ -396,6 +396,24 @@ sealed class UIElement {
         @StringAnnotation("The name of the skybox texture file to be rendered. KTX files can be rendered. Sample: **environment: forest.ktx**")
         val skybox: String
     ) : UIElement()
+
+    @ElementAnnotation("With a **LazyColumn** element you can add a vertical list and fill it with data from a json data source.")
+    data class LazyColumnElement(
+        @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
+        val url: String,
+        @WeightAnnotation
+        val weight: Int,
+        val uiElements: MutableList<UIElement> = mutableListOf()
+    ) : UIElement()
+
+    @ElementAnnotation("With a **LazyRow** element you can add a horizontal list and fill it with data from a json data source.")
+    data class LazyRowElement(
+        @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
+        val url: String,
+        @IntAnnotation
+        val height: Int,
+        val uiElements: MutableList<UIElement> = mutableListOf()
+    ) : UIElement()
 }
 
 data class Padding(val top: Int, val right: Int, val bottom: Int, val left: Int)
