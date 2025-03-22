@@ -109,3 +109,10 @@ annotation class StringAnnotation(val description: String = "Enter a string and 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class LinkAnnotation(val description: String = "At the moment we support two types of link.\nweb -> opens a website like **link: \"web:http://www.example.com\"**\npage -> opens a page like **link: \"page:about\"**")
+
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ChildrenAnnotation(
+    val description: String
+)

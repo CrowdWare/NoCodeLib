@@ -397,21 +397,64 @@ sealed class UIElement {
         val skybox: String
     ) : UIElement()
 
-    @ElementAnnotation("With a **LazyColumn** element you can add a vertical list and fill it with data from a json data source.")
+    @ElementAnnotation(
+        "With a **LazyColumn** element you can add a vertical list and fill it with data from a JSON data source.\n\n" +
+                "Inside the element, use a **LazyContent** block to define how each item should be rendered.\n" +
+                "Optionally, add a **LazyNoContent** block to display content when the list is empty.\n\n" +
+                "Example:\n\n" +
+                "```SML\n" +
+                "LazyColumn {\n" +
+                "    url: \"https://example.com/api/books\"\n" +
+                "    LazyContent {\n" +
+                "        Text { text: \"<title>\" }\n" +
+                "    }\n" +
+                "    LazyNoContent {\n" +
+                "        Text { text: \"No items found.\" }\n" +
+                "    }\n" +
+                "}\n" +
+                "```"
+    )
     data class LazyColumnElement(
         @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
         val url: String,
         @WeightAnnotation
         val weight: Int,
+        @ChildrenAnnotation(
+            "This element supports the following child blocks:\n\n" +
+                    "- **LazyContent**: defines how to render each item\n" +
+                    "- **LazyNoContent** (optional): defines fallback UI when list is empty"
+        )
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 
-    @ElementAnnotation("With a **LazyRow** element you can add a horizontal list and fill it with data from a json data source.")
+    @ElementAnnotation(
+        "With a **LazyRow** element you can add a horizontal list and fill it with data from a JSON data source.\n\n" +
+                "Use a **LazyContent** block to define the layout for each item.\n" +
+                "Optionally, add a **LazyNoContent** block to display content when the list is empty.\n\n" +
+                "Example:\n\n" +
+                "```SML\n" +
+                "LazyRow {\n" +
+                "    url: \"https://example.com/api/favourites\"\n" +
+                "    height: 200\n" +
+                "    LazyContent {\n" +
+                "        Image { src: \"<pictureurl>\" width: 100 }\n" +
+                "    }\n" +
+                "    LazyNoContent {\n" +
+                "        Text { text: \"No favourites yet.\" }\n" +
+                "    }\n" +
+                "}\n" +
+                "```"
+    )
     data class LazyRowElement(
         @StringAnnotation("The URL of the data source. Sample: **url: https://mywebservice.com/listOfItems**")
         val url: String,
         @IntAnnotation
         val height: Int,
+        @ChildrenAnnotation(
+            "This element supports the following child blocks:\n\n" +
+                    "- **LazyContent**: defines how to render each item\n" +
+                    "- **LazyNoContent** (optional): defines fallback UI when list is empty"
+        )
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }

@@ -93,7 +93,7 @@ fun propertyPanel(currentProject: ProjectState?) {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
                                             is PaddingAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
+                                                renderAnnotation(member.name, annotation.description,)
                                             }
                                             is MarkdownAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
@@ -106,6 +106,9 @@ fun propertyPanel(currentProject: ProjectState?) {
                                             }
                                             is LinkAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
+                                            }
+                                            is ChildrenAnnotation -> {
+                                                renderAnnotation(member.name, annotation.description, isChildrenAnnotation = true)
                                             }
                                         }
                                     }
@@ -125,7 +128,11 @@ fun propertyPanel(currentProject: ProjectState?) {
                                     fontWeight = FontWeight.Bold,
                                     color = ExtendedTheme.colors.syntaxColor
                                 )
-                                renderAnnotation("colorName", "A definition of all available colors. The colors are entered as hex values.\nSample:\nTheme {\n\tprimary: \"#825500\"\n}")
+                                renderAnnotation(
+                                    "colorName",
+                                    "A definition of all available colors. The colors are entered as hex values.\nSample:\nTheme {\n\tprimary: \"#825500\"\n}",
+                                    false
+                                )
                             }
                         }
                     }
@@ -146,9 +153,11 @@ fun propertyPanel(currentProject: ProjectState?) {
                                     fontWeight = FontWeight.Normal,
                                     color = MaterialTheme.colors.onPrimary
                                 )
-                                renderAnnotation("src", "A part of the ebook.\nSample:\nPart {\n\tsrc: \"home.md\"\n}\n\nPart {\n" +
-                                        "\tsrc: \"second.md\"\n" +
-                                        "}")
+                                renderAnnotation(
+                                    "src", "A part of the ebook.\nSample:\nPart {\n\tsrc: \"home.md\"\n}\n\nPart {\n" +
+                                            "\tsrc: \"second.md\"\n" +
+                                            "}", false
+                                )
                             }
                         }
                     }
@@ -213,13 +222,22 @@ fun propertyPanel(currentProject: ProjectState?) {
 }
 
 @Composable
-fun renderAnnotation(name: String, description: String) {
-    Text(
-        text = name,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = ExtendedTheme.colors.attributeNameColor
-    )
+fun renderAnnotation(name: String, description: String, isChildrenAnnotation: Boolean = false) {
+    Spacer(modifier = Modifier.height(8.dp))
+    if(isChildrenAnnotation) {
+        Text(
+            text = "Possible Children",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = ExtendedTheme.colors.attributeNameColor)
+    } else {
+        Text(
+            text = name,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = ExtendedTheme.colors.attributeNameColor
+        )
+    }
     val md = parseMarkdown(description)
     Text(
         text = md,
