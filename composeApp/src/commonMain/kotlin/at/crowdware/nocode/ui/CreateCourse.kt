@@ -37,7 +37,7 @@ class CreateCourse {
         var dir = File("")
         var sourceDir = File("")
 
-        fun start(folder: String, source: String, app: App) {
+        fun start(folder: String, source: String, app: App, lang: String = "en") {
             dir = File(folder + "/" + app.name.replace(" ", "_").toLowerCase())
             sourceDir = File(source)
             val assets = File(dir, "assets")
@@ -54,10 +54,9 @@ class CreateCourse {
                     if (page.first != null) {
                         val name = file.name.substringBeforeLast(".sml")
                         val html = getHtmlContent(page.first!!)
-                        val navi = getNaviHtml(app)
+                        val navi = getNaviHtml(app, lang)
                         val context = mutableMapOf<String, Any>()
 
-                        println("desc: ${app.description}")
                         context["name"] = app.name
                         context["author"] = app.author
                         context["authorBio"] = app.authorBio
@@ -67,7 +66,10 @@ class CreateCourse {
                         context["navigation"] = navi
 
                         val classLoader = Thread.currentThread().contextClassLoader
-                        val resourcePath = "templates/course.html"
+                        var resourcePath = "templates/course.html"
+                        if (lang == "de") { // TODO: support other languages
+                            resourcePath = "templates/course_DE.html"
+                        }
                         val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
                         val templateData = inputStream?.bufferedReader()?.use { it.readText() }
                             ?: throw IllegalArgumentException("File not found: $resourcePath")
@@ -158,10 +160,14 @@ class CreateCourse {
             return html
         }
 
-        fun getNaviHtml(app: App): String {
+        fun getNaviHtml(app: App, lang: String): String {
             var html = ""
             html += "<h2>Navigation</h2>\n"
-            html += " <p>This is the menu with a list of all topics.</p>\n"
+            if (lang == "de") {
+                html += " <p>Das ist ein Menu mit einer Liste aller Topics.</p>\n"
+            } else {
+                html += " <p>This is the menu with a list of all topics.</p>\n"
+            }
             html += "<ul>\n"
             for (topic in app.course.topics) {
                 html += "<li><a id='course-link' href='https://artanidos.pythonanywhere.com/nocode/course/${topic.page}'>${topic.label}</a></li>\n"
