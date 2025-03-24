@@ -88,6 +88,7 @@ abstract class ProjectState {
     var isPageLoaded by mutableStateOf(false)
     var actualElement: KClass<*>? by mutableStateOf(null)
     var parseError: String? by mutableStateOf(null)
+    var lang: String by mutableStateOf("")
 
     lateinit var pageNode: TreeNode
     lateinit var imagesNode: TreeNode
@@ -281,6 +282,9 @@ abstract class ProjectState {
 
     fun LoadFile(filePath: String) {
         path = filePath
+
+        val regex = Regex("""/pages-([a-z]{2})/""")
+        lang = regex.find(path)?.groupValues?.get(1) ?: ""
 
         CoroutineScope(Dispatchers.Main).launch {
             extension = path.substringAfterLast('.', "")

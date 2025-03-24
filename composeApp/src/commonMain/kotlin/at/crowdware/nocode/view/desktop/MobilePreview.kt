@@ -64,6 +64,7 @@ import java.io.File
 fun mobilePreview(currentProject: ProjectState?) {
     var page: Page? = if (currentProject?.isPageLoaded == true) currentProject.page else null
     val scrollState = rememberScrollState()
+    val lang = currentProject?.lang
 
     if (page == null && currentProject != null) {
         page = currentProject.cachedPage
@@ -138,7 +139,7 @@ fun mobilePreview(currentProject: ProjectState?) {
                                             )
                                         )
                                 ) {
-                                    RenderPage(page)
+                                    RenderPage(page, lang!!)
                                 }
                             }
                         } else if (currentProject != null && currentProject.extension == "md") {
@@ -230,12 +231,17 @@ fun renderText(element: TextElement) {
 }
 
 @Composable
-fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement) {
+fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     if (element.part.isNotEmpty() && currentProject != null) {
+        var dir = "parts"
+        if(lang.isNotEmpty()) {
+            dir += "-$lang"
+        }
+
         try {
-            txt = File(currentProject.folder + "/parts", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", element.part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
@@ -253,12 +259,16 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement) {
 }
 
 @Composable
-fun RowScope.renderMarkdown(modifier: Modifier, element: MarkdownElement) {
+fun RowScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     if (element.part.isNotEmpty() && currentProject != null) {
+        var dir = "parts"
+        if (lang.isNotEmpty()) {
+            dir += "-$lang"
+        }
         try {
-            txt = File(currentProject.folder + "/parts", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", element.part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
@@ -276,12 +286,16 @@ fun RowScope.renderMarkdown(modifier: Modifier, element: MarkdownElement) {
 }
 
 @Composable
-fun renderMarkdown(element: MarkdownElement) {
+fun renderMarkdown(element: MarkdownElement, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     if (element.part.isNotEmpty() && currentProject != null) {
+        var dir = "parts"
+        if (lang.isNotEmpty()) {
+            dir += "-$lang"
+        }
         try {
-            txt = File(currentProject.folder + "/parts", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", element.part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
@@ -321,7 +335,7 @@ fun renderButton(modifier: Modifier, element: ButtonElement) {
 }
 
 @Composable
-fun renderColumn(modifier: Modifier, element: ColumnElement) {
+fun renderColumn(modifier: Modifier, element: ColumnElement, lang: String) {
     Column(modifier = modifier
         .padding(
         top = element.padding.top.dp,
@@ -330,13 +344,13 @@ fun renderColumn(modifier: Modifier, element: ColumnElement) {
         end = element.padding.right.dp
     )) {
         for (childElement in element.uiElements) {
-            RenderUIElement(childElement)
+            RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun renderRow(element: RowElement) {
+fun renderRow(element: RowElement, lang: String) {
     Row(modifier = Modifier.padding(
         top = element.padding.top.dp,
         bottom = element.padding.bottom.dp,
@@ -347,52 +361,52 @@ fun renderRow(element: RowElement) {
         .then(if(element.width > 0) Modifier.width(element.width.dp) else Modifier),
         horizontalArrangement = Arrangement.SpaceBetween){
         for (childElement in element.uiElements) {
-            RenderUIElement(childElement)
+            RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun renderLazyColumn(modifier: Modifier, element: LazyColumnElement) {
+fun renderLazyColumn(modifier: Modifier, element: LazyColumnElement, lang: String) {
     Column(modifier = modifier) {
         for (childElement in element.uiElements) {
-            RenderUIElement(childElement)
+            RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun renderLazyRow(element: LazyRowElement) {
+fun renderLazyRow(element: LazyRowElement, lang: String) {
     Row (modifier = if(element.height > 0) Modifier.height(element.height.dp) else Modifier) {
         for (childElement in element.uiElements) {
-            RenderUIElement(childElement)
+            RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun RenderUIElement(element: UIElement) {
+fun RenderUIElement(element: UIElement, lang: String) {
     when (element) {
         is TextElement -> {
             renderText(element)
         }
         is MarkdownElement -> {
-            renderMarkdown(element)
+            renderMarkdown(element, lang)
         }
         is ButtonElement -> {
             renderButton(modifier = Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(Modifier, element)
+            renderColumn(Modifier, element, lang = lang)
         }
         is RowElement -> {
-            renderRow(element)
+            renderRow(element, lang)
         }
         is LazyColumnElement -> {
-            renderLazyColumn(modifier = Modifier, element = element)
+            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
         }
         is LazyRowElement -> {
-            renderLazyRow(element)
+            renderLazyRow(element, lang)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(modifier = Modifier, element)
@@ -420,28 +434,28 @@ fun RenderUIElement(element: UIElement) {
 }
 
 @Composable
-fun RowScope.RenderUIElement(element: UIElement) {
+fun RowScope.RenderUIElement(element: UIElement, lang: String) {
     when (element) {
         is TextElement -> {
             renderText(element)
         }
         is MarkdownElement -> {
-            renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
+            renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
         }
         is ButtonElement -> {
             renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.weight(1f), element)
         }
         is ColumnElement -> {
-            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element)
+            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
         }
         is RowElement -> {
-            renderRow(element)
+            renderRow(element, lang)
         }
         is LazyColumnElement -> {
-            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element)
+            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
         }
         is LazyRowElement -> {
-            renderLazyRow(element)
+            renderLazyRow(element, lang)
         }
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
@@ -507,28 +521,28 @@ fun RowScope.RenderUIElement(element: UIElement) {
 }
 
 @Composable
-fun ColumnScope.RenderUIElement(element: UIElement) {
+fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
     when (element) {
         is TextElement -> {
            renderText(element)
         }
         is MarkdownElement -> {
-            renderMarkdown(element)
+            renderMarkdown(element, lang)
         }
         is ButtonElement -> {
             renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.fillMaxWidth(), element)
         }
         is ColumnElement -> {
-            renderColumn(if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element)
+            renderColumn(if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element, lang)
         }
         is RowElement -> {
-            renderRow(element)
+            renderRow(element, lang)
         }
         is LazyColumnElement -> {
-            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element)
+            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
         }
         is LazyRowElement -> {
-            renderLazyRow(element)
+            renderLazyRow(element, lang)
         }
         is ImageElement -> {
             dynamicImageFromAssets(
@@ -759,9 +773,9 @@ fun hexToColor(hex: String, default: String = "#000000"): Color {
 }
 
 @Composable
-fun ColumnScope.RenderPage(page: Page) {
+fun ColumnScope.RenderPage(page: Page, lang: String) {
     for (element in page.elements) {
-        RenderUIElement(element)
+        RenderUIElement(element, lang)
     }
 }
 
