@@ -25,6 +25,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -83,6 +84,16 @@ actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String
     } else {
         Text(text = "Image not found: ${src}", style = TextStyle(color = MaterialTheme.colors.onPrimary))
     }
+}
+
+@Composable
+actual fun asyncImage(modifier: Modifier, src: String, scale: String, link: String, width: Int, height: Int) {
+    Image(
+        painter = painterResource("images/asyncimage.png"),
+        contentDescription = "Description of the image",
+        modifier = if(width > 0 && height > 0) modifier.width(width.dp).height(height.dp) else modifier.fillMaxWidth(),
+        contentScale = ContentScale.FillBounds
+    )
 }
 
 @Composable

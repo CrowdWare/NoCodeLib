@@ -249,6 +249,16 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                         parseNestedElements(extractChildElements(element), row.uiElements as MutableList<UIElement>)
                         elements.add(row)
                     }
+                    "Box" -> {
+                        val box = UIElement.BoxElement(
+                            padding = parsePadding((properties["padding"] as? PropertyValue.StringValue)?.value ?: "0"),
+                            weight = (properties["weight"] as? PropertyValue.IntValue)?.value ?: 0,
+                            height = (properties["height"] as? PropertyValue.IntValue)?.value ?: 0,
+                            width = (properties["width"] as? PropertyValue.IntValue)?.value ?: 0
+                        )
+                        parseNestedElements(extractChildElements(element), box.uiElements as MutableList<UIElement>)
+                        elements.add(box)
+                    }
                     "Markdown" -> {
                         if (theme != null) {
                             val md = ((properties["text"] as? PropertyValue.StringValue)?.value ?: "").split("\n")
@@ -289,6 +299,17 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                     }
                     "Image" -> {
                         val img = UIElement.ImageElement(
+                            src = (properties["src"] as? PropertyValue.StringValue)?.value ?: "",
+                            scale = (properties["scale"] as? PropertyValue.StringValue)?.value ?: "1",
+                            link = (properties["link"] as? PropertyValue.StringValue)?.value ?: "",
+                            weight = (properties["weight"] as? PropertyValue.IntValue)?.value ?: 0,
+                            height = (properties["height"] as? PropertyValue.IntValue)?.value ?: 0,
+                            width = (properties["width"] as? PropertyValue.IntValue)?.value ?: 0
+                        )
+                        elements.add(img)
+                    }
+                    "AsyncImage" -> {
+                        val img = UIElement.AsyncImageElement(
                             src = (properties["src"] as? PropertyValue.StringValue)?.value ?: "",
                             scale = (properties["scale"] as? PropertyValue.StringValue)?.value ?: "1",
                             link = (properties["link"] as? PropertyValue.StringValue)?.value ?: "",

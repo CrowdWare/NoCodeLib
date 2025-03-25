@@ -411,6 +411,9 @@ fun RenderUIElement(element: UIElement, lang: String) {
         is ImageElement -> {
             at.crowdware.nocode.view.desktop.dynamicImageFromAssets(modifier = Modifier, element)
         }
+        is AsyncImageElement -> {
+            at.crowdware.nocode.view.desktop.asyncImage(modifier = Modifier, "", scale = element.scale, "", element.width, element.height)
+        }
         is SoundElement -> {
             at.crowdware.nocode.view.desktop.dynamicSoundfromAssets(element.src)
         }
@@ -462,6 +465,11 @@ fun RowScope.RenderUIElement(element: UIElement, lang: String) {
                 modifier = if (element.weight > 0) Modifier.weight(
                     element.weight.toFloat()
                 ) else Modifier, element
+            )
+        }
+        is AsyncImageElement -> {
+            asyncImage(
+                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
             )
         }
         is SoundElement -> {
@@ -552,6 +560,9 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
                     Modifier
                 }, element
             )
+        }
+        is AsyncImageElement -> {
+            asyncImage(modifier = if (element.weight > 0) { Modifier.weight(element.weight.toFloat()) } else { Modifier }, "", element.scale, "", element.width, element.height)
         }
         is SoundElement -> {
             at.crowdware.nocode.view.desktop.dynamicSoundfromAssets(element.src)
@@ -970,6 +981,8 @@ fun parseMarkdown(markdown: String): AnnotatedString {
 expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
 @Composable
 expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, element: UIElement.ImageElement)
+@Composable
+expect fun asyncImage(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
 @Composable
 expect fun dynamicSoundfromAssets(filename: String)
 @Composable

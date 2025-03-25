@@ -264,6 +264,27 @@ sealed class UIElement {
         @LinkAnnotation
         val link: String) : UIElement()
 
+    @ElementAnnotation("With an **AsyncImage** element you can load and display an image from a URL asynchronously.")
+    data class AsyncImageElement(
+        @StringAnnotation("Enter the full URL of the image.\nExample: **src: \"https://example.com/image.jpg\"**")
+        val src: String,
+
+        @StringAnnotation("Enter the scale type: crop, fit, inside, fillbounds, fillheight, fillwidth, none.\nExample: **scale: \"fit\"**")
+        val scale: String,
+
+        @WeightAnnotation
+        val weight: Int,
+
+        @IntAnnotation
+        val width: Int,
+
+        @IntAnnotation
+        val height: Int,
+
+        @LinkAnnotation
+        val link: String
+    ) : UIElement()
+
     @ElementAnnotation("With a **Spacer** element you can create a visual distance between other elements on the page.")
     data class SpacerElement(
         @IntAnnotation
@@ -455,6 +476,19 @@ sealed class UIElement {
                     "- **LazyContent**: defines how to render each item\n" +
                     "- **LazyNoContent** (optional): defines fallback UI when list is empty"
         )
+        val uiElements: MutableList<UIElement> = mutableListOf()
+    ) : UIElement()
+
+    @ElementAnnotation("With a **Box** element you can stack elements on top of each other, allowing overlays such as an icon over an image.")
+    data class BoxElement(
+        @PaddingAnnotation
+        val padding: Padding,
+        @WeightAnnotation
+        val weight: Int,
+        @IntAnnotation
+        val width: Int,
+        @IntAnnotation
+        val height: Int,
         val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }

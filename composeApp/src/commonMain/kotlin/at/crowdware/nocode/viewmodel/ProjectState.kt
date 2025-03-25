@@ -393,6 +393,13 @@ abstract class ProjectState {
                 children = mutableStateListOf(),
                 expanded = mutableStateOf(false)
             )
+            is UIElement.AsyncImageElement -> TreeNode(
+                title = mutableStateOf("AsyncImage"),
+                type = NodeType.OTHER,
+                path = "",
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(false)
+            )
             is UIElement.SpacerElement -> TreeNode(
                 title = mutableStateOf("Spacer"),
                 type = NodeType.OTHER,
@@ -439,6 +446,15 @@ abstract class ProjectState {
             )
             is UIElement.ColumnElement -> TreeNode(
                 title = mutableStateOf("Column"),
+                type = NodeType.DIRECTORY,
+                path = "",
+                children = mutableStateListOf(
+                    *uiElement.uiElements.map { mapUIElementToTreeNode(it) }.toTypedArray()
+                ),
+                expanded = mutableStateOf(true)
+            )
+            is UIElement.BoxElement -> TreeNode(
+                title = mutableStateOf("Box"),
                 type = NodeType.DIRECTORY,
                 path = "",
                 children = mutableStateListOf(
