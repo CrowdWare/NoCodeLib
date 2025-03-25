@@ -113,7 +113,8 @@ abstract class ProjectState {
         appId: String,
         theme: String,
         createBook: Boolean,
-        createApp: Boolean
+        createApp: Boolean,
+        langs: List<String>
     )
 
     fun createEbook(title: String, folder: String, langs: List<String>) {

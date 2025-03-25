@@ -110,7 +110,8 @@ fun createEbookDialog(
                             ) {
                                 Checkbox(
                                     checked = checkedStates[lang] ?: false,
-                                    onCheckedChange = { isChecked -> checkedStates[lang] = isChecked }
+                                    onCheckedChange = { isChecked -> checkedStates[lang] = isChecked },
+                                    colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
                                 )
                                 Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
                             }

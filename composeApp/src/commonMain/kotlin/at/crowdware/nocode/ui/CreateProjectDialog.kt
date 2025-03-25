@@ -49,9 +49,11 @@ fun createProjectDialog(
     onCheckAppChanged: (Boolean) -> Unit,
     app: Boolean,
     book: Boolean,
+    lang: String,
     onDismissRequest: () -> Unit,
-    onCreateRequest: () -> Unit
+    onCreateRequest: (List<String>) -> Unit
 ) {
+    val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
@@ -124,6 +126,25 @@ fun createProjectDialog(
                         )
                     }
                 }
+                val languageList = lang.split(",").map { it.trim() }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Languages")
+                Column {
+                    languageList.forEach { lang ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(4.dp)
+                        ) {
+                            Checkbox(
+                                checked = checkedStates[lang] ?: false,
+                                onCheckedChange = { isChecked -> checkedStates[lang] = isChecked },
+                                colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
+                            )
+                            Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -134,7 +155,11 @@ fun createProjectDialog(
             }
             Button(
                 enabled = (app || book) && name.text.isNotEmpty() && folder.text.isNotEmpty() && id.text.isNotEmpty(),
-                onClick = onCreateRequest,
+                onClick = {
+                    // Filtere nur die aktivierten Sprachen heraus und übergebe sie
+                    val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
+                    onCreateRequest(selectedLanguages)
+                },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = ExtendedTheme.colors.accentColor,
                     contentColor = ExtendedTheme.colors.onAccentColor

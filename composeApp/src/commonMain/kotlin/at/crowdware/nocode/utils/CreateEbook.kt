@@ -64,7 +64,7 @@ class CreateEbook {
                 writeContainer(tempDir)
                 writeMimetype(tempDir)
                 generatePackage(tempDir, book, guid, lang, langs.size > 1)
-                val toc = generateParts(tempDir, book, source, lang = lang, multiLang = langs.size > 1)
+                val toc = generateParts(tempDir, book, source, lang = lang)
                 generateToc(tempDir, book, toc, lang)
 
                 val files = getAllFiles(tempDir)
@@ -238,7 +238,8 @@ class CreateEbook {
             File(outputPath.toUri()).writeText(renderedXml, Charsets.UTF_8)
         }
 
-        fun generateParts(dir: File, book: Ebook, source: String, lang: String, multiLang: Boolean): List<Map<String, Any>> {
+        fun generateParts(dir: File, book: Ebook, source: String, lang: String): List<Map<String, Any>> {
+            println("generatePart: $lang")
             val toc = mutableListOf<Map<String, Any>>()
             val item = mutableMapOf<String, Any>(
                 "href" to "toc.xhtml",
@@ -249,9 +250,7 @@ class CreateEbook {
             toc.add(item)
 
             val path = Paths.get("").toAbsolutePath().toString()
-            var partsFolder = "parts"
-            if (multiLang)
-                partsFolder += "-" + lang
+            val partsFolder = "parts-$lang"
             for (part in book.parts) {
                 if (!part.pdfOnly) {
                     val context = mutableMapOf<String, Any>()

@@ -33,6 +33,7 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import kotlin.system.exitProcess
 
 actual fun getNodeType(path: String): NodeType {
     val file = File(path)
@@ -77,7 +78,7 @@ class DesktopProjectState : ProjectState() {
         }
 
         fun mapFileToTreeNode(file: File): TreeNode {
-            val allowedFolderNames = listOf("images", "videos", "sounds", "pages", "parts", "models","pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo")
+            val allowedFolderNames = listOf("images", "videos", "sounds", "models","pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo")
             val nodeType = getNodeType(file)
             val children = if (file.isDirectory) {
                 file.listFiles()
@@ -103,7 +104,7 @@ class DesktopProjectState : ProjectState() {
                 type = nodeType,
                 children = statefulChildren
             )
-            if (node.title.value == "pages" || node.title.value == "pages-en" || node.title.value == "pages-es" || node.title.value == "pages-pt" || node.title.value == "pages-fr" || node.title.value == "pages-eo") {
+            if ( node.title.value == "pages-en" || node.title.value == "pages-es" || node.title.value == "pages-pt" || node.title.value == "pages-fr" || node.title.value == "pages-eo") {
                 // TODO, pageNode will be overridden all the time
                 pageNode = node
             } else if (node.title.value == "images") {
@@ -112,7 +113,7 @@ class DesktopProjectState : ProjectState() {
                 videosNode = node
             } else if (node.title.value == "sounds") {
                 soundsNode = node
-            } else if (node.title.value == "parts") {
+            } else if (node.title.value.startsWith("parts")) {
                 partsNode = node
             } else if (node.title.value == "models") {
                 modelsNode = node
@@ -127,7 +128,7 @@ class DesktopProjectState : ProjectState() {
             ?.filter {
                 it.name != ".DS_Store" &&
                         !it.name.endsWith(".py") &&
-                        (it.isDirectory && it.name in listOf("pages", "parts", "images", "sounds", "videos", "models", "textures", "pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo"  )) ||
+                        (it.isDirectory && it.name in listOf( "images", "sounds", "videos", "models", "textures", "pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo"  )) ||
                         (it.isFile && it.name in listOf("app.sml", "book.sml"))
             }
             ?.map { mapFileToTreeNode(it) }
@@ -150,21 +151,34 @@ class DesktopProjectState : ProjectState() {
 
         treeData = sortedNodes.toList()
         folder = path
-
+        val supportedLanguages = listOf("de", "en", "es", "pt", "fr", "eo")
         // app.sml load and parse
         val appFile =  File("$folder/app.sml")
         if (appFile.exists()) {
             loadApp()
-            // TODO use localized path, instead of pages use pages-de for example
-            LoadFile("$folder/pages/home.sml")
+
+            for (lang in supportedLanguages) {
+                val langDir = File(folder, "pages-$lang")
+                val homeFile = File(langDir, "home.sml")
+                if (homeFile.exists()) {
+                    LoadFile("$folder/pages-$lang/home.sml")
+                    break
+                }
+            }
         }
 
         // book.sml load and parse
         val bookFile = File("$folder/book.sml")
         if(bookFile.exists()) {
             loadBook()
-            // TODO use localized path, instead of pages use pages-de for example
-            LoadFile("$folder/parts/home.md")
+            for (lang in supportedLanguages) {
+                val langDir = File(folder, "parts-$lang")
+                val homeFile = File(langDir, "home.md")
+                if (homeFile.exists()) {
+                    LoadFile("$folder/parts-$lang/home.md")
+                    break
+                }
+            }
         }
     }
 
@@ -198,13 +212,16 @@ class DesktopProjectState : ProjectState() {
         appId: String,
         theme: String,
         createBook: Boolean,
-        createApp: Boolean
+        createApp: Boolean,
+        langs: List<String>
     ) {
         val dir = File("$path$name")
         dir.mkdirs()
         if(createApp) {
-            val pages = File("$path$name/pages")
-            pages.mkdirs()
+            for(lang in langs) {
+                val pages = File("$path$name/pages-$lang")
+                pages.mkdirs()
+            }
             val videos = File("$path$name/videos")
             videos.mkdirs()
             val sounds = File("$path$name/sounds")
@@ -223,23 +240,29 @@ class DesktopProjectState : ProjectState() {
                 appContent += writeDarkTheme()
             appContent += "// deployment start - don't edit here\n\n// deployment end\n}\n\n"
             app.writeText(appContent)
-
-            val home = File("$path$name/pages/home.sml")
-            home.writeText("Page {\n\tpadding: \"8\"\n\n\tColumn {\n\t\tpadding: \"8\"\n\n\t\tText { text: \"Home\" }\n\t}\n}\n")
-            println("create: $path, $name")
+            for(lang in langs) {
+                val home = File("$path$name/pages-$lang/home.sml")
+                home.writeText("Page {\n\tpadding: \"8\"\n\n\tColumn {\n\t\tpadding: \"8\"\n\n\t\tText { text: \"Home\" }\n\t}\n}\n")
+                println("create: $path, $name")
+            }
             copyResourceToFile("python/server.py", "$path/$name/server.py")
             copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
             copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
         }
 
         if (createBook) {
-            val parts = File("$path$name/parts")
-            parts.mkdirs()
-            val homemd = File("$path$name/parts/home.md")
-            homemd.writeText("# BookTitle\nLorem ipsum dolor\n")
-
+            var booklang = ""
+            for(lang in langs) {
+                val pages = File("$path$name/parts-$lang")
+                pages.mkdirs()
+                val homemd = File("$path$name/parts-$lang/home.md")
+                homemd.writeText("# BookTitle\nLorem ipsum dolor\n")
+                if (booklang.length > 0)
+                    booklang += ","
+                booklang += lang
+            }
             val book = File("$path$name/book.sml")
-            var bookContent = "Ebook {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"Epub3\"\n\tcreator: \"\"\n\tlanguage: \"en\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
+            var bookContent = "Ebook {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"Epub3\"\n\tcreator: \"\"\n\tlanguage: \"$booklang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
             book.writeText(bookContent)
         }
 
