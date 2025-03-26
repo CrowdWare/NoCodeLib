@@ -38,51 +38,30 @@ fun createHTMLDialog(
     onDismissRequest: () -> Unit,
     onCreateRequest: () -> Unit
 ) {
-    if(GlobalAppState.appState?.licenseType == LicenseType.UNDEFINED) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "License")
-            },
-            text = {
-                Column {
-                    Text(text = "No License key entered.\nPlease open settings and enter a valid license key.\nYou can get the license key on our website.")
-                    ClickableText(text = "https://freebook.crowdware.at/abo.html", url = "https://freebook.crowdware.at/abo.html")
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text("Cancel")
-                }
-            })
-    } else {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "Create HTML")
-            },
-            text = {
-                InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    enabled = folder.text.isNotEmpty(),
-                    onClick = onCreateRequest,
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = ExtendedTheme.colors.accentColor,
-                        contentColor = ExtendedTheme.colors.onAccentColor
-                    )
-                ) {
-                    Text("Create")
-                }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(text = "Create HTML")
+        },
+        text = {
+            InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismissRequest
+            ) {
+                Text("Cancel")
             }
-        )
-    }
+            Button(
+                enabled = folder.text.isNotEmpty(),
+                onClick = onCreateRequest,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = ExtendedTheme.colors.accentColor,
+                    contentColor = ExtendedTheme.colors.onAccentColor
+                )
+            ) {
+                Text("Create")
+            }
+        }
+    )
 }

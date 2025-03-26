@@ -34,8 +34,6 @@ import java.io.InputStream
 fun aboutDialog(appName: String, version: String,
     onDismissRequest: () -> Unit,
 ) {
-    GlobalAppState.appState?.licenseType
-
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
@@ -61,18 +59,6 @@ fun aboutDialog(appName: String, version: String,
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("All rights reserved.", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface)
                     Spacer(modifier = Modifier.height(16.dp))
-                    if(GlobalAppState.appState?.licenseType != LicenseType.UNDEFINED) {
-                        Text("License", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        var licenseString = when (GlobalAppState.appState?.licenseType) {
-                            LicenseType.FREE -> "FREE"
-                            LicenseType.PRO -> "PRO " +  GlobalAppState.appState?.license_date
-                            LicenseType.STARTER -> "STARTER " +  GlobalAppState.appState?.license_date
-                            LicenseType.EXPIRED -> "Expired"
-                            else -> {""}
-                        }
-                        Text(licenseString, style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface)
-                    }
                 }
             }
 

@@ -180,8 +180,8 @@ class CreateEbook {
             context["bookLink"] = book.bookLink
             context["license"] = book.license
             context["licenseLink"] = book.licenseLink
-            context["generator"] = "FreeBookDesigner v." + Version.version
-            context["license"] = "Non-commercial license"
+            context["generator"] = "NoCodeDesigner v." + Version.version
+            context["license"] = "GPL-3 license"
 
             val items = mutableListOf<Map<String, String>>()
             val spine = mutableListOf<String>()
@@ -322,7 +322,7 @@ class CreateEbook {
             context["creator"] = book.creator
             context["creatorLink"] = book.creatorLink
             context["bookLink"] = book.bookLink
-            context["generator"] = "FreeBookDesigner v." + Version.version
+            context["generator"] = "NoCodeDesigner v." + Version.version
             if (lang == "de") {
                 if (currentProject != null) {
                     context["publishedby"] = "Publiziert von"
@@ -332,39 +332,25 @@ class CreateEbook {
                 context["from"] = "von"
                 context["softwareLicense"] = "Software Lizenz"
                 context["licenseTextA"] = "Dieses Buch wurde mit der"
-                if (GlobalAppState.appState?.licenseType == LicenseType.FREE) {
-                    context["isLicensedUnder"] = "ist lizenziert unter einer nicht-kommerziellen Lizenz."
-                    context["license"] = "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
-                    context["licenseLink"] = "https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1"
-                    context["licenseTextB"] = "nicht-kommerziellen Version"
-                } else {
-                    context["isLicensedUnder"] = "ist lizenziert unter einer kommerziellen Lizenz."
-                    context["license"] = book.license
-                    context["licenseLink"] = book.licenseLink
-                    context["licenseTextB"] = "kommerziellen Version"
-                }
+                context["isLicensedUnder"] = "ist lizenziert unter einer nicht-kommerziellen Lizenz."
+                context["license"] = "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
+                context["licenseLink"] = "https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1"
+                context["licenseTextB"] = "Open Source Version"
                 context["licenseTextC"] = "des"
                 context["licenseTextD"] = " erstellt."
             } else {
                 if (currentProject != null) {
                     context["publishedby"] = "Published by"
-                    context["publisher"] = GlobalAppState.appState?.license_publisher.toString()
+                    context["publisher"] = "CrowdWare"
                 }
                 context["licenseInformation"] = "License information"
                 context["from"] = "from"
                 context["softwareLicense"] = "Software License"
                 context["licenseTextA"] = "This book has been created with the"
-                if (GlobalAppState.appState?.licenseType == LicenseType.FREE) {
-                    context["isLicensedUnder"] = "is licensed under a non-commercial license."
-                    context["license"] = "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
-                    context["licenseLink"] = "https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1"
-                    context["licenseTextB"] = "non-commercial version"
-                } else {
-                    context["isLicensedUnder"] = "is licensed under a commercial license."
-                    context["license"] = book.license
-                    context["licenseLink"] = book.licenseLink
-                    context["licenseTextB"] = "commercial version"
-                }
+                context["isLicensedUnder"] = "is licensed under a non-commercial license."
+                context["license"] = "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
+                context["licenseLink"] = "https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1"
+                context["licenseTextB"] = "open source version"
                 context["licenseTextC"] = "of the"
                 context["licenseTextD"] = "."
             }

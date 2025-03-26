@@ -50,52 +50,8 @@ class AppState() {
     var lastProject by mutableStateOf("")
     var theme by mutableStateOf("")
     var license by mutableStateOf("")
-    var licenseType by mutableStateOf(LicenseType.UNDEFINED)
     var license_publisher by mutableStateOf("")
     var license_date by mutableStateOf("")
-
-    fun initLicense() {
-        var data = ""
-        if (license.isEmpty()) {
-            licenseType = LicenseType.UNDEFINED
-            println("license is empty")
-            return
-        }
-        try {
-            println("license: $license")
-            data = decryptStringGCM(license.trim())
-        } catch (e: Exception) {
-            e.printStackTrace()
-            licenseType = LicenseType.UNDEFINED
-            return
-        }
-        val parts = data.split("|")
-        val type = try {
-            LicenseType.valueOf(parts[0])
-        } catch (e: IllegalArgumentException) {
-            println("Exception: ${e.message}")
-            licenseType = LicenseType.UNDEFINED
-            return
-        }
-        license_publisher = parts[1]
-        license_date = parts[2]
-
-        println("lic: $license_publisher $license_date ${licenseType}")
-        // Überprüfen, ob die Lizenz abgelaufen ist
-        val licenseDate = try {
-            LocalDate.parse(license_date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        } catch (e: DateTimeParseException) {
-            licenseType = LicenseType.EXPIRED
-            return
-        }
-
-        if (licenseType != LicenseType.FREE && licenseDate.isBefore(LocalDate.now())) {
-            licenseType = LicenseType.EXPIRED
-            return
-        }
-        licenseType = type
-    }
-
 
     // Helper function to convert hex string to byte array
     fun hexStringToByteArray(s: String): ByteArray {
@@ -105,38 +61,6 @@ class AppState() {
             data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
         }
         return data
-    }
-
-    fun decryptStringGCM(encryptedHex: String): String {
-        try {
-            // Entschlüsselten Hex-String in Byte-Array konvertieren
-            val encryptedData = hexStringToByteArray(encryptedHex)
-
-            // IV ist in den ersten 12 Bytes
-            val iv = encryptedData.copyOfRange(0, 12)
-
-            // Ciphertext enthält den Rest (inklusive Tag)
-            val cipherText = encryptedData.copyOfRange(12, encryptedData.size)
-
-            // AES Schlüssel vorbereiten
-            val secretKey = SecretKey.SECRET_KEY
-            val secretKeySpec = SecretKeySpec(secretKey.toByteArray(Charsets.UTF_8), "AES")
-
-            // GCM Parameter mit IV und Tag-Länge
-            val gcmParameterSpec = GCMParameterSpec(128, iv)
-
-            // Cipher für AES/GCM/NoPadding initialisieren
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmParameterSpec)
-
-            // Entschlüsseln
-            val decryptedData = cipher.doFinal(cipherText)
-
-            // Ergebnis als String zurückgeben
-            return String(decryptedData, Charsets.UTF_8)
-        } catch (e: Exception) {
-            throw e
-        }
     }
 }
 

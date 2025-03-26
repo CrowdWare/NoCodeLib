@@ -47,101 +47,62 @@ fun createEbookDialog(
     //onCreateRequest: () -> Unit
     onCreateRequest: (List<String>) -> Unit
 ) {
-    if(GlobalAppState.appState?.licenseType == LicenseType.UNDEFINED) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "License")
-            },
-            text = {
-                Column {
-                    Text(text = "No License key entered.\nPlease open settings and enter a valid license key.\nYou can get the license key on our website.")
-                    ClickableText(text = "https://freebook.crowdware.at/abo.html", url = "https://freebook.crowdware.at/abo.html")
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text("Cancel")
-                }
-            })
-    } else if (GlobalAppState.appState?.licenseType == LicenseType.EXPIRED) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "License expired")
-            },
-            text = {
-                Column {
-                    Text(text = "License expired.\nPlease open settings and enter a valid license key.\nYou can get a new license key on our website.")
-                    ClickableText(text = "https://freebook.crowdware.at/abo.html", url = "https://freebook.crowdware.at/abo.html")
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text("Cancel")
-                }
-            })
-    } else {
-        val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "Create Ebook")
-            },
-            text = {
-                Column {
-                    InputRow(label = "Name:", value = name, onValueChange = onNameChange)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
 
-                    val languageList = lang.split(",").map { it.trim() }
+    val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(text = "Create Ebook")
+        },
+        text = {
+            Column {
+                InputRow(label = "Name:", value = name, onValueChange = onNameChange)
+                Spacer(modifier = Modifier.height(16.dp))
+                InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Languages")
-                    Column {
-                        languageList.forEach { lang ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(4.dp)
-                            ) {
-                                Checkbox(
-                                    checked = checkedStates[lang] ?: false,
-                                    onCheckedChange = { isChecked -> checkedStates[lang] = isChecked },
-                                    colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
-                                )
-                                Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
-                            }
+                val languageList = lang.split(",").map { it.trim() }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Languages")
+                Column {
+                    languageList.forEach { lang ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(4.dp)
+                        ) {
+                            Checkbox(
+                                checked = checkedStates[lang] ?: false,
+                                onCheckedChange = { isChecked -> checkedStates[lang] = isChecked },
+                                colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
+                            )
+                            Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
                         }
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDismissRequest
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    enabled = name.text.isNotEmpty() && folder.text.isNotEmpty(),
-                    onClick = {
-                        // Filtere nur die aktivierten Sprachen heraus und übergebe sie
-                        val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
-                        onCreateRequest(selectedLanguages)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = ExtendedTheme.colors.accentColor,
-                        contentColor = ExtendedTheme.colors.onAccentColor
-                    )
-                ) {
-                    Text("Create")
-                }
             }
-        )
-    }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismissRequest
+            ) {
+                Text("Cancel")
+            }
+            Button(
+                enabled = name.text.isNotEmpty() && folder.text.isNotEmpty(),
+                onClick = {
+                    // Filtere nur die aktivierten Sprachen heraus und übergebe sie
+                    val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
+                    onCreateRequest(selectedLanguages)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = ExtendedTheme.colors.accentColor,
+                    contentColor = ExtendedTheme.colors.onAccentColor
+                )
+            ) {
+                Text("Create")
+            }
+        }
+    )
 }
 
 @Composable

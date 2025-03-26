@@ -81,7 +81,6 @@ abstract class ProjectState {
     var isCreateEbookVisible by mutableStateOf(false)
     var isCreateHTMLVisible by mutableStateOf(false)
     var isCreateCourseVisible by mutableStateOf(false)
-    var isSettingsVisible by mutableStateOf(false)
     var isAboutDialogOpen by  mutableStateOf(false)
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
