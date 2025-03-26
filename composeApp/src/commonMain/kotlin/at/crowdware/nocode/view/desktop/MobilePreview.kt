@@ -27,10 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -314,7 +311,7 @@ fun renderMarkdown(element: MarkdownElement, lang: String) {
 
 @Composable
 fun renderButton(modifier: Modifier, element: ButtonElement) {
-    var colors = ButtonDefaults.buttonColors()
+    var colors: ButtonColors
     if(element.color.isNotEmpty() && element.backgroundColor.isNotEmpty())
         colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor(element.backgroundColor), contentColor = hexToColor(element.color))
     else if(element.color.isNotEmpty())
@@ -324,9 +321,9 @@ fun renderButton(modifier: Modifier, element: ButtonElement) {
     else
         colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor("primary"), contentColor = hexToColor("onPrimary"))
     Button(
-        modifier = Modifier
-            .then(if (element.width > 0) Modifier.width(element.width.dp) else modifier)
-            .then(if(element.height > 0) Modifier.height(element.height.dp) else modifier),
+        modifier = modifier
+            .then(if (element.width > 0) Modifier.width(element.width.dp) else Modifier.fillMaxWidth())
+            .then(if (element.height > 0) Modifier.height(element.height.dp) else Modifier) ,
         colors = colors,
         onClick =  { handleButtonClick(element.link) }
     ) {
@@ -367,6 +364,21 @@ fun renderRow(element: RowElement, lang: String) {
 }
 
 @Composable
+fun renderBox(element: BoxElement, lang: String) {
+    Box(modifier = Modifier.padding(
+        top = element.padding.top.dp,
+        bottom = element.padding.bottom.dp,
+        start = element.padding.left.dp,
+        end = element.padding.right.dp)
+        .then(if(element.height > 0) Modifier.height(element.height.dp) else Modifier.fillMaxHeight())
+        .then(if(element.width > 0) Modifier.width(element.width.dp) else Modifier.fillMaxWidth())){
+        for (childElement in element.uiElements) {
+            RenderUIElement(childElement, lang)
+        }
+    }
+}
+
+@Composable
 fun renderLazyColumn(modifier: Modifier, element: LazyColumnElement, lang: String) {
     Column(modifier = modifier) {
         for (childElement in element.uiElements) {
@@ -385,7 +397,7 @@ fun renderLazyRow(element: LazyRowElement, lang: String) {
 }
 
 @Composable
-fun RenderUIElement(element: UIElement, lang: String) {
+fun RenderUIElement(element: UIElement, lang: String, inBox: Boolean = false) {
     when (element) {
         is TextElement -> {
             renderText(element)
@@ -401,6 +413,9 @@ fun RenderUIElement(element: UIElement, lang: String) {
         }
         is RowElement -> {
             renderRow(element, lang)
+        }
+        is BoxElement -> {
+            renderBox(element, lang)
         }
         is LazyColumnElement -> {
             renderLazyColumn(modifier = Modifier, element = element, lang = lang)
@@ -453,6 +468,9 @@ fun RowScope.RenderUIElement(element: UIElement, lang: String) {
         }
         is RowElement -> {
             renderRow(element, lang)
+        }
+        is BoxElement -> {
+            renderBox(element, lang)
         }
         is LazyColumnElement -> {
             renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
@@ -528,8 +546,23 @@ fun RowScope.RenderUIElement(element: UIElement, lang: String) {
     }
 }
 
+fun String.toAlignment(): Alignment {
+    return when (this) {
+        "topStart" -> Alignment.TopStart
+        "topCenter" -> Alignment.TopCenter
+        "topEnd" -> Alignment.TopEnd
+        "centerStart" -> Alignment.CenterStart
+        "center" -> Alignment.Center
+        "centerEnd" -> Alignment.CenterEnd
+        "bottomStart" -> Alignment.BottomStart
+        "bottomCenter" -> Alignment.BottomCenter
+        "bottomEnd" -> Alignment.BottomEnd
+        else -> Alignment.TopStart // Default fallback
+    }
+}
+
 @Composable
-fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
+fun BoxScope.RenderUIElement(element: UIElement, lang: String) {
     when (element) {
         is TextElement -> {
            renderText(element)
@@ -538,13 +571,82 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
             renderMarkdown(element, lang)
         }
         is ButtonElement -> {
-            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.fillMaxWidth(), element)
+            renderButton(modifier = Modifier, element)
         }
         is ColumnElement -> {
-            renderColumn(if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element, lang)
+            renderColumn(modifier = Modifier, element, lang)
         }
         is RowElement -> {
             renderRow(element, lang)
+        }
+        is BoxElement -> {
+            renderBox(element, lang)
+        }
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element, lang)
+        }
+        is ImageElement -> {
+            val alignment = if (element.align.isNotEmpty()) element.align.toAlignment() else Alignment.TopStart
+            dynamicImageFromAssets(
+                modifier = Modifier.align(alignment),
+                element = element
+            )
+        }
+        is AsyncImageElement -> {
+            asyncImage(modifier = Modifier, "", element.scale, "", element.width, element.height)
+        }
+        is SoundElement -> {
+            dynamicSoundfromAssets(element.src)
+        }
+        is SpacerElement -> {
+            var mod = Modifier as Modifier
+
+            if (element.amount >0 )
+                mod = mod.then(Modifier.height(element.amount.dp))
+            Spacer(modifier = mod)
+        }
+        is VideoElement -> {
+            if (element.src.startsWith("http")) {
+                dynamicVideofromUrl(modifier = Modifier)
+            } else {
+                dynamicVideofromAssets(modifier = Modifier, element.src)
+            }
+        }
+        is YoutubeElement -> {
+            dynamicYoutube(modifier = Modifier)
+        }
+        is SceneElement -> {
+            dynamicScene(modifier = Modifier, element.width, element.height)
+        }
+        else -> {
+            println("Unsupported element: $element")
+        }
+    }
+}
+
+@Composable
+fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
+    when (element) {
+        is TextElement -> {
+            renderText(element)
+        }
+        is MarkdownElement -> {
+            renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
+        }
+        is ButtonElement -> {
+            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat()) else Modifier, element)
+        }
+        is ColumnElement -> {
+            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
+        }
+        is RowElement -> {
+            renderRow(element, lang)
+        }
+        is BoxElement -> {
+            renderBox(element, lang)
         }
         is LazyColumnElement -> {
             renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
@@ -554,24 +656,24 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
         }
         is ImageElement -> {
             dynamicImageFromAssets(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
-                } else {
-                    Modifier
-                }, element
+                modifier = if (element.weight > 0) Modifier.weight(
+                    element.weight.toFloat()
+                ) else Modifier, element
             )
         }
         is AsyncImageElement -> {
-            asyncImage(modifier = if (element.weight > 0) { Modifier.weight(element.weight.toFloat()) } else { Modifier }, "", element.scale, "", element.width, element.height)
+            asyncImage(
+                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
+            )
         }
         is SoundElement -> {
-            at.crowdware.nocode.view.desktop.dynamicSoundfromAssets(element.src)
+            dynamicSoundfromAssets(element.src)
         }
         is SpacerElement -> {
             var mod = Modifier as Modifier
 
-            if (element.amount >0 )
-                mod = mod.then(Modifier.height(element.amount.dp))
+            if (element.amount > 0 )
+                mod = mod.then(Modifier.width(element.amount.dp))
             if (element.weight > 0.0)
                 mod = mod.then(Modifier.weight(element.weight.toFloat()))
 
@@ -579,7 +681,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
         }
         is VideoElement -> {
             if (element.src.startsWith("http")) {
-                at.crowdware.nocode.view.desktop.dynamicVideofromUrl(
+                dynamicVideofromUrl(
                     modifier = if (element.weight > 0) {
                         Modifier.weight(element.weight.toFloat())
                     } else {
@@ -587,7 +689,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
                     }
                 )
             } else {
-                at.crowdware.nocode.view.desktop.dynamicVideofromAssets(
+                dynamicVideofromAssets(
                     modifier = if (element.weight > 0) {
                         Modifier.weight(element.weight.toFloat())
                     } else {
@@ -597,7 +699,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
             }
         }
         is YoutubeElement -> {
-            at.crowdware.nocode.view.desktop.dynamicYoutube(
+            dynamicYoutube(
                 modifier = if (element.weight > 0) {
                     Modifier.weight(element.weight.toFloat())
                 } else {
@@ -606,7 +708,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
             )
         }
         is SceneElement -> {
-            at.crowdware.nocode.view.desktop.dynamicScene(
+            dynamicScene(
                 modifier = if (element.weight > 0) {
                     Modifier.weight(element.weight.toFloat())
                 } else {
@@ -619,6 +721,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
         }
     }
 }
+
 
 fun colorNameToHex(colorName: String): String {
     val currentProject = GlobalProjectState.projectState

@@ -261,6 +261,9 @@ sealed class UIElement {
         @IntAnnotation
         val height: Int,
 
+        @StringAnnotation("Use **align** to position the element within its parent Box. Possible values: `topStart`, `topCenter`, `topEnd`, `centerStart`, `center`, `centerEnd`, `bottomStart`, `bottomCenter`, `bottomEnd`.\nExample: **align: \"topEnd\"**")
+        val align: String,
+
         @LinkAnnotation
         val link: String) : UIElement()
 

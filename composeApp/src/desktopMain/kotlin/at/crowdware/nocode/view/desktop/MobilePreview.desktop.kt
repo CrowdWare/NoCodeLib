@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ImageBitmap
@@ -75,11 +76,9 @@ actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String
                 "none" -> ContentScale.None
                 else -> ContentScale.Fit
             },
-            //modifier = if(width == 0)(modifier.fillMaxWidth()) else (modifier.fillMaxWidth(width/100f))
             modifier = modifier
                 .then(if (width == 0) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(width / 100f))
                 .then(if (height == 0) Modifier.wrapContentHeight() else Modifier.fillMaxHeight(height / 100f))
-
         )
     } else {
         Text(text = "Image not found: ${src}", style = TextStyle(color = MaterialTheme.colors.onPrimary))

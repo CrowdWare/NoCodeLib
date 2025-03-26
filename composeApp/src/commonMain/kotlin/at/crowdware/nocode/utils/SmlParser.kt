@@ -304,7 +304,8 @@ fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIEleme
                             link = (properties["link"] as? PropertyValue.StringValue)?.value ?: "",
                             weight = (properties["weight"] as? PropertyValue.IntValue)?.value ?: 0,
                             height = (properties["height"] as? PropertyValue.IntValue)?.value ?: 0,
-                            width = (properties["width"] as? PropertyValue.IntValue)?.value ?: 0
+                            width = (properties["width"] as? PropertyValue.IntValue)?.value ?: 0,
+                            align = (properties["align"] as? PropertyValue.StringValue)?.value ?: "",
                         )
                         elements.add(img)
                     }
