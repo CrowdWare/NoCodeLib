@@ -116,7 +116,7 @@ fun loadAppState(path: String) {
         appState.lastProject = ""
         appState.windowX = 100
         appState.windowY = 100
-        appState.windowWidth = 1024
+        appState.windowWidth = 1400
         appState.windowHeight = 768
     }
     

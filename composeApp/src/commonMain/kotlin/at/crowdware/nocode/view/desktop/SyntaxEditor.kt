@@ -135,8 +135,8 @@ fun RowScope.syntaxEditor(
             }
         }
     } else {
-        Box(modifier = Modifier.fillMaxSize().weight(1F), contentAlignment = Alignment.Center) {
-            Text(text = "No file open, click a page or a part in the treeview on the left.")
+        Box(modifier = Modifier.fillMaxSize().weight(1F).padding(8.dp), contentAlignment = Alignment.Center) {
+            Text(text = "No file open, click a page or a part in the treeview on the left if a project is open. If no project is open then create a new project clicking the plus icon on the left.")
         }
     }
 }
