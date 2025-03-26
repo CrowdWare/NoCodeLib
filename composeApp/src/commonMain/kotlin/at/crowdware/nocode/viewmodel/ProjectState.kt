@@ -98,9 +98,11 @@ abstract class ProjectState {
     lateinit var texturesNode: TreeNode
     var app: App? by mutableStateOf(null)
     var book: Ebook? by mutableStateOf(null)
+    var site: Site? by mutableStateOf(null)
     var page: Page? by mutableStateOf(null)
     var cachedPage: Page? by mutableStateOf(null)
 
+    abstract fun loadSite()
     abstract fun loadApp()
     abstract fun loadBook()
     abstract suspend fun loadProjectFiles(path: String, uuid: String, pid: String)
@@ -122,15 +124,15 @@ abstract class ProjectState {
     }
 
     fun createHTML(folder: String) {
-        app!!.deployDirHtml  = folder
-        save(app!!)
-        app?.let { CreateHTML.start(folder, this.folder, it) }
+        site!!.deployDirHtml  = folder
+        save(site!!)
+        site?.let { CreateHTML.start(folder, this.folder, it) }
     }
 
     fun createCourse(folder: String, lang: String) {
-        app!!.deployDirHtml  = folder
-        save(app!!)
-        app?.let { CreateCourse.start(folder, this.folder, it, lang) }
+        site!!.deployDirHtml  = folder
+        save(site!!)
+        site?.let { CreateCourse.start(folder, this.folder, it, lang) }
     }
 
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
@@ -182,6 +184,56 @@ abstract class ProjectState {
         return sml
     }
 
+    fun save(site: Site) {
+        val file = File(folder, "site.sml")
+        var sml = "Site {\n"
+        sml += "\tsmlVersion: \"${site.smlVersion}\"\n"
+        sml += "\tname: \"${site.name}\"\n"
+        sml += "\ttheme: \"${site.theme}\"\n"
+        sml += "\tdescription: \"${site.description}\"\n"
+        sml += "\tdeployDirHtml: \"${site.deployDirHtml}\"\n"
+        sml += "\tauthor: \"${site.author}\"\n"
+        sml += "\tauthorBio: \"${site.authorBio}\"\n"
+        sml += "\n"
+        if (site.course.topics.isNotEmpty()) {
+            sml += saveCourse(site.course)
+        }
+        sml += "\n"
+        sml += "\tTheme {\n"
+        sml += "\t\tprimary: \"" + site.theme.primary.toString() + "\"\n"
+        sml += "\t\tonPrimary: \"" + site.theme.onPrimary.toString() + "\"\n"
+        sml += "\t\tprimaryContainer: \"" + site.theme.primaryContainer.toString() + "\"\n"
+        sml += "\t\tonPrimaryContainer: \"" + site.theme.onPrimaryContainer.toString() + "\"\n"
+        sml += "\t\tsecondary: \"" + site.theme.secondary.toString() + "\"\n"
+        sml += "\t\tonSecondary: \"" + site.theme.onSecondary.toString() + "\"\n"
+        sml += "\t\tsecondaryContainer: \"" + site.theme.secondaryContainer.toString() + "\"\n"
+        sml += "\t\tonSecondaryContainer: \"" + site.theme.onSecondaryContainer.toString() + "\"\n"
+        sml += "\t\ttertiary: \"" + site.theme.tertiary.toString() + "\"\n"
+        sml += "\t\tonTertiary: \"" + site.theme.onTertiary.toString() + "\"\n"
+        sml += "\t\ttertiaryContainer: \"" + site.theme.tertiaryContainer.toString() + "\"\n"
+        sml += "\t\tonTertiaryContainer: \"" + site.theme.onTertiaryContainer.toString() + "\"\n"
+        sml += "\t\terror: \"" + site.theme.error.toString() + "\"\n"
+        sml += "\t\terrorContainer: \"" + site.theme.errorContainer.toString() + "\"\n"
+        sml += "\t\tonError: \"" + site.theme.onError.toString() + "\"\n"
+        sml += "\t\tonErrorContainer: \"" + site.theme.onErrorContainer.toString() + "\"\n"
+        sml += "\t\tbackground: \"" + site.theme.background.toString() + "\"\n"
+        sml += "\t\tonBackground: \"" + site.theme.onBackground.toString() + "\"\n"
+        sml += "\t\tsurface: \"" + site.theme.surface.toString() + "\"\n"
+        sml += "\t\tonSurface: \"" + site.theme.onSurface.toString() + "\"\n"
+        sml += "\t\tsurfaceVariant: \"" + site.theme.surfaceVariant.toString() + "\"\n"
+        sml += "\t\tonSurfaceVariant: \"" + site.theme.onSurfaceVariant.toString() + "\"\n"
+        sml += "\t\toutline: \"" + site.theme.outline.toString() + "\"\n"
+        sml += "\t\tinverseOnSurface: \"" + site.theme.inverseOnSurface.toString() + "\"\n"
+        sml += "\t\tinverseSurface: \"" + site.theme.inverseSurface.toString() + "\"\n"
+        sml += "\t\tinversePrimary: \"" + site.theme.inversePrimary.toString() + "\"\n"
+        sml += "\t\tsurfaceTint: \"" + site.theme.surfaceTint.toString() + "\"\n"
+        sml += "\t\toutlineVariant: \"" + site.theme.outlineVariant.toString() + "\"\n"
+        sml += "\t\tscrim: \"" + site.theme.scrim.toString() + "\"\n"
+        sml += "\t}\n"
+        sml += "}\n"
+        file.writeText(sml)
+    }
+
     fun save(app: App) {
         // TODO: Navigation is missing, but not used yet
         val file = File(folder, "app.sml")
@@ -191,13 +243,8 @@ abstract class ProjectState {
         sml += "\tdescription: \"${app.description}\"\n"
         sml += "\tid: \"${app.id}\"\n"
         sml += "\ticon: \"${app.icon}\"\n"
-        sml += "\tdeployDirHtml: \"${app.deployDirHtml}\"\n"
         sml += "\tauthor: \"${app.author}\"\n"
-        sml += "\tauthorBio: \"${app.authorBio}\"\n"
         sml += "\n"
-        if (app?.course != null) {
-            sml += saveCourse(app!!.course!!)
-        }
         sml += "\tTheme {\n"
         sml += "\t\tprimary: \"" + app.theme.primary.toString() + "\"\n"
         sml += "\t\tonPrimary: \"" + app.theme.onPrimary.toString() + "\"\n"

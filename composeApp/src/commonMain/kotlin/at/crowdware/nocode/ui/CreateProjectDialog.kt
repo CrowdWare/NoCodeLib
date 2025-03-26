@@ -134,7 +134,7 @@ fun createProjectDialog(
                 }
 
                 // Theme, Languages etc. wie gehabt ...
-                if (internalSelectedType == "App") {
+                if (internalSelectedType == "App" || internalSelectedType == "Website") {
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text("Theme:", color = MaterialTheme.colors.onPrimary,

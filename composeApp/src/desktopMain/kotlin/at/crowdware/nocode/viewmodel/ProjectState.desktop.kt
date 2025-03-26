@@ -28,6 +28,7 @@ import at.crowdware.nocode.model.*
 import java.io.File
 import at.crowdware.nocode.utils.parseApp
 import at.crowdware.nocode.utils.parseBook
+import at.crowdware.nocode.utils.parseSite
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
@@ -152,6 +153,21 @@ class DesktopProjectState : ProjectState() {
         treeData = sortedNodes.toList()
         folder = path
         val supportedLanguages = listOf("de", "en", "es", "pt", "fr", "eo")
+
+        val siteFile = File("$folder/site.sml")
+        if (siteFile.exists()) {
+            loadSite()
+
+            for (lang in supportedLanguages) {
+                val langDir = File(folder, "pages-$lang")
+                val homeFile = File(langDir, "home.sml")
+                if (homeFile.exists()) {
+                    LoadFile("$folder/pages-$lang/home.sml")
+                    break
+                }
+            }
+        }
+
         // app.sml load and parse
         val appFile =  File("$folder/app.sml")
         if (appFile.exists()) {
@@ -179,6 +195,17 @@ class DesktopProjectState : ProjectState() {
                     break
                 }
             }
+        }
+    }
+
+    override fun loadSite() {
+        val siteFile = File("$folder/site.sml")
+        try {
+            val uiSml = siteFile.readText()
+            val result = parseSite(uiSml)
+            site = result.first
+        } catch (e: Exception) {
+            println("Error parsing site.sml: ${e.message}")
         }
     }
 
@@ -235,18 +262,23 @@ class DesktopProjectState : ProjectState() {
             textures.mkdirs()
             createParts(path, name, langs)
             val app = File("$path$name/app.sml")
-            var appContent = "App {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\tid: \"$appId.$name\"\n\ticon: \"icon.png\"\n\n"
-            if(theme == "Light")
-                appContent += writeLightTheme()
+            var appContent = """
+                App {
+                    smlVersion: "1.1"
+                    name: "$name"
+                    version: "1.0"
+                    id: "$appId.$name"
+                    icon: "icon.png"
+
+                """.trimIndent()
+
+            appContent += if (theme == "Light")
+                writeLightTheme()
             else
-                appContent += writeDarkTheme()
+                writeDarkTheme()
             appContent += "// deployment start - don't edit here\n\n// deployment end\n}\n\n"
             app.writeText(appContent)
-            for(lang in langs) {
-                val home = File("$path$name/pages-$lang/home.sml")
-                home.writeText("Page {\n\tpadding: \"8\"\n\n\tColumn {\n\t\tpadding: \"8\"\n\n\t\tText { text: \"Home in $lang\" }\n\t}\n}\n")
-                println("create: $path, $name")
-            }
+            createPages(path, name, langs)
             copyResourceToFile("python/server.py", "$path/$name/server.py")
             copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
             copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
@@ -255,15 +287,56 @@ class DesktopProjectState : ProjectState() {
         if (createBook) {
             val lang = createParts(path, name, langs)
             val book = File("$path$name/book.sml")
-            var bookContent = "Ebook {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"Epub3\"\n\tcreator: \"\"\n\tlanguage: \"$lang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
+            val bookContent = """
+                Ebook {
+                    smlVersion: "1.1"
+                    name: "$name"
+                    version: "1.0"
+                    theme: "Epub3"
+                    creator: ""
+                    language: "$lang"
+
+                    Part {
+                        src: "home.md"
+                    }
+                }
+            """.trimIndent()
             book.writeText(bookContent)
         }
 
         if (createWebsite) {
-            val lang = createParts(path, name, langs)
+            for(lang in langs) {
+                val pages = File("$path$name/pages-$lang")
+                pages.mkdirs()
+            }
+            val videos = File("$path$name/videos")
+            videos.mkdirs()
+            val sounds = File("$path$name/sounds")
+            sounds.mkdirs()
+            val images = File("$path$name/images")
+            images.mkdirs()
+
             val site = File("$path$name/site.sml")
-            var siteContent = "Site {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"bootstrap\"\n\tcreator: \"\"\n\tlanguage: \"$lang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
+              var siteContent = """
+                Site {
+                    smlVersion: "1.1"
+                    name: "$name"
+                    version: "1.0"
+                    template: "bootstrap"
+                    creator: ""
+                    language: "$lang"
+                    deployDirHtml: ""
+                    author: ""
+                    authorBio: ""
+                
+            """.trimIndent()
+            siteContent += if (theme == "Light")
+                writeLightTheme()
+            else
+                writeDarkTheme()
+            siteContent += "}\n\n"
             site.writeText(siteContent)
+            createPages(path, name, langs)
         }
         val images = File("$path$name/images")
         images.mkdirs()
@@ -272,7 +345,7 @@ class DesktopProjectState : ProjectState() {
     }
 }
 
-fun createParts( path: String, name: String, langs: List<String>): String {
+fun createParts( path: String, name: String, langs: List<String>) {
     var booklang = ""
     for(lang in langs) {
         val pages = File("$path$name/parts-$lang")
@@ -283,7 +356,36 @@ fun createParts( path: String, name: String, langs: List<String>): String {
             booklang += ","
         booklang += lang
     }
-    return booklang
+}
+
+val welcomeTranslations = mapOf(
+    "en" to "Welcome to the home screen",
+    "de" to "Willkommen auf der Startseite",
+    "pt" to "Bem-vindo à tela inicial",
+    "fr" to "Bienvenue sur l'écran d'accueil",
+    "eo" to "Bonvenon al la hejmekrano",
+    "es" to "Bienvenido a la pantalla principal"
+)
+
+fun createPages(path: String, name: String, langs: List<String>) {
+    for (lang in langs) {
+        val home = File("$path$name/pages-$lang/home.sml")
+        val welcomeText = welcomeTranslations[lang] ?: "Welcome Home" // fallback
+
+        val homeContent = """
+            Page {
+                padding: "8"
+
+                Column {
+                    padding: "8"
+
+                    Markdown { text: "# $welcomeText" }
+                }
+            }
+            """.trimIndent()
+
+        home.writeText(homeContent)
+    }
 }
 
 fun writeDarkTheme(): String {

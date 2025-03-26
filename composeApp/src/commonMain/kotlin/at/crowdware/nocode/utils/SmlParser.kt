@@ -81,6 +81,81 @@ object SmlGrammar : Grammar<List<Any>>() {
     override val rootParser: Parser<List<Any>> = (oneOrMore(element) and ignoredParser).map { (elements, _) -> elements }
 }
 
+fun deserializeSite(parsedResult: List<Any>): Site {
+    val site = Site()
+
+    parsedResult.forEach { tuple ->
+        when (tuple) {
+            is Tuple7<*, *, *, *, *, *, *> -> {
+                val elementName = (tuple.t2 as? TokenMatch)?.text
+                val properties = extractProperties(tuple)
+
+                when (elementName) {
+                    "Site" -> {
+                        site.name = (properties["name"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.author = (properties["author"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.description = (properties["description"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.smlVersion = (properties["smlVersion"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.deployDirHtml = (properties["deployDirHtml"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.authorBio = (properties["authorBio"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.template = (properties["template"] as? PropertyValue.StringValue)?.value ?: "bootstrap"
+                        parseNestedSiteElements(extractChildElements(tuple), site)
+                    }
+                }
+            }
+        }
+    }
+    return site
+}
+
+fun parseNestedSiteElements(nestedElements: List<Any>, site: Site) {
+    nestedElements.forEach { element ->
+        when (element) {
+            is Tuple7<*, *, *, *, *, *, *> -> {
+                val elementName = (element.t2 as? TokenMatch)?.text
+                val properties = extractProperties(element)
+
+                when (elementName) {
+                    "Course" -> {
+                        parseCourse(extractChildElements(element), site.course)
+                    }
+                    "Theme" -> {
+                        site.theme.error = (properties["error"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.scrim = (properties["scrim"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onError = (properties["onError"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.background = (properties["background"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.errorContainer = (properties["errorContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.inverseOnSurface = (properties["inverseOnSurface"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.inversePrimary = (properties["inversePrimary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.inverseSurface = (properties["inverseSurface"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onBackground = (properties["onBackground"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onErrorContainer = (properties["onErrorContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onPrimary = (properties["onPrimary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onPrimaryContainer = (properties["onPrimaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onSecondary = (properties["onSecondary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onSecondaryContainer = (properties["onSecondaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onSurface = (properties["onSurface"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onSurfaceVariant = (properties["onSurfaceVariant"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onTertiary = (properties["onTertiary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onTertiaryContainer = (properties["onTertiaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.outline = (properties["outline"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.outlineVariant = (properties["outlineVariant"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.primary = (properties["primary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.surface = (properties["surface"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onPrimaryContainer = (properties["error"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.secondary = (properties["onPrimaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.onSecondaryContainer = (properties["error"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.surfaceTint = (properties["onSecondaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.surfaceVariant = (properties["surfaceVariant"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.tertiary = (properties["tertiary"] as? PropertyValue.StringValue)?.value ?: ""
+                        site.theme.tertiaryContainer = (properties["tertiaryContainer"] as? PropertyValue.StringValue)?.value ?: ""
+                    }
+                }
+            }
+        }
+    }
+}
+
 fun deserializeApp(parsedResult: List<Any>): App {
     val app = App()
 
@@ -96,9 +171,7 @@ fun deserializeApp(parsedResult: List<Any>): App {
                         app.icon = (properties["icon"] as? PropertyValue.StringValue)?.value ?: ""
                         app.name = (properties["name"] as? PropertyValue.StringValue)?.value ?: ""
                         app.author = (properties["author"] as? PropertyValue.StringValue)?.value ?: ""
-                        app.authorBio = (properties["authorBio"] as? PropertyValue.StringValue)?.value ?: ""
                         app.description = (properties["description"] as? PropertyValue.StringValue)?.value ?: ""
-                        app.deployDirHtml = (properties["deployDirHtml"] as? PropertyValue.StringValue)?.value ?: ""
                         app.smlVersion = (properties["smlVersion"] as? PropertyValue.StringValue)?.value ?: ""
                         parseNestedAppElements(extractChildElements(tuple), app)
                     }
@@ -156,7 +229,7 @@ fun extractChildElements(element: Any): List<Any> {
 fun deserializePage(parsedResult: List<Any>): Page {
     val page = Page(color = "", backgroundColor = "", title="", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
     val currentProject = GlobalProjectState.projectState
-    val theme = currentProject?.app?.theme
+    val theme = currentProject?.app?.theme ?: currentProject?.site?.theme
 
     parsedResult.forEach { tuple ->
         when (tuple) {
@@ -168,7 +241,7 @@ fun deserializePage(parsedResult: List<Any>): Page {
                     "Page" -> {
                         page.title = (properties["title"] as? PropertyValue.StringValue)?.value ?: ""
                         page.color = (properties["color"] as? PropertyValue.StringValue)?.value ?: (theme?.onBackground ?: "no")
-                        page.backgroundColor = (properties["backgroundColor"] as? PropertyValue.StringValue)?.value ?: (theme?.background ?: "n0")
+                        page.backgroundColor = (properties["backgroundColor"] as? PropertyValue.StringValue)?.value ?: (theme?.background ?: "nix")
                         page.padding = parsePadding((properties["padding"] as? PropertyValue.StringValue)?.value ?: "0")
                         page.scrollable = (properties["scrollable"] as? PropertyValue.StringValue)?.value ?: "false"
                         parseNestedElements(extractChildElements(tuple), page.elements as MutableList<UIElement>)
@@ -202,7 +275,7 @@ val textAlignMap = mapOf(
 
 fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIElement>) {
     val currentProject = GlobalProjectState.projectState
-    val theme = currentProject?.app?.theme
+    val theme = currentProject?.app?.theme ?: currentProject?.site?.theme
 
     nestedElements.forEach { element ->
         when (element) {
@@ -420,9 +493,6 @@ fun parseNestedAppElements(nestedElements: List<Any>, app: App) {
                 val properties = extractProperties(element)
 
                 when (elementName) {
-                    "Course" -> {
-                        parseCourse(extractChildElements(element), app.course)
-                    }
                     "Deployment" -> {
                         parseNestedDeployElements(extractChildElements(element), app.deployment)
                     }
@@ -484,12 +554,21 @@ fun parseNestedDeployElements(nestedElements: List<Any>, deployment: DeploymentE
     }
 }
 
-
 fun parsePage(sml: String): Pair<Page?, String?> {
     try {
         val result = SmlGrammar.parseToEnd(sml)
         return Pair(deserializePage(result), null)
     } catch(e: Exception) {
+        return Pair(null, e.message)
+    }
+}
+
+fun parseSite(sml: String, ): Pair<Site?, String?> {
+    try {
+        val result = SmlGrammar.parseToEnd(sml)
+        return Pair(deserializeSite(result), null)
+    } catch(e: Exception) {
+        println("Error: ${e.message}")
         return Pair(null, e.message)
     }
 }

@@ -37,42 +37,45 @@ class CreateHTML {
         var dir = File("")
         var sourceDir = File("")
 
-        fun start(folder: String, source: String, app: App) {
-            dir = File(folder)
+        fun start(folder: String, source: String, site: Site) {
+            dir = File("$folder/${site.name}")
             sourceDir = File(source)
             val assets = File(dir, "assets")
             assets.mkdirs()
 
-            copyAssets(assets)
+            copyAssets(assets, site)
             copyImages(dir, source)
 
             // create a html file for all pages
-            val sourceDir = File(source, "pages")
-            sourceDir.walkTopDown().forEach { file ->
-                if (file.isFile) {
-                    val page = parsePage(file.readText())
-                    if (page.first != null) {
-                        val name = file.name.substringBeforeLast(".sml")
-                        val html = getHtmlContent(page.first!!)
-                        val context = mutableMapOf<String, Any>()
+            val languages = listOf("de", "en", "pt", "fr", "eo", "es")
+            for (lang in languages) {
+                val sourceDir = File(source, "pages-$lang")
+                sourceDir.walkTopDown().forEach { file ->
+                    if (file.isFile) {
+                        val pageContent = file.readText()
+                        println("content: $pageContent")
+                        val page = parsePage(pageContent)
+                        if (page.first != null) {
+                            val name = file.name.substringBeforeLast(".sml")
+                            val html = getHtmlContent(page.first!!)
+                            val context = mutableMapOf<String, Any>()
 
-                        println("desc: ${app.description}")
-                        context["name"] = app.name
-                        context["description"] = app.description
-                        context["title"] = app.name + " - " + page.first!!.title
-                        context["content"] = html
+                            context["name"] = site.name
+                            context["title"] = site.name + " - " + page.first!!.title
+                            context["content"] = html
 
-                        val classLoader = Thread.currentThread().contextClassLoader
-                        val resourcePath = "templates/page.html"
-                        val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
-                        val templateData = inputStream?.bufferedReader()?.use { it.readText() }
-                            ?: throw IllegalArgumentException("File not found: $resourcePath")
+                            val classLoader = Thread.currentThread().contextClassLoader
+                            val resourcePath = "templates/web/${site.template}/template.html"
+                            val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
+                            val templateData = inputStream?.bufferedReader()?.use { it.readText() }
+                                ?: throw IllegalArgumentException("File not found: $resourcePath")
 
-                        val template = Template.parse(templateData)
-                        val xhtml = template.processToString(context)
+                            val template = Template.parse(templateData)
+                            val xhtml = template.processToString(context)
 
-                        val outputFile = Paths.get(dir.path, "$name.html").toFile()
-                        outputFile.writeText(xhtml, Charsets.UTF_8)
+                            val outputFile = Paths.get(dir.path, "$name-$lang.html").toFile()
+                            outputFile.writeText(xhtml, Charsets.UTF_8)
+                        }
                     }
                 }
             }
@@ -92,9 +95,9 @@ class CreateHTML {
             }
         }
 
-        fun copyAssets(targetDir: File) {
+        fun copyAssets(targetDir: File, site: Site) {
             val classLoader = Thread.currentThread().contextClassLoader
-            val resourcePath = "templates/assets"
+            val resourcePath = "templates/web/${site.template}/assets"
             val resourceURL = classLoader.getResource(resourcePath)
                 ?: throw IllegalArgumentException("Resource not found: $resourcePath")
 
@@ -141,10 +144,10 @@ class CreateHTML {
 
         fun getHtmlContent(page: Page): String {
             var html = ""
-
             html += "<section class=\"container\">\n"
             html += "<div class=\"row\">\n"
             html += "<div class=\"col-md-12\">\n"
+
             for (element in page.elements) {
                 html += getHtmlFromElement(element)
             }

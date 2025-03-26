@@ -24,13 +24,30 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import java.time.LocalDateTime
 
+
+data class Site(
+    @StringAnnotation("Version of the current SML. default is 1.1")
+    var smlVersion: String = "1.1",
+    @StringAnnotation("Name of the site.")
+    var name: String = "",
+    @StringAnnotation("Put a description about the site here.")
+    var description: String = "",
+    @StringAnnotation("The name of the author.")
+    var author: String = "",
+    @StringAnnotation("Theme for the site. Atm there is only \"bootstrap\".")
+    var template: String = "bootstrap",
+    @StringAnnotation("The folder name where you want to deploy the HTML output.")
+    var deployDirHtml: String ="",
+    var authorBio: String = "",
+    var theme: ThemeElement = ThemeElement(),
+    var course: UIElement.Course = UIElement.Course(),
+)
+
 data class App(
     @StringAnnotation("Name of the book.")
     var name: String = "",
     @StringAnnotation("Put a description about the book here.")
     var description: String = "",
-    @StringAnnotation("The folder name where you want to deploy the HTML output.")
-    var deployDirHtml: String ="",
     @StringAnnotation("Icon for the book. Sample: icon.png")
     var icon: String = "",
     @StringAnnotation("Unique Id of the app. Sample: com.example.bookname")
@@ -40,8 +57,6 @@ data class App(
     @StringAnnotation("The name of the author.")
     var author: String = "",
     @StringAnnotation("A short bio about the author.")
-    var authorBio: String = "",
-    var course: UIElement.Course = UIElement.Course(),
     var theme: ThemeElement = ThemeElement(),
     var deployment: DeploymentElement = DeploymentElement()
 )

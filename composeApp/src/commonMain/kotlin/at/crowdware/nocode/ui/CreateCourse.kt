@@ -37,8 +37,8 @@ class CreateCourse {
         var dir = File("")
         var sourceDir = File("")
 
-        fun start(folder: String, source: String, app: App, lang: String = "en") {
-            dir = File(folder + "/" + app.name.replace(" ", "_").toLowerCase())
+        fun start(folder: String, source: String, site: Site, lang: String = "en") {
+            dir = File(folder + "/" + site.name.replace(" ", "_").toLowerCase())
             sourceDir = File(source)
             val assets = File(dir, "assets")
             assets.mkdirs()
@@ -54,14 +54,14 @@ class CreateCourse {
                     if (page.first != null) {
                         val name = file.name.substringBeforeLast(".sml")
                         val html = getHtmlContent(page.first!!)
-                        val navi = getNaviHtml(app, lang)
+                        val navi = getNaviHtml(site, lang)
                         val context = mutableMapOf<String, Any>()
 
-                        context["name"] = app.name
-                        context["author"] = app.author
-                        context["authorBio"] = app.authorBio
-                        context["description"] = app.description
-                        context["title"] = app.name + " - " + page.first!!.title
+                        context["name"] = site.name
+                        context["author"] = site.author
+                        context["authorBio"] = site.authorBio
+                        context["description"] = site.description
+                        context["title"] = site.name + " - " + page.first!!.title
                         context["content"] = html
                         context["navigation"] = navi
 
@@ -158,7 +158,7 @@ class CreateCourse {
             return html
         }
 
-        fun getNaviHtml(app: App, lang: String): String {
+        fun getNaviHtml(site: Site, lang: String): String {
             var html = ""
             html += "<h2>Navigation</h2>\n"
             if (lang == "de") {
@@ -167,7 +167,7 @@ class CreateCourse {
                 html += " <p>This is the menu with a list of all topics.</p>\n"
             }
             html += "<ul>\n"
-            for (topic in app.course.topics) {
+            for (topic in site.course.topics) {
                 html += "<li><a id='course-link' href='https://artanidos.pythonanywhere.com/nocode/course/${topic.page}'>${topic.label}</a></li>\n"
                 html += "<ul>\n"
                 for (subtopic in topic.subtopics) {
