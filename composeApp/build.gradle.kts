@@ -15,14 +15,6 @@ val hourPart = String.format("%02d", currentDateTime.hour)
 val minutesPart = String.format("%02d", currentDateTime.minute)
 val version = "$majorVersion.$yearPart$monthPart.$dayPart$hourPart$minutesPart".take(11)
 
-val secretKeyProvider = providers.fileContents(layout.projectDirectory.file("../config.properties"))
-    .asText
-    .map {
-        val properties = Properties()
-        properties.load(it.reader())
-        properties.getProperty("SECRET_KEY")
-    }
-
 plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.compose)
@@ -117,19 +109,6 @@ tasks.register("generateConstantsFile") {
     outputs.dir(outputDir)
 
     doLast {
-        val secretKey: String = try {
-            val secretKeyFile = layout.projectDirectory.file("../config.properties").asFile
-            if (secretKeyFile.exists()) {
-                val properties = Properties()
-                properties.load(secretKeyFile.reader())
-                properties.getProperty("SECRET_KEY")
-            } else {
-                throw FileNotFoundException("config.properties file is missing. The file contains: SECRET_KEY=<key>")
-            }
-        } catch (e: Exception) {
-            throw GradleException("Failed to load secret key: ${e.message}")
-        }
-
         val versionFile = outputDir.resolve("Constants.kt")
         versionFile.parentFile.mkdirs()
         versionFile.writeText("""
@@ -137,10 +116,6 @@ tasks.register("generateConstantsFile") {
 
             object Version {
                 const val version = "$versionValue"
-            }
-            
-            object SecretKey {
-                const val SECRET_KEY = "$secretKey"
             }
         """.trimIndent())
         println("Version changed to: $versionValue")
