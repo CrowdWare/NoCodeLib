@@ -39,86 +39,115 @@ import at.crowdware.nocode.theme.ExtendedTheme
 fun createProjectDialog(
     name: TextFieldValue,
     onNameChange: (TextFieldValue) -> Unit,
-    folder: TextFieldValue,
-    onFolderChange: (TextFieldValue) -> Unit,
     id: TextFieldValue,
     onIdChange: (TextFieldValue) -> Unit,
+    selectedType: String,
+    onTypeSelected: (String) -> Unit,
     theme: String,
     onThemeChanged: (String) -> Unit,
-    onCheckBookChanged: (Boolean) -> Unit,
-    onCheckAppChanged: (Boolean) -> Unit,
-    app: Boolean,
-    book: Boolean,
     lang: String,
+    userFolder: String,
     onDismissRequest: () -> Unit,
-    onCreateRequest: (List<String>) -> Unit
+    onCreateRequest: (List<String>, String) -> Unit
 ) {
     val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
+
+    var projectFolder by remember { mutableStateOf(TextFieldValue("")) }
+    var folderManuallyChanged by remember { mutableStateOf(false) }
+    var internalSelectedType by remember { mutableStateOf(selectedType) }
+
+    fun updateFolderForType(type: String) {
+        if (!folderManuallyChanged) {
+            val defaultSubfolder = when (type) {
+                "Book" -> "Ebooks"
+                "App" -> "Apps"
+                "Website" -> "Websites"
+                else -> ""
+            }
+            val fullPath = if (defaultSubfolder.isNotEmpty()) {
+                "$userFolder/$defaultSubfolder"
+            } else userFolder
+            projectFolder = TextFieldValue(fullPath)
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = "Create Project")
-        },
+        title = { Text(text = "Create Project") },
         text = {
             Column(modifier = Modifier.padding(16.dp)) {
+
+                // Type Auswahl
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Type:",
                         color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
-                    CheckboxItem(
-                        modifier = Modifier.weight(1f),
-                        checked = book,
-                        onCheckedChange = onCheckBookChanged,
-                        label = "Ebook", color = MaterialTheme.colors.onPrimary)
-                    CheckboxItem(modifier = Modifier.weight(1f),
-                        checked = app,
-                        onCheckedChange = onCheckAppChanged,
-                        label = "App", color = MaterialTheme.colors.onPrimary)
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
+                    )
+                    listOf("Book", "App", "Website").forEach { type ->
+                        RadioButtonItem(
+                            modifier = Modifier.weight(1f),
+                            label = type,
+                            selected = internalSelectedType == type,
+                            color = MaterialTheme.colors.onPrimary,
+                            onClick = {
+                                internalSelectedType = type
+                                onTypeSelected(type)
+                                updateFolderForType(type)
+                            }
+                        )
+                    }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Name:",
-                        color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.CenterVertically).weight(1F))
+                    Text("Name:", color = MaterialTheme.colors.onPrimary,
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
                     Spacer(modifier = Modifier.width(16.dp))
-                    TextInput(name, onNameChange, modifier = Modifier.weight(3F))
+                    TextInput(name, onNameChange, modifier = Modifier.weight(3f))
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
-                if(app) {
+                if (internalSelectedType == "App") {
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "AppId:",
-                            color = MaterialTheme.colors.onPrimary,
-                            modifier = Modifier.align(Alignment.CenterVertically).weight(1F))
+                        Text("AppId:", color = MaterialTheme.colors.onPrimary,
+                            modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
                         Spacer(modifier = Modifier.width(16.dp))
-                        TextInput(id, onIdChange, modifier = Modifier.weight(3F))
+                        TextInput(id, onIdChange, modifier = Modifier.weight(3f))
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Folder:",
-                        color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.CenterVertically).weight(1F))
+                    Text("Folder:", color = MaterialTheme.colors.onPrimary,
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
                     Spacer(modifier = Modifier.width(16.dp))
-                    TextInput(folder, onFolderChange, modifier = Modifier.weight(3F), hasIcon = true)
+                    TextInput(
+                        projectFolder,
+                        onValueChange = {
+                            projectFolder = it
+                            folderManuallyChanged = true
+                        },
+                        modifier = Modifier.weight(3f),
+                        hasIcon = true
+                    )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                if (app) {
+
+                // Theme, Languages etc. wie gehabt ...
+                if (internalSelectedType == "App") {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Theme:",
-                            color = MaterialTheme.colors.onPrimary,
+                        Text("Theme:", color = MaterialTheme.colors.onPrimary,
                             modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
-                        RadioButtonItem(modifier = Modifier.weight(1f),
+                        RadioButtonItem(
+                            modifier = Modifier.weight(1f),
                             label = "Light",
                             selected = theme == "Light",
                             color = MaterialTheme.colors.onPrimary,
                             onClick = { onThemeChanged("Light") }
                         )
-                        RadioButtonItem(modifier = Modifier.weight(1f),
+                        RadioButtonItem(
+                            modifier = Modifier.weight(1f),
                             label = "Dark",
                             selected = theme == "Dark",
                             color = MaterialTheme.colors.onPrimary,
@@ -126,39 +155,38 @@ fun createProjectDialog(
                         )
                     }
                 }
-                val languageList = lang.split(",").map { it.trim() }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Languages")
                 Column {
-                    languageList.forEach { lang ->
+                    lang.split(",").map { it.trim() }.forEach { langCode ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(4.dp)
                         ) {
                             Checkbox(
-                                checked = checkedStates[lang] ?: false,
-                                onCheckedChange = { isChecked -> checkedStates[lang] = isChecked },
+                                checked = checkedStates[langCode] ?: false,
+                                onCheckedChange = { checkedStates[langCode] = it },
                                 colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
                             )
-                            Text(text = lang.uppercase(), modifier = Modifier.padding(start = 8.dp))
+                            Text(text = langCode.uppercase(), modifier = Modifier.padding(start = 8.dp))
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = onDismissRequest
-            ) {
+            Button(onClick = onDismissRequest) {
                 Text("Cancel")
             }
             Button(
-                enabled = (app || book) && name.text.isNotEmpty() && folder.text.isNotEmpty() && id.text.isNotEmpty(),
+                enabled = internalSelectedType.isNotEmpty() &&
+                        name.text.isNotEmpty() &&
+                        projectFolder.text.isNotEmpty() &&
+                        (internalSelectedType != "App" || id.text.isNotEmpty()),
                 onClick = {
-                    // Filtere nur die aktivierten Sprachen heraus und übergebe sie
                     val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
-                    onCreateRequest(selectedLanguages)
+                    onCreateRequest(selectedLanguages, projectFolder.text)
                 },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = ExtendedTheme.colors.accentColor,

@@ -66,10 +66,8 @@ class CreateCourse {
                         context["navigation"] = navi
 
                         val classLoader = Thread.currentThread().contextClassLoader
-                        var resourcePath = "templates/course.html"
-                        if (lang == "de") { // TODO: support other languages
-                            resourcePath = "templates/course_DE.html"
-                        }
+                        val resourcePath = "templates/course/course-$lang.html"
+
                         val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
                         val templateData = inputStream?.bufferedReader()?.use { it.readText() }
                             ?: throw IllegalArgumentException("File not found: $resourcePath")
@@ -100,7 +98,7 @@ class CreateCourse {
 
         fun copyAssets(targetDir: File) {
             val classLoader = Thread.currentThread().contextClassLoader
-            val resourcePath = "templates/assets"
+            val resourcePath = "templates/course/assets"
             val resourceURL = classLoader.getResource(resourcePath)
                 ?: throw IllegalArgumentException("Resource not found: $resourcePath")
 

@@ -38,8 +38,7 @@ data class State(
     val windowX: Int,
     val windowY: Int,
     val lastProject: String,
-    val theme: String,
-    val license : String
+    val theme: String
 )
 
 class AppState() {
@@ -49,9 +48,6 @@ class AppState() {
     var windowY by mutableStateOf(0)
     var lastProject by mutableStateOf("")
     var theme by mutableStateOf("")
-    var license by mutableStateOf("")
-    var license_publisher by mutableStateOf("")
-    var license_date by mutableStateOf("")
 
     // Helper function to convert hex string to byte array
     fun hexStringToByteArray(s: String): ByteArray {

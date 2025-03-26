@@ -42,8 +42,7 @@ fun saveState(frame: ComposeWindow, folder: String, path: String) {
             windowX = frame.x,
             windowY = frame.y,
             lastProject = folder,
-            theme = "Dark",
-            license = appState?.license.toString()
+            theme = "Dark"
         ), path
     )
 }
@@ -112,7 +111,6 @@ fun loadAppState(path: String) {
     // Set default values
     if (appState != null) {
         appState.theme = "Dark"
-        appState.license = ""
         appState.lastProject = ""
         appState.windowX = 100
         appState.windowY = 100
@@ -127,7 +125,6 @@ fun loadAppState(path: String) {
             val state = Json.decodeFromString<State>(jsonState)
             if (appState != null) {
                 appState.theme = state.theme
-                appState.license = state.license
                 appState.lastProject = state.lastProject
                 appState.windowX = state.windowX
                 appState.windowY = state.windowY
@@ -149,8 +146,7 @@ fun loadAppState(path: String) {
                     windowX = appState.windowX ?: 100,
                     windowY = appState.windowY ?: 100,
                     lastProject = "",
-                    theme = "Dark",
-                    license = ""
+                    theme = "Dark"
                 ), path
             )
         }

@@ -129,7 +129,7 @@ class DesktopProjectState : ProjectState() {
                 it.name != ".DS_Store" &&
                         !it.name.endsWith(".py") &&
                         (it.isDirectory && it.name in listOf( "images", "sounds", "videos", "models", "textures", "pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo"  )) ||
-                        (it.isFile && it.name in listOf("app.sml", "book.sml"))
+                        (it.isFile && it.name in listOf("app.sml", "book.sml", "site.sml"))
             }
             ?.map { mapFileToTreeNode(it) }
             ?: emptyList()
@@ -213,6 +213,7 @@ class DesktopProjectState : ProjectState() {
         theme: String,
         createBook: Boolean,
         createApp: Boolean,
+        createWebsite: Boolean,
         langs: List<String>
     ) {
         val dir = File("$path$name")
@@ -232,6 +233,7 @@ class DesktopProjectState : ProjectState() {
             models.mkdirs()
             val textures = File("$path$name/textures")
             textures.mkdirs()
+            createParts(path, name, langs)
             val app = File("$path$name/app.sml")
             var appContent = "App {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\tid: \"$appId.$name\"\n\ticon: \"icon.png\"\n\n"
             if(theme == "Light")
@@ -242,7 +244,7 @@ class DesktopProjectState : ProjectState() {
             app.writeText(appContent)
             for(lang in langs) {
                 val home = File("$path$name/pages-$lang/home.sml")
-                home.writeText("Page {\n\tpadding: \"8\"\n\n\tColumn {\n\t\tpadding: \"8\"\n\n\t\tText { text: \"Home\" }\n\t}\n}\n")
+                home.writeText("Page {\n\tpadding: \"8\"\n\n\tColumn {\n\t\tpadding: \"8\"\n\n\t\tText { text: \"Home in $lang\" }\n\t}\n}\n")
                 println("create: $path, $name")
             }
             copyResourceToFile("python/server.py", "$path/$name/server.py")
@@ -251,26 +253,37 @@ class DesktopProjectState : ProjectState() {
         }
 
         if (createBook) {
-            var booklang = ""
-            for(lang in langs) {
-                val pages = File("$path$name/parts-$lang")
-                pages.mkdirs()
-                val homemd = File("$path$name/parts-$lang/home.md")
-                homemd.writeText("# BookTitle\nLorem ipsum dolor\n")
-                if (booklang.length > 0)
-                    booklang += ","
-                booklang += lang
-            }
+            val lang = createParts(path, name, langs)
             val book = File("$path$name/book.sml")
-            var bookContent = "Ebook {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"Epub3\"\n\tcreator: \"\"\n\tlanguage: \"$booklang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
+            var bookContent = "Ebook {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"Epub3\"\n\tcreator: \"\"\n\tlanguage: \"$lang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
             book.writeText(bookContent)
         }
 
+        if (createWebsite) {
+            val lang = createParts(path, name, langs)
+            val site = File("$path$name/site.sml")
+            var siteContent = "Site {\n\tsmlVersion: \"1.1\"\n\tname: \"$name\"\n\tversion: \"1.0\"\n\ttheme: \"bootstrap\"\n\tcreator: \"\"\n\tlanguage: \"$lang\"\n\n\tPart {\n\t\tsrc: \"home.md\"\n\t}\n}\n"
+            site.writeText(siteContent)
+        }
         val images = File("$path$name/images")
         images.mkdirs()
 
         LoadProject("$path$name", uuid, pid)
     }
+}
+
+fun createParts( path: String, name: String, langs: List<String>): String {
+    var booklang = ""
+    for(lang in langs) {
+        val pages = File("$path$name/parts-$lang")
+        pages.mkdirs()
+        val homemd = File("$path$name/parts-$lang/home.md")
+        homemd.writeText("# Headline in $lang\nLorem ipsum dolor\n")
+        if (booklang.length > 0)
+            booklang += ","
+        booklang += lang
+    }
+    return booklang
 }
 
 fun writeDarkTheme(): String {

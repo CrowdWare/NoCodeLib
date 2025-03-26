@@ -83,7 +83,7 @@ class CreateEbook {
 
         fun copyAssets(theme: String, targetDir: File) {
             val classLoader = Thread.currentThread().contextClassLoader
-            val resourcePath = "themes/$theme/assets"
+            val resourcePath = "templates/ebook/$theme/assets"
             val resourceURL = classLoader.getResource(resourcePath)
                 ?: throw IllegalArgumentException("Resource not found: $resourcePath")
 
@@ -221,11 +221,10 @@ class CreateEbook {
             // Read and process the template file
             val classLoader = Thread.currentThread().contextClassLoader
 
-            // Path inside the resources (e.g., "themes/<theme>/assets")
             var packageName = "package"
             if (multiLang)
                 packageName += "-$lang"
-            val resourcePath = "themes/${book.theme}/layout/$packageName.opf"
+            val resourcePath = "templates/ebook/${book.theme}/layout/$packageName.opf"
             val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
             val data = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("File not found: $resourcePath")
 
@@ -277,12 +276,15 @@ class CreateEbook {
                         context["content"] = html
 
                         val classLoader = Thread.currentThread().contextClassLoader
-                        val resourcePath = "themes/${book.theme}/layout/template.xhtml"
+                        val resourcePath = "templates/ebook/${book.theme}/layout/template.xhtml"
+                        println("resPath: $resourcePath")
                         val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
                         val templateData = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("File not found: $resourcePath")
 
                         val template = Template.parse(templateData)
                         val xhtml = template.processToString(context)
+
+                        println("xhtml: $xhtml")
 
                         val outputFile = Paths.get(dir.path, "EPUB", "parts", "$name.xhtml").toFile()
                         outputFile.writeText(xhtml, Charsets.UTF_8)
@@ -326,8 +328,8 @@ class CreateEbook {
             if (lang == "de") {
                 if (currentProject != null) {
                     context["publishedby"] = "Publiziert von"
-                    context["publisher"] = GlobalAppState.appState?.license_publisher.toString()
-                }
+                    context["publisher"] = "CrowdWare"
+                 }
                 context["licenseInformation"] = "Lizenzinformationen"
                 context["from"] = "von"
                 context["softwareLicense"] = "Software Lizenz"
@@ -360,7 +362,7 @@ class CreateEbook {
                 context["parts"] = parts
 
             val classLoader = Thread.currentThread().contextClassLoader
-            val resourcePath = "themes/${book.theme}/layout/toc.xhtml"
+            val resourcePath = "templates/ebook/${book.theme}/layout/toc.xhtml"
             val inputStream: InputStream? = classLoader.getResourceAsStream(resourcePath)
             val templateData = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("File not found: $resourcePath")
 

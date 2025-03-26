@@ -113,6 +113,7 @@ abstract class ProjectState {
         theme: String,
         createBook: Boolean,
         createApp: Boolean,
+        createWebsite: Boolean,
         langs: List<String>
     )
 
