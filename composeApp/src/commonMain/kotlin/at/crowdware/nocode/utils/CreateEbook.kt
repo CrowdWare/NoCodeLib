@@ -46,7 +46,7 @@ import kotlin.io.path.createTempDirectory
 
 class CreateEbook {
     companion object {
-        fun start(title: String, folder: String, source: String, book: Ebook, langs: List<String>) {
+        fun start(title: String, folder: String, source: String, book: Ebook, langs: List<String>, generator: String) {
             val dir = File(folder)
             dir.mkdirs()
 
@@ -63,9 +63,9 @@ class CreateEbook {
                 copyImages(tempDir, source)
                 writeContainer(tempDir)
                 writeMimetype(tempDir)
-                generatePackage(tempDir, book, guid, lang, langs.size > 1)
+                generatePackage(tempDir, book, guid, lang, langs.size > 1, generator)
                 val toc = generateParts(tempDir, book, source, lang = lang)
-                generateToc(tempDir, book, toc, lang)
+                generateToc(tempDir, book, toc, lang, generator)
 
                 val files = getAllFiles(tempDir)
 
@@ -167,7 +167,7 @@ class CreateEbook {
                     "</container>", Charsets.UTF_8)
         }
 
-        fun generatePackage(dir: File, book: Ebook, guid: String, lang: String, multiLang: Boolean) {
+        fun generatePackage(dir: File, book: Ebook, guid: String, lang: String, multiLang: Boolean, generator: String) {
             val context = mutableMapOf<String, Any>()
 
             context["uuid"] = guid
@@ -180,7 +180,7 @@ class CreateEbook {
             context["bookLink"] = book.bookLink
             context["license"] = book.license
             context["licenseLink"] = book.licenseLink
-            context["generator"] = "NoCodeDesigner v." + Version.version
+            context["generator"] = generator
             context["license"] = "GPL-3 license"
 
             val items = mutableListOf<Map<String, String>>()
@@ -311,7 +311,7 @@ class CreateEbook {
                 .replace("<td align=\"left\"", "<td class=\"left\"")
         }
 
-        fun generateToc(dir: File, book: Ebook, parts: List<Map<String, Any>>, lang: String) {
+        fun generateToc(dir: File, book: Ebook, parts: List<Map<String, Any>>, lang: String, generator: String) {
             val currentProject = GlobalProjectState.projectState
             val context = mutableMapOf<String, Any>()
 
@@ -322,7 +322,7 @@ class CreateEbook {
             context["creator"] = book.creator
             context["creatorLink"] = book.creatorLink
             context["bookLink"] = book.bookLink
-            context["generator"] = "NoCodeDesigner v." + Version.version
+            context["generator"] = generator
             if (lang == "de") {
                 if (currentProject != null) {
                     context["publishedby"] = "Publiziert von"

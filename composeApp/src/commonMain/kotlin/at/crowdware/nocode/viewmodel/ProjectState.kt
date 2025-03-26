@@ -116,8 +116,8 @@ abstract class ProjectState {
         langs: List<String>
     )
 
-    fun createEbook(title: String, folder: String, langs: List<String>) {
-        book?.let { CreateEbook.start(title, folder, this.folder, it, langs) }
+    fun createEbook(title: String, folder: String, langs: List<String>, generator: String) {
+        book?.let { CreateEbook.start(title, folder, this.folder, it, langs, generator = generator) }
     }
 
     fun createHTML(folder: String) {
