@@ -1,5 +1,10 @@
 package at.crowdware.nocode.plugin
 
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.net.URLClassLoader
+import java.util.zip.ZipFile
+
 
 object PluginManager {
     private val plugins = mutableListOf<SmlExportPlugin>()
@@ -12,4 +17,81 @@ object PluginManager {
 
     fun getById(id: String): SmlExportPlugin? =
         plugins.find { it.id == id }
+
+    fun loadAllFromPluginsFolder(folder: File): List<SmlExportPlugin> {
+        val plugins = mutableListOf<SmlExportPlugin>()
+
+        if (!folder.exists() || !folder.isDirectory) return plugins
+
+        val pluginZips = folder.listFiles { file ->
+            file.extension == "zip" && file.name.endsWith("-plugin.zip")
+        } ?: return plugins
+
+        for (zip in pluginZips) {
+            loadPluginFromZip(zip)?.let { plugin ->
+                plugins.add(plugin)
+                PluginManager.register(plugin)
+            }
+        }
+
+        return plugins
+    }
+
+    fun loadPluginFromZip(zipFile: File): SmlExportPlugin? {
+        try {
+            val tempDir = File(".plugin-cache/${zipFile.nameWithoutExtension}")
+            if (tempDir.exists()) tempDir.deleteRecursively()
+            tempDir.mkdirs()
+
+            // Entpacken
+            ZipFile(zipFile).use { zip ->
+                zip.entries().asSequence().forEach { entry ->
+                    val outFile = File(tempDir, entry.name)
+                    if (entry.isDirectory) {
+                        outFile.mkdirs()
+                    } else {
+                        outFile.parentFile.mkdirs()
+                        zip.getInputStream(entry).use { input ->
+                            outFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // plugin.json lesen
+            val pluginJsonFile = File(tempDir, "plugin.json")
+            if (!pluginJsonFile.exists()) {
+                println("⚠️ plugin.json fehlt in ${zipFile.name}")
+                return null
+            }
+
+            val metadata = Json.decodeFromString<PluginMetadata>(pluginJsonFile.readText())
+            val jarFile = File(tempDir, metadata.entry)
+            if (!jarFile.exists()) {
+                println("⚠️ JAR nicht gefunden: ${metadata.entry}")
+                return null
+            }
+
+            // Plugin-Klasse laden
+            val loader = URLClassLoader(arrayOf(jarFile.toURI().toURL()), PluginManager::class.java.classLoader)
+            val clazz = Class.forName(metadata.mainClass, true, loader)
+            val instance = clazz.getDeclaredConstructor().newInstance()
+
+            if (instance is SmlExportPlugin) {
+                println("✅ Plugin geladen: ${metadata.label} (${metadata.id})")
+                return instance
+            } else {
+                println("❌ ${metadata.mainClass} ist kein SmlExportPlugin")
+            }
+
+        } catch (e: Exception) {
+            println("❌ Fehler beim Laden von ${zipFile.name}: ${e.message}")
+            e.printStackTrace()
+        }
+
+        return null
+    }
 }
+
