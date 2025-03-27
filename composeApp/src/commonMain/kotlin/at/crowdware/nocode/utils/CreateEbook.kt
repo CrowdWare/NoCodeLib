@@ -20,9 +20,7 @@
 package at.crowdware.nocode.utils
 
 import at.crowdware.nocode.Version
-import at.crowdware.nocode.viewmodel.GlobalAppState
 import at.crowdware.nocode.viewmodel.GlobalProjectState
-import at.crowdware.nocode.viewmodel.LicenseType
 import com.vladsch.flexmark.ext.tables.TablesExtension
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
