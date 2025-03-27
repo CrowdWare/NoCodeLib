@@ -53,6 +53,7 @@ kotlin {
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtime.compose)
+                implementation(compose.desktop.currentOs)
                 implementation("org.jetbrains.compose.material:material-icons-extended:1.7.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
                 implementation("br.com.devsrsouza.compose.icons:font-awesome:1.1.1")
@@ -67,6 +68,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:3.0.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
+
                 kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
             }
         }
