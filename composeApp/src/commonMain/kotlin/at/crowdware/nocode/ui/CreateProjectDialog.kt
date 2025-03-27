@@ -84,7 +84,7 @@ fun createProjectDialog(
                         color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
                     )
-                    listOf("Book", "App", "Website").forEach { type ->
+                    listOf("Book", "App", /*"Website"*/).forEach { type ->
                         RadioButtonItem(
                             modifier = Modifier.weight(1f),
                             label = type,

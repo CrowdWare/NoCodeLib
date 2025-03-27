@@ -345,7 +345,7 @@ class DesktopProjectState : ProjectState() {
     }
 }
 
-fun createParts( path: String, name: String, langs: List<String>) {
+fun createParts( path: String, name: String, langs: List<String>): String {
     var booklang = ""
     for(lang in langs) {
         val pages = File("$path$name/parts-$lang")
@@ -356,6 +356,7 @@ fun createParts( path: String, name: String, langs: List<String>) {
             booklang += ","
         booklang += lang
     }
+    return booklang
 }
 
 val welcomeTranslations = mapOf(

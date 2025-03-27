@@ -136,7 +136,7 @@ fun RowScope.syntaxEditor(
         }
     } else {
         Box(modifier = Modifier.fillMaxSize().weight(1F).padding(8.dp), contentAlignment = Alignment.Center) {
-            Text(text = "No file open, click a page or a part in the treeview on the left if a project is open. If no project is open then create a new project clicking the plus icon on the left.")
+            Text(color = MaterialTheme.colors.onPrimary , text = "No file open, click a page or a part in the treeview on the left if a project is open. If no project is open then click the OPEN project icon in the toolbar on the left or CREATE a new project clicking the plus icon in the toolbar on the left.")
         }
     }
 }
