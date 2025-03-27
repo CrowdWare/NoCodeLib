@@ -173,6 +173,8 @@ data class Markdown (
 
 @ElementAnnotation("A **Page** is the base element of the NoCodeApp. You can put all other Elements inside a Page.")
 data class Page(
+    var language: String = "",  // only used for plugins and is not parsed
+
     @StringAnnotation("Give the page a title which will be the headline in the book reader.")
     var title: String,
 
