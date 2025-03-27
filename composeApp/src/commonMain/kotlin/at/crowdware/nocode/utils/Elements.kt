@@ -24,7 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import java.time.LocalDateTime
 
-
+/*
 data class Site(
     @StringAnnotation("Version of the current SML. default is 1.1")
     var smlVersion: String = "1.1",
@@ -42,6 +42,7 @@ data class Site(
     var theme: ThemeElement = ThemeElement(),
     var course: UIElement.Course = UIElement.Course(),
 )
+*/
 
 data class App(
     @StringAnnotation("Name of the book.")
@@ -61,6 +62,7 @@ data class App(
     var deployment: DeploymentElement = DeploymentElement()
 )
 
+/*
 data class Ebook (
     @StringAnnotation("Version of the current SML. Default is 1.1")
     var smlVersion: String = "1.1",
@@ -84,7 +86,7 @@ data class Ebook (
     var bookLink: String = "#",
     val parts: MutableList<PartElement> = mutableListOf()
 )
-
+*/
 data class ThemeElement(
     var primary: String = "",
     var onPrimary: String = "",

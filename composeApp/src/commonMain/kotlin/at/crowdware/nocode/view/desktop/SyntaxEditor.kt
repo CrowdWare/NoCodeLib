@@ -79,9 +79,9 @@ fun RowScope.syntaxEditor(
                                         currentProject.loadApp()
                                     }
 
-                                    "book.sml" -> {
+                                    /*"book.sml" -> {
                                         currentProject.loadBook()
-                                    }
+                                    }*/
 
                                     else -> {
                                         currentProject.reloadPage()

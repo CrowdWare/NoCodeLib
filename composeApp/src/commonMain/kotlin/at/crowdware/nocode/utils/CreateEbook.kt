@@ -41,7 +41,7 @@ import java.util.zip.ZipOutputStream
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 
-
+/*
 class CreateEbook {
     companion object {
         fun start(title: String, folder: String, source: String, book: Ebook, langs: List<String>, generator: String) {
@@ -422,4 +422,4 @@ class CreateEbook {
             return linksList
         }
     }
-}
+}*/

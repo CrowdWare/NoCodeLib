@@ -97,14 +97,14 @@ abstract class ProjectState {
     lateinit var modelsNode: TreeNode
     lateinit var texturesNode: TreeNode
     var app: App? by mutableStateOf(null)
-    var book: Ebook? by mutableStateOf(null)
-    var site: Site? by mutableStateOf(null)
+    //var book: Ebook? by mutableStateOf(null)
+    //var site: Site? by mutableStateOf(null)
     var page: Page? by mutableStateOf(null)
     var cachedPage: Page? by mutableStateOf(null)
 
-    abstract fun loadSite()
+    //abstract fun loadSite()
     abstract fun loadApp()
-    abstract fun loadBook()
+    //abstract fun loadBook()
     abstract suspend fun loadProjectFiles(path: String, uuid: String, pid: String)
     abstract suspend fun createProjectFiles(
         path: String,
@@ -113,28 +113,31 @@ abstract class ProjectState {
         name: String,
         appId: String,
         theme: String,
-        createBook: Boolean,
-        createApp: Boolean,
-        createWebsite: Boolean,
+        //createBook: Boolean,
+        //createApp: Boolean,
+        //createWebsite: Boolean,
         langs: List<String>
     )
 
+    /*
     fun createEbook(title: String, folder: String, langs: List<String>, generator: String) {
         book?.let { CreateEbook.start(title, folder, this.folder, it, langs, generator = generator) }
     }
-
+*/
+    /*
     fun createHTML(folder: String) {
         site!!.deployDirHtml  = folder
         save(site!!)
         site?.let { CreateHTML.start(folder, this.folder, it) }
     }
-
+*/
+    /*
     fun createCourse(folder: String, lang: String) {
         site!!.deployDirHtml  = folder
         save(site!!)
         site?.let { CreateCourse.start(folder, this.folder, it, lang) }
     }
-
+*/
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
         folder = path
         println("loadProject: $folder")
@@ -184,6 +187,7 @@ abstract class ProjectState {
         return sml
     }
 
+    /*
     fun save(site: Site) {
         val file = File(folder, "site.sml")
         var sml = "Site {\n"
@@ -233,7 +237,7 @@ abstract class ProjectState {
         sml += "}\n"
         file.writeText(sml)
     }
-
+*/
     fun save(app: App) {
         // TODO: Navigation is missing, but not used yet
         val file = File(folder, "app.sml")
@@ -351,9 +355,10 @@ abstract class ProjectState {
             if (extension == "sml") {
                 val result = parsePage(fileText)
                 page = result.first
-                if (path.substringAfterLast(File.separator) == "book.sml") {
-                    loadElementData(Ebook())
-                } else if (path.substringAfterLast(File.separator) == "app.sml") {
+                //if (path.substringAfterLast(File.separator) == "book.sml") {
+                //    loadElementData(Ebook())
+                //} else
+                if (path.substringAfterLast(File.separator) == "app.sml") {
                     loadElementData(App())
                 } else {
                     parseError = result.second
@@ -407,12 +412,12 @@ abstract class ProjectState {
                 val clazz = Class.forName(clsName).kotlin
                 actualElement = clazz
             }
-            is Ebook -> {
+            /*is Ebook -> {
                 elementData = listOf(mapBookToTreeNode(obj as Ebook))
                 val clsName = "at.crowdware.nocode.utils.Ebook"
                 val clazz = Class.forName(clsName).kotlin
                 actualElement = clazz
-            }
+            }*/
         }
     }
 
@@ -561,6 +566,7 @@ abstract class ProjectState {
         }
     }
 
+    /*
     fun mapBookToTreeNode(book: Ebook): TreeNode {
         val rootNode = TreeNode(
             title = mutableStateOf("Ebook"),
@@ -570,7 +576,7 @@ abstract class ProjectState {
             expanded = mutableStateOf(true)
         )
         return rootNode
-    }
+    }*/
 
     fun mapAppToTreeNode(app: App): TreeNode {
         val rootNode = TreeNode(

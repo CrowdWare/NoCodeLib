@@ -52,10 +52,11 @@ fun createProjectDialog(
 ) {
     val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
 
-    var projectFolder by remember { mutableStateOf(TextFieldValue("")) }
+    var projectFolder by remember { mutableStateOf(TextFieldValue("$userFolder/Apps")) }
     var folderManuallyChanged by remember { mutableStateOf(false) }
     var internalSelectedType by remember { mutableStateOf(selectedType) }
 
+    /*
     fun updateFolderForType(type: String) {
         if (!folderManuallyChanged) {
             val defaultSubfolder = when (type) {
@@ -70,13 +71,14 @@ fun createProjectDialog(
             projectFolder = TextFieldValue(fullPath)
         }
     }
-
+*/
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(text = "Create Project") },
         text = {
             Column(modifier = Modifier.padding(16.dp)) {
 
+                /*
                 // Type Auswahl
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -84,7 +86,7 @@ fun createProjectDialog(
                         color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
                     )
-                    listOf("Book", "App", /*"Website"*/).forEach { type ->
+                    listOf(/*"Book",*/ "App", /*"Website"*/).forEach { type ->
                         RadioButtonItem(
                             modifier = Modifier.weight(1f),
                             label = type,
@@ -97,9 +99,9 @@ fun createProjectDialog(
                             }
                         )
                     }
-                }
+                }*/
 
-                Spacer(modifier = Modifier.height(16.dp))
+                //Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text("Name:", color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
@@ -108,7 +110,7 @@ fun createProjectDialog(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                if (internalSelectedType == "App") {
+                //if (internalSelectedType == "App") {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text("AppId:", color = MaterialTheme.colors.onPrimary,
                             modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
@@ -116,7 +118,7 @@ fun createProjectDialog(
                         TextInput(id, onIdChange, modifier = Modifier.weight(3f))
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                }
+                //}
 
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text("Folder:", color = MaterialTheme.colors.onPrimary,
@@ -180,7 +182,7 @@ fun createProjectDialog(
                 Text("Cancel")
             }
             Button(
-                enabled = internalSelectedType.isNotEmpty() &&
+                enabled = /*internalSelectedType.isNotEmpty() &&*/
                         name.text.isNotEmpty() &&
                         projectFolder.text.isNotEmpty() &&
                         (internalSelectedType != "App" || id.text.isNotEmpty()),

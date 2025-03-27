@@ -27,8 +27,8 @@ import at.crowdware.nocode.model.extensionToNodeType
 import at.crowdware.nocode.model.*
 import java.io.File
 import at.crowdware.nocode.utils.parseApp
-import at.crowdware.nocode.utils.parseBook
-import at.crowdware.nocode.utils.parseSite
+//import at.crowdware.nocode.utils.parseBook
+//import at.crowdware.nocode.utils.parseSite
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
@@ -154,6 +154,7 @@ class DesktopProjectState : ProjectState() {
         folder = path
         val supportedLanguages = listOf("de", "en", "es", "pt", "fr", "eo")
 
+        /*
         val siteFile = File("$folder/site.sml")
         if (siteFile.exists()) {
             loadSite()
@@ -166,7 +167,7 @@ class DesktopProjectState : ProjectState() {
                     break
                 }
             }
-        }
+        }*/
 
         // app.sml load and parse
         val appFile =  File("$folder/app.sml")
@@ -183,6 +184,7 @@ class DesktopProjectState : ProjectState() {
             }
         }
 
+        /*
         // book.sml load and parse
         val bookFile = File("$folder/book.sml")
         if(bookFile.exists()) {
@@ -195,9 +197,10 @@ class DesktopProjectState : ProjectState() {
                     break
                 }
             }
-        }
+        }*/
     }
 
+    /*
     override fun loadSite() {
         val siteFile = File("$folder/site.sml")
         try {
@@ -207,7 +210,7 @@ class DesktopProjectState : ProjectState() {
         } catch (e: Exception) {
             println("Error parsing site.sml: ${e.message}")
         }
-    }
+    }*/
 
     override fun loadApp() {
         val appFile = File("$folder/app.sml")
@@ -220,6 +223,7 @@ class DesktopProjectState : ProjectState() {
         }
     }
 
+    /*
     override fun loadBook() {
         val bookFile = File("$folder/book.sml")
         try {
@@ -230,6 +234,7 @@ class DesktopProjectState : ProjectState() {
             println("Error parsing book.sml: ${e.message}")
         }
     }
+*/
 
     override suspend fun createProjectFiles(
         path: String,
@@ -238,14 +243,14 @@ class DesktopProjectState : ProjectState() {
         name: String,
         appId: String,
         theme: String,
-        createBook: Boolean,
-        createApp: Boolean,
-        createWebsite: Boolean,
+        //createBook: Boolean,
+        //createApp: Boolean,
+        //createWebsite: Boolean,
         langs: List<String>
     ) {
         val dir = File("$path$name")
         dir.mkdirs()
-        if(createApp) {
+        //if(createApp) {
             for(lang in langs) {
                 val pages = File("$path$name/pages-$lang")
                 pages.mkdirs()
@@ -282,8 +287,9 @@ class DesktopProjectState : ProjectState() {
             copyResourceToFile("python/server.py", "$path/$name/server.py")
             copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
             copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
-        }
+        //}
 
+        /*
         if (createBook) {
             val lang = createParts(path, name, langs)
             val book = File("$path$name/book.sml")
@@ -302,8 +308,9 @@ class DesktopProjectState : ProjectState() {
                 }
             """.trimIndent()
             book.writeText(bookContent)
-        }
+        }*/
 
+        /*
         if (createWebsite) {
             for(lang in langs) {
                 val pages = File("$path$name/pages-$lang")
@@ -337,9 +344,9 @@ class DesktopProjectState : ProjectState() {
             siteContent += "}\n\n"
             site.writeText(siteContent)
             createPages(path, name, langs)
-        }
-        val images = File("$path$name/images")
-        images.mkdirs()
+        }*/
+        val imageFiles = File("$path$name/images")
+        imageFiles.mkdirs()
 
         LoadProject("$path$name", uuid, pid)
     }

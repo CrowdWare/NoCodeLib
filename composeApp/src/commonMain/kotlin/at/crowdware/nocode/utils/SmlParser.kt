@@ -81,6 +81,7 @@ object SmlGrammar : Grammar<List<Any>>() {
     override val rootParser: Parser<List<Any>> = (oneOrMore(element) and ignoredParser).map { (elements, _) -> elements }
 }
 
+/*
 fun deserializeSite(parsedResult: List<Any>): Site {
     val site = Site()
 
@@ -107,7 +108,8 @@ fun deserializeSite(parsedResult: List<Any>): Site {
     }
     return site
 }
-
+*/
+/*
 fun parseNestedSiteElements(nestedElements: List<Any>, site: Site) {
     nestedElements.forEach { element ->
         when (element) {
@@ -155,6 +157,7 @@ fun parseNestedSiteElements(nestedElements: List<Any>, site: Site) {
         }
     }
 }
+*/
 
 fun deserializeApp(parsedResult: List<Any>): App {
     val app = App()
@@ -181,7 +184,7 @@ fun deserializeApp(parsedResult: List<Any>): App {
     }
     return app
 }
-
+/*
 fun deserializeBook(parsedResult: List<Any>): Ebook {
     val book = Ebook()
 
@@ -211,7 +214,7 @@ fun deserializeBook(parsedResult: List<Any>): Ebook {
     }
     return book
 }
-
+*/
 fun extractProperties(element: Any): Map<String, PropertyValue> {
     if (element is Tuple7<*, *, *, *, *, *, *>) {
         return (element.t5 as? List<*>)?.filterIsInstance<Pair<String, PropertyValue>>()?.toMap() ?: emptyMap()
@@ -229,7 +232,7 @@ fun extractChildElements(element: Any): List<Any> {
 fun deserializePage(parsedResult: List<Any>): Page {
     val page = Page(color = "", backgroundColor = "", title="", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
     val currentProject = GlobalProjectState.projectState
-    val theme = currentProject?.app?.theme ?: currentProject?.site?.theme
+    val theme = currentProject?.app?.theme// ?: currentProject?.site?.theme
 
     parsedResult.forEach { tuple ->
         when (tuple) {
@@ -275,7 +278,7 @@ val textAlignMap = mapOf(
 
 fun parseNestedElements(nestedElements: List<Any>, elements: MutableList<UIElement>) {
     val currentProject = GlobalProjectState.projectState
-    val theme = currentProject?.app?.theme ?: currentProject?.site?.theme
+    val theme = currentProject?.app?.theme// ?: currentProject?.site?.theme
 
     nestedElements.forEach { element ->
         when (element) {
@@ -464,7 +467,7 @@ fun parsePadding(padding: String): Padding {
         else -> Padding(0, 0, 0, 0)
     }
 }
-
+/*
 fun parseNestedBookElements(nestedElements: List<Any>, book: Ebook) {
     nestedElements.forEach { element ->
         when (element) {
@@ -483,7 +486,7 @@ fun parseNestedBookElements(nestedElements: List<Any>, book: Ebook) {
     }
 }
 
-
+*/
 
 fun parseNestedAppElements(nestedElements: List<Any>, app: App) {
     nestedElements.forEach { element ->
@@ -563,6 +566,7 @@ fun parsePage(sml: String): Pair<Page?, String?> {
     }
 }
 
+/*
 fun parseSite(sml: String, ): Pair<Site?, String?> {
     try {
         val result = SmlGrammar.parseToEnd(sml)
@@ -572,7 +576,7 @@ fun parseSite(sml: String, ): Pair<Site?, String?> {
         return Pair(null, e.message)
     }
 }
-
+*/
 fun parseApp(sml: String, ): Pair<App?, String?> {
     try {
         val result = SmlGrammar.parseToEnd(sml)
@@ -583,6 +587,7 @@ fun parseApp(sml: String, ): Pair<App?, String?> {
     }
 }
 
+/*
 fun parseBook(sml: String, ): Pair<Ebook?, String?> {
     try {
         val result = SmlGrammar.parseToEnd(sml)
@@ -590,7 +595,7 @@ fun parseBook(sml: String, ): Pair<Ebook?, String?> {
     } catch(e: Exception) {
         return Pair(null, e.message)
     }
-}
+}*/
 
 fun parseCourse(nestedElements: List<Any>, course: UIElement.Course) {
     nestedElements.forEach { element ->

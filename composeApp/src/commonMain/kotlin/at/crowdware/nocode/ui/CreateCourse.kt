@@ -19,7 +19,7 @@
 
 package at.crowdware.nocode.utils
 
-import at.crowdware.nocode.utils.CreateEbook.Companion.copyStreamToFile
+//import at.crowdware.nocode.utils.CreateEbook.Companion.copyStreamToFile
 import at.crowdware.nocode.utils.UIElement.*
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
@@ -32,6 +32,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
+/*
 class CreateCourse {
     companion object {
         var dir = File("")
@@ -262,4 +263,4 @@ class CreateCourse {
             return "<a target=\"_blank\" href=\"$link\" class=\"btn btn-primary w-100 mt-3\">${element.label}</a>\n"
         }
     }
-}
+}*/
