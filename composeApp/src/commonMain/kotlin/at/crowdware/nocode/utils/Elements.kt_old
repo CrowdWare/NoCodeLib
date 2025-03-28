@@ -22,7 +22,6 @@ package at.crowdware.nocode.utils
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 import java.time.LocalDateTime
 
 /*
@@ -179,27 +178,24 @@ data class Page(
     var language: String = "",  // only used for plugins and is not parsed
 
     @StringAnnotation("Give the page a title which will be the headline in the book reader.")
-    var title: String = "",
+    var title: String,
 
     @HexColorAnnotation
-    var color: String = "",
+    var color: String,
 
     @HexColorAnnotation
-    var backgroundColor: String = "",
+    var backgroundColor: String,
 
     @PaddingAnnotation
-    var padding: Padding = Padding(0,0,0,0),
+    var padding: Padding,
 
     @StringAnnotation("You can enter boolean values like **\"true\"** and **\"false\"**. Sample **scrollable: \"true\"**")
-    var scrollable: String = "false",
+    var scrollable: String,
 
     @IgnoreForDocumentation
-    val elements: MutableList<UIElement> = mutableListOf()
-)
+    val elements: MutableList<UIElement>)
 
 sealed class UIElement {
-    val uiElements: MutableList<UIElement> = mutableListOf()
-
     data object Zero : UIElement()
 
     data class Course(
@@ -319,7 +315,7 @@ sealed class UIElement {
         @WeightAnnotation
         val weight: Int
 
-    ) : UIElement()
+        ) : UIElement()
 
     @ElementAnnotation("With a **Video** element you can show and play videos on the page.")
     data class VideoElement(
@@ -350,7 +346,7 @@ sealed class UIElement {
 
         @IntAnnotation
         val height: Int
-    ) : UIElement()
+        ) : UIElement()
 
     @ElementAnnotation("With a **Sound** element you can play sounds when the page is loaded.")
     data class SoundElement(
@@ -360,66 +356,64 @@ sealed class UIElement {
     @ElementAnnotation("With a **Row** element you can arrange elements horizontally on the page.")
     data class RowElement(
         @PaddingAnnotation
-        val padding: Padding =  Padding(0,0,0,0),
+        val padding: Padding,
 
         @WeightAnnotation
-        val weight: Int = 0,
+        val weight: Int,
 
         @IntAnnotation
-        val width: Int = 0 ,
+        val width: Int,
 
         @IntAnnotation
-        val height: Int = 0,
+        val height: Int,
 
-        //val uiElements: MutableList<UIElement> = mutableListOf()
-    ) : UIElement()
+        val uiElements: MutableList<UIElement> = mutableListOf()) : UIElement()
     @ElementAnnotation("With a **Column** element you can arrange elements vertically on the page.")
     data class ColumnElement(
         @PaddingAnnotation
-        val padding: Padding = Padding(0,0,0,0),
+        val padding: Padding,
 
         @WeightAnnotation
-        val weight: Int = 0,
+        val weight: Int,
 
         @IntAnnotation
-        val width: Int = 0,
+        val width: Int,
 
         @IntAnnotation
-        val height: Int = 0,
+        val height: Int,
 
-        //val uiElements: MutableList<UIElement> = mutableListOf()
-    ) : UIElement()
+        val uiElements: MutableList<UIElement> = mutableListOf()) : UIElement()
 
     @ElementAnnotation("With a **Markdown** element you can render styled text on the page.")
     data class MarkdownElement(
         @MarkdownAnnotation
-        val text: String = "",
+        val text: String,
 
         @StringAnnotation("Name of the part (from the ebook project) which will be inserted here. Like: home.md")
-        val part: String = "",
+        val part: String,
 
         @HexColorAnnotation
-        val color: String = "",
+        val color: String,
 
         @IntAnnotation
-        val fontSize: TextUnit = 16.sp,
+        val fontSize: TextUnit,
 
         @StringAnnotation("Enter one of the following weights normal, extralight, thin, medium, bold, semibold, extrabold, black like **fontWeight: \"bold\"**")
-        val fontWeight: FontWeight = FontWeight.Normal,
+        val fontWeight: FontWeight,
 
         @StringAnnotation("Enter one of the following alignments left, center, right like **textAlign: \"center\"**")
-        val textAlign: TextAlign = TextAlign.Start,
+        val textAlign: TextAlign,
 
         @WeightAnnotation
-        val weight: Int = 0,
+        val weight: Int,
 
         @IntAnnotation
-        val width: Int = 0,
+        val width: Int,
 
         @IntAnnotation
-        val height: Int = 0,
+        val height: Int,
 
-        ) : UIElement()
+    ) : UIElement()
 
     @ElementAnnotation("With a **Scene** element you can render in 3D scenes. These scenes can also be interactive tutorials, movies whatever you can imagine and build with 3D models.")
     data class SceneElement(
@@ -468,12 +462,12 @@ sealed class UIElement {
         val url: String,
         @WeightAnnotation
         val weight: Int,
-        /*@ChildrenAnnotation(
+        @ChildrenAnnotation(
             "This element supports the following child blocks:\n\n" +
                     "- **LazyContent**: defines how to render each item\n" +
                     "- **LazyNoContent** (optional): defines fallback UI when list is empty"
         )
-        //val uiElements: MutableList<UIElement> = mutableListOf()*/
+        val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 
     @ElementAnnotation(
@@ -499,12 +493,12 @@ sealed class UIElement {
         val url: String,
         @IntAnnotation
         val height: Int,
-        /*@ChildrenAnnotation(
+        @ChildrenAnnotation(
             "This element supports the following child blocks:\n\n" +
                     "- **LazyContent**: defines how to render each item\n" +
                     "- **LazyNoContent** (optional): defines fallback UI when list is empty"
         )
-        val uiElements: MutableList<UIElement> = mutableListOf()*/
+        val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 
     @ElementAnnotation("With a **Box** element you can stack elements on top of each other, allowing overlays such as an icon over an image.")
@@ -517,7 +511,7 @@ sealed class UIElement {
         val width: Int,
         @IntAnnotation
         val height: Int,
-        //val uiElements: MutableList<UIElement> = mutableListOf()
+        val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }
 

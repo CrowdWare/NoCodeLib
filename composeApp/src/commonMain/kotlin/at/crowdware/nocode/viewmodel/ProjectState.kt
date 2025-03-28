@@ -350,18 +350,16 @@ abstract class ProjectState {
                 }
                 path = "$filePath.$extension"
             }
-            var fileText = at.crowdware.nocode.viewmodel.loadFileContent(path, "", "")
+            var fileText = loadFileContent(path, "", "")
             fileText = fileText.replace("\t", "    ")
             if (extension == "sml") {
-                val result = parsePage(fileText)
-                page = result.first
-                //if (path.substringAfterLast(File.separator) == "book.sml") {
-                //    loadElementData(Ebook())
-                //} else
+                val (parsedPage, error) = parsePage(fileText, lang)
+                page = parsedPage
+
                 if (path.substringAfterLast(File.separator) == "app.sml") {
                     loadElementData(App())
                 } else {
-                    parseError = result.second
+                    parseError = error
                     if (page != null) {
                         cachedPage = page
                         isPageLoaded = true
@@ -386,8 +384,9 @@ abstract class ProjectState {
     }
 
     fun reloadPage() {
+        println("reloadPage")
         if(extension == "sml" && fileName != "app.sml" && fileName != "ebook.sml") {
-            val result = parsePage(currentFileContent.text)
+            val result = parsePage(currentFileContent.text, lang)
             page = result.first
             parseError = result.second
             if (page != null) {

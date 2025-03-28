@@ -52,12 +52,13 @@ fun RowScope.syntaxEditor(
     textFieldValue: TextFieldValue,
     onTextFieldValueChange: (TextFieldValue) -> Unit
 ) {
+    val relative = currentProject?.folder?.let { currentProject.path.removePrefix(it).removePrefix("/") }
     val coroutineScope = rememberCoroutineScope()
     if (currentProject != null && currentProject.isEditorVisible) {
         Column(modifier = Modifier.weight(1F).fillMaxHeight()) {
             Column(modifier = Modifier.weight(1F).fillMaxHeight().background(color = MaterialTheme.colors.primary)) {
                 BasicText(
-                    text = currentProject.fileName + "",
+                    text = relative.toString(),
                     modifier = Modifier.padding(8.dp),
                     maxLines = 1,
                     style = TextStyle(color = MaterialTheme.colors.onPrimary),

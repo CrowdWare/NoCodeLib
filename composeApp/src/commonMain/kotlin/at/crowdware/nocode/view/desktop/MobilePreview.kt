@@ -64,6 +64,7 @@ fun mobilePreview(currentProject: ProjectState?) {
     val lang = currentProject?.lang
 
     if (page == null && currentProject != null) {
+        // in case of syntax error we keep showing the last page
         page = currentProject.cachedPage
     }
 
@@ -110,6 +111,7 @@ fun mobilePreview(currentProject: ProjectState?) {
                         ),
                     ) {
                         if (page != null && page.elements.isNotEmpty()) {
+                            println("page in preview: ${page}")
                             Box(
                                 modifier = Modifier
                                     .size((1.0 / scale * 360.0).dp, (1.0 / scale * 640).dp)
@@ -229,6 +231,7 @@ fun renderText(element: TextElement) {
 
 @Composable
 fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lang: String) {
+
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     if (element.part.isNotEmpty() && currentProject != null) {
@@ -246,6 +249,8 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lan
         txt = element.text
     }
     val parsedMarkdown = parseMarkdown(txt)
+    val c = hexToColor(element.color, colorNameToHex("onBackground"))
+    println("renderMarkdown: $parsedMarkdown, $c")
     Text(modifier = modifier,
         text = parsedMarkdown,
         style = TextStyle(color = hexToColor(element.color, colorNameToHex("onBackground"))),
@@ -629,6 +634,7 @@ fun BoxScope.RenderUIElement(element: UIElement, lang: String) {
 
 @Composable
 fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
+    println("renderUIElement: $element")
     when (element) {
         is TextElement -> {
             renderText(element)
