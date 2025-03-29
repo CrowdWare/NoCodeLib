@@ -34,7 +34,10 @@ import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import at.crowdware.nocode.utils.SmlNode
 import at.crowdware.nocode.utils.UIElement
+import at.crowdware.nocode.utils.getIntValue
+import at.crowdware.nocode.utils.getStringValue
 import at.crowdware.nocode.viewmodel.GlobalProjectState
 import org.jcodec.api.FrameGrab
 import org.jcodec.common.model.Picture
@@ -46,8 +49,13 @@ import java.net.URI
 
 
 @Composable
-actual fun dynamicImageFromAssets(modifier: Modifier, element: UIElement.ImageElement) {
-    dynamicImageFromAssets(modifier, element.src, element.scale, element.link, element.width, element.height)
+actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode) {
+    val src = getStringValue(node, "src", "")
+    val scale = getStringValue(node, "scale", "")
+    val link = getStringValue(node, "link", "")
+    val width = getIntValue(node, "width", 0)
+    val height = getIntValue(node, "height", 0)
+    dynamicImageFromAssets(modifier, src, scale, link, width, height)
 }
 
 @Composable

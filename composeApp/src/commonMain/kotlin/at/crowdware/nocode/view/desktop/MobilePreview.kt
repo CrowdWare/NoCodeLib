@@ -56,9 +56,6 @@ import at.crowdware.nocode.viewmodel.GlobalProjectState
 import at.crowdware.nocode.viewmodel.ProjectState
 import java.io.File
 
-
-
-
 @Composable
 fun mobilePreview(currentProject: ProjectState?) {
     var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
@@ -495,6 +492,9 @@ fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
         "Row" -> {
             renderRow(node, lang)
         }
+        "Box" -> {
+            renderBox(node, lang)
+        }
         "Spacer" -> {
             var mod = Modifier as Modifier
             val amount = getIntValue(node, "amount", 0)
@@ -514,79 +514,67 @@ fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
         "Button" -> {
             renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node)
         }
-        /*
-
-        is BoxElement -> {
-            renderBox(element, lang)
+        "Image" -> {
+            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
         }
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
+        "LazyColumn" -> {
+            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
         }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
+        "LazyRow" -> {
+            renderLazyRow(node, lang)
         }
-        is ImageElement -> {
-            dynamicImageFromAssets(
-                modifier = if (element.weight > 0) Modifier.weight(
-                    element.weight.toFloat()
-                ) else Modifier, element
-            )
-        }
-        is AsyncImageElement -> {
+        "AsyncImage" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
+            val scale = getStringValue(node, "scale", "")
             asyncImage(
-                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
+                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,"", scale, "", width, height
             )
         }
-        is SoundElement -> {
-            dynamicSoundfromAssets(element.src)
+        "Sound" -> {
+            val src = getStringValue(node, "src", "")
+            dynamicSoundfromAssets(src)
         }
-        is SpacerElement -> {
-            var mod = Modifier as Modifier
-
-            if (element.amount > 0 )
-                mod = mod.then(Modifier.width(element.amount.dp))
-            if (element.weight > 0.0)
-                mod = mod.then(Modifier.weight(element.weight.toFloat()))
-
-            Spacer(modifier = mod)
-        }
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
+        "Video" -> {
+            val src = getStringValue(node, "src", "")
+            if (src.startsWith("http")) {
                 dynamicVideofromUrl(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
+                    modifier = if (weight > 0) {
+                        Modifier.weight(weight.toFloat())
                     } else {
                         Modifier
                     }
                 )
             } else {
                 dynamicVideofromAssets(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
+                    modifier = if (weight > 0) {
+                        Modifier.weight(weight.toFloat())
                     } else {
                         Modifier
-                    }, element.src
+                    }, src
                 )
             }
         }
-        is YoutubeElement -> {
-            at.crowdware.nocode.view.desktop.dynamicYoutube(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
+        "Youtube" -> {
+            dynamicYoutube(
+                modifier = if (weight > 0) {
+                    Modifier.weight(weight.toFloat())
                 } else {
                     Modifier
                 }
             )
         }
-        is SceneElement -> {
+        "Scene" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
             dynamicScene(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
+                modifier = if (weight > 0) {
+                    Modifier.weight(weight.toFloat())
                 } else {
                     Modifier
-                }, element.width, element.height
+                }, width, height
             )
-        }*/
+        }
         else -> {
             println("Unsupported element: ${node.name}")
         }
@@ -636,46 +624,44 @@ fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
                 mod = mod.then(Modifier.height(amount.dp))
             Spacer(modifier = mod)
         }
-        /*
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
+        "Image" -> {
+            val align = getStringValue(node, "align", "")
+            val alignment = if (align.isNotEmpty()) align.toAlignment() else Alignment.TopStart
+            dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node)
         }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
+        "LazyColumn" -> {
+            renderLazyColumn(modifier = Modifier, node = node, lang = lang)
         }
-        is ImageElement -> {
-            val alignment = if (element.align.isNotEmpty()) element.align.toAlignment() else Alignment.TopStart
-            dynamicImageFromAssets(
-                modifier = Modifier.align(alignment),
-                element = element
-            )
+        "LazyRow" -> {
+            renderLazyRow(node, lang)
         }
-        is AsyncImageElement -> {
-            asyncImage(modifier = Modifier, "", element.scale, "", element.width, element.height)
+        "AsyncImage" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
+            val scale = getStringValue(node, "scale", "")
+            asyncImage(modifier = Modifier, "", scale, "", width, height)
         }
-        is SoundElement -> {
-            dynamicSoundfromAssets(element.src)
+        "SoundElement" -> {
+            val src = getStringValue(node, "src", "")
+            dynamicSoundfromAssets(src)
         }
-        is SpacerElement -> {
-            var mod = Modifier as Modifier
 
-            if (element.amount >0 )
-                mod = mod.then(Modifier.height(element.amount.dp))
-            Spacer(modifier = mod)
-        }
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
+        "VideoElement" -> {
+            val src = getStringValue(node, "src", "")
+            if (src.startsWith("http")) {
                 dynamicVideofromUrl(modifier = Modifier)
             } else {
-                dynamicVideofromAssets(modifier = Modifier, element.src)
+                dynamicVideofromAssets(modifier = Modifier, src)
             }
         }
-        is YoutubeElement -> {
+        "Youtube" -> {
             dynamicYoutube(modifier = Modifier)
         }
-        is SceneElement -> {
-            dynamicScene(modifier = Modifier, element.width, element.height)
-        }*/
+        "Scene" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
+            dynamicScene(modifier = Modifier, width, height)
+        }
         else -> {
             println("Unsupported node: $node")
         }
@@ -714,71 +700,71 @@ fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
         "Box" -> {
             renderBox(node, lang)
         }
-        /*
-
-
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
+        "Image" -> {
+            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
         }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
+        "LazyColumn" -> {
+            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
         }
-        is ImageElement -> {
-            dynamicImageFromAssets(
-                modifier = if (element.weight > 0) Modifier.weight(
-                    element.weight.toFloat()
-                ) else Modifier, element
-            )
+        "LazyRow" -> {
+            renderLazyRow(node, lang)
         }
-        is AsyncImageElement -> {
+        "AsyncImage" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
+            val scale = getStringValue(node, "scale", "")
             asyncImage(
-                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
+                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,"", scale, "", width, height
             )
         }
-        is SoundElement -> {
-            dynamicSoundfromAssets(element.src)
+        "Sound" -> {
+            val src = getStringValue(node, "src", "")
+            dynamicSoundfromAssets(src)
         }
 
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
+        "Video" -> {
+            val src = getStringValue(node, "src", "")
+            if (src.startsWith("http")) {
                 dynamicVideofromUrl(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
+                    modifier = if (weight > 0) {
+                        Modifier.weight(weight.toFloat())
                     } else {
                         Modifier
                     }
                 )
             } else {
                 dynamicVideofromAssets(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
+                    modifier = if (weight > 0) {
+                        Modifier.weight(weight.toFloat())
                     } else {
                         Modifier
-                    }, element.src
+                    }, src
                 )
             }
         }
-        is YoutubeElement -> {
+        "Youtube" -> {
             dynamicYoutube(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
+                modifier = if (weight > 0) {
+                    Modifier.weight(weight.toFloat())
                 } else {
                     Modifier
                 }
             )
         }
-        is SceneElement -> {
+        "Scene" -> {
+            val width = getIntValue(node, "width", 0)
+            val height = getIntValue(node, "height", 0)
             dynamicScene(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
+                modifier = if (weight > 0) {
+                    Modifier.weight(weight.toFloat())
                 } else {
                     Modifier
-                }, element.width, element.height
+                }, width, height
             )
         }
         else -> {
-            println("Unsupported element: $element")
-        }*/
+            println("Unsupported node: ${node.name}")
+        }
     }
 }
 
@@ -1143,7 +1129,7 @@ fun parseMarkdown(markdown: String): AnnotatedString {
 @Composable
 expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
 @Composable
-expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, element: UIElement.ImageElement)
+expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, node: SmlNode)
 @Composable
 expect fun asyncImage(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
 @Composable
