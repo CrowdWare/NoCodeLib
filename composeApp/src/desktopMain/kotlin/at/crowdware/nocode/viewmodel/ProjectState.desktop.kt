@@ -24,19 +24,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
 import at.crowdware.nocode.model.extensionToNodeType
-import at.crowdware.nocode.model.*
 import at.crowdware.nocode.utils.fillAppFromSmlNode
 import at.crowdware.nocode.utils.parseSML
 import java.io.File
-//import at.crowdware.nocode.utils.parseApp
-//import at.crowdware.nocode.utils.parseBook
-//import at.crowdware.nocode.utils.parseSite
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
-import kotlin.system.exitProcess
 
 actual fun getNodeType(path: String): NodeType {
     val file = File(path)
@@ -81,14 +76,32 @@ class DesktopProjectState : ProjectState() {
         }
 
         fun mapFileToTreeNode(file: File): TreeNode {
-            val allowedFolderNames = listOf("images", "videos", "sounds", "models","pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo")
+            val allowedFolderNames = listOf(
+                "images",
+                "videos",
+                "sounds",
+                "models",
+                "pages-en",
+                "pages-de",
+                "pages-es",
+                "pages-pt",
+                "pages-fr",
+                "pages-eo",
+                "parts-en",
+                "parts-de",
+                "parts-es",
+                "parts-pt",
+                "parts-fr",
+                "parts-eo"
+            )
             val nodeType = getNodeType(file)
             val children = if (file.isDirectory) {
                 file.listFiles()
                     ?.filter { it.name != ".DS_Store" }
                     ?.flatMap {
                         if (it.isDirectory && allowedFolderNames.contains(it.name)) {
-                            it.listFiles()?.filter { file -> file.name != ".DS_Store" }?.map { mapFileToTreeNode(it) } ?: emptyList()
+                            it.listFiles()?.filter { file -> file.name != ".DS_Store" }?.map { mapFileToTreeNode(it) }
+                                ?: emptyList()
                         } else if (!it.isDirectory) {
                             listOf(mapFileToTreeNode(it))
                         } else {
@@ -102,12 +115,12 @@ class DesktopProjectState : ProjectState() {
                 addAll(children)
             }
             val node = TreeNode(
-                title = mutableStateOf( file.name),
+                title = mutableStateOf(file.name),
                 path = file.path,
                 type = nodeType,
                 children = statefulChildren
             )
-            if ( node.title.value == "pages-en" || node.title.value == "pages-es" || node.title.value == "pages-pt" || node.title.value == "pages-fr" || node.title.value == "pages-eo") {
+            if (node.title.value == "pages-en" || node.title.value == "pages-es" || node.title.value == "pages-pt" || node.title.value == "pages-fr" || node.title.value == "pages-eo") {
                 // TODO, pageNode will be overridden all the time
                 pageNode = node
             } else if (node.title.value == "images") {
@@ -131,8 +144,26 @@ class DesktopProjectState : ProjectState() {
             ?.filter {
                 it.name != ".DS_Store" &&
                         !it.name.endsWith(".py") &&
-                        (it.isDirectory && it.name in listOf( "images", "sounds", "videos", "models", "textures", "pages-en", "pages-de", "pages-es", "pages-pt", "pages-fr", "pages-eo","parts-en", "parts-de", "parts-es", "parts-pt", "parts-fr", "parts-eo"  )) ||
-                        (it.isFile && it.name in listOf("app.sml", "book.sml", "site.sml"))
+                        (it.isDirectory && it.name in listOf(
+                            "images",
+                            "sounds",
+                            "videos",
+                            "models",
+                            "textures",
+                            "pages-en",
+                            "pages-de",
+                            "pages-es",
+                            "pages-pt",
+                            "pages-fr",
+                            "pages-eo",
+                            "parts-en",
+                            "parts-de",
+                            "parts-es",
+                            "parts-pt",
+                            "parts-fr",
+                            "parts-eo"
+                        )) ||
+                        (it.isFile && it.name in listOf("app.sml"))
             }
             ?.map { mapFileToTreeNode(it) }
             ?: emptyList()
@@ -156,23 +187,8 @@ class DesktopProjectState : ProjectState() {
         folder = path
         val supportedLanguages = listOf("de", "en", "es", "pt", "fr", "eo")
 
-        /*
-        val siteFile = File("$folder/site.sml")
-        if (siteFile.exists()) {
-            loadSite()
-
-            for (lang in supportedLanguages) {
-                val langDir = File(folder, "pages-$lang")
-                val homeFile = File(langDir, "home.sml")
-                if (homeFile.exists()) {
-                    LoadFile("$folder/pages-$lang/home.sml")
-                    break
-                }
-            }
-        }*/
-
         // app.sml load and parse
-        val appFile =  File("$folder/app.sml")
+        val appFile = File("$folder/app.sml")
         if (appFile.exists()) {
             loadApp()
 
@@ -185,60 +201,18 @@ class DesktopProjectState : ProjectState() {
                 }
             }
         }
-
-        /*
-        // book.sml load and parse
-        val bookFile = File("$folder/book.sml")
-        if(bookFile.exists()) {
-            loadBook()
-            for (lang in supportedLanguages) {
-                val langDir = File(folder, "parts-$lang")
-                val homeFile = File(langDir, "home.md")
-                if (homeFile.exists()) {
-                    LoadFile("$folder/parts-$lang/home.md")
-                    break
-                }
-            }
-        }*/
     }
-
-    /*
-    override fun loadSite() {
-        val siteFile = File("$folder/site.sml")
-        try {
-            val uiSml = siteFile.readText()
-            val result = parseSite(uiSml)
-            site = result.first
-        } catch (e: Exception) {
-            println("Error parsing site.sml: ${e.message}")
-        }
-    }*/
 
     override fun loadApp() {
         val appFile = File("$folder/app.sml")
         try {
             val uiSml = appFile.readText()
-            //val result = parseApp(uiSml)
             val (parsedApp, error) = parseSML(uiSml)
             app = parsedApp?.let { fillAppFromSmlNode(it) }
-            //app = result.first
         } catch (e: Exception) {
             println("Error parsing app.sml: ${e.message}")
         }
     }
-
-    /*
-    override fun loadBook() {
-        val bookFile = File("$folder/book.sml")
-        try {
-            val uiSml = bookFile.readText()
-            val result = parseBook(uiSml)
-            book = result.first
-        } catch (e: Exception) {
-            println("Error parsing book.sml: ${e.message}")
-        }
-    }
-*/
 
     override suspend fun createProjectFiles(
         path: String,
@@ -247,31 +221,28 @@ class DesktopProjectState : ProjectState() {
         name: String,
         appId: String,
         theme: String,
-        //createBook: Boolean,
-        //createApp: Boolean,
-        //createWebsite: Boolean,
         langs: List<String>
     ) {
         val dir = File("$path$name")
         dir.mkdirs()
-        //if(createApp) {
-            for(lang in langs) {
-                val pages = File("$path$name/pages-$lang")
-                pages.mkdirs()
-            }
-            val videos = File("$path$name/videos")
-            videos.mkdirs()
-            val sounds = File("$path$name/sounds")
-            sounds.mkdirs()
-            val images = File("$path$name/images")
-            images.mkdirs()
-            val models = File("$path$name/models")
-            models.mkdirs()
-            val textures = File("$path$name/textures")
-            textures.mkdirs()
-            createParts(path, name, langs)
-            val app = File("$path$name/app.sml")
-            var appContent = """
+
+        for (lang in langs) {
+            val pages = File("$path$name/pages-$lang")
+            pages.mkdirs()
+        }
+        val videos = File("$path$name/videos")
+        videos.mkdirs()
+        val sounds = File("$path$name/sounds")
+        sounds.mkdirs()
+        val images = File("$path$name/images")
+        images.mkdirs()
+        val models = File("$path$name/models")
+        models.mkdirs()
+        val textures = File("$path$name/textures")
+        textures.mkdirs()
+        createParts(path, name, langs)
+        val app = File("$path$name/app.sml")
+        var appContent = """
                 App {
                     smlVersion: "1.1"
                     name: "$name"
@@ -281,17 +252,17 @@ class DesktopProjectState : ProjectState() {
 
                 """.trimIndent()
 
-            appContent += if (theme == "Light")
-                writeLightTheme()
-            else
-                writeDarkTheme()
-            appContent += "// deployment start - don't edit here\n\n// deployment end\n}\n\n"
-            app.writeText(appContent)
-            createPages(path, name, langs)
-            copyResourceToFile("python/server.py", "$path/$name/server.py")
-            copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
-            copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
-        //}
+        appContent += if (theme == "Light")
+            writeLightTheme()
+        else
+            writeDarkTheme()
+        appContent += "// deployment start - don't edit here\n\n// deployment end\n}\n\n"
+        app.writeText(appContent)
+        createPages(path, name, langs)
+        copyResourceToFile("python/server.py", "$path/$name/server.py")
+        copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
+        copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
+
 
         /*
         if (createBook) {
@@ -314,41 +285,6 @@ class DesktopProjectState : ProjectState() {
             book.writeText(bookContent)
         }*/
 
-        /*
-        if (createWebsite) {
-            for(lang in langs) {
-                val pages = File("$path$name/pages-$lang")
-                pages.mkdirs()
-            }
-            val videos = File("$path$name/videos")
-            videos.mkdirs()
-            val sounds = File("$path$name/sounds")
-            sounds.mkdirs()
-            val images = File("$path$name/images")
-            images.mkdirs()
-
-            val site = File("$path$name/site.sml")
-              var siteContent = """
-                Site {
-                    smlVersion: "1.1"
-                    name: "$name"
-                    version: "1.0"
-                    template: "bootstrap"
-                    creator: ""
-                    language: "$lang"
-                    deployDirHtml: ""
-                    author: ""
-                    authorBio: ""
-                
-            """.trimIndent()
-            siteContent += if (theme == "Light")
-                writeLightTheme()
-            else
-                writeDarkTheme()
-            siteContent += "}\n\n"
-            site.writeText(siteContent)
-            createPages(path, name, langs)
-        }*/
         val imageFiles = File("$path$name/images")
         imageFiles.mkdirs()
 

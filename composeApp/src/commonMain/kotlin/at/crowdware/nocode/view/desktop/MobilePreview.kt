@@ -109,7 +109,7 @@ fun mobilePreview(currentProject: ProjectState?) {
                             fontScale = fontScale
                         ),
                     ) {
-                        if (node != null && node.children.isNotEmpty()) {
+                        if (node != null && node.children.isNotEmpty() && currentProject?.extension == "sml") {
                             val pageBackgroundColor = hexToColor(getStringValue(node, "backgroundColor", "background"))
                             Box(
                                 modifier = Modifier

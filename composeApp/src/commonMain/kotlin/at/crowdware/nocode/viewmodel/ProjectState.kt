@@ -340,7 +340,7 @@ abstract class ProjectState {
             extension = path.substringAfterLast('.', "")
             if (extension.isEmpty()) {
                 extension = when {
-                    at.crowdware.nocode.viewmodel.fileExists("$path.sml") -> "sml"
+                    fileExists("$path.sml") -> "sml"
                     else -> {
                         println("Keine gültige Datei gefunden.")
                         return@launch // Wenn keine gültige Datei gefunden wird, breche ab
@@ -384,7 +384,6 @@ abstract class ProjectState {
     }
 
     fun reloadPage() {
-        println("reloadPage")
         if(extension == "sml" && fileName != "app.sml" && fileName != "ebook.sml") {
             val (smlNode, error) = parseSML(currentFileContent.text)
             parsedPage = smlNode
@@ -398,6 +397,7 @@ abstract class ProjectState {
     }
 
     private fun loadElementData(obj: Any?) {
+        // TODO
         /*
         when (obj) {
             is Page -> {
