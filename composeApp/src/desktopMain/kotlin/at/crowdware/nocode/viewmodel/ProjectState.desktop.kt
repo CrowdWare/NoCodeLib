@@ -25,8 +25,10 @@ import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
 import at.crowdware.nocode.model.extensionToNodeType
 import at.crowdware.nocode.model.*
+import at.crowdware.nocode.utils.fillAppFromSmlNode
+import at.crowdware.nocode.utils.parseSML
 import java.io.File
-import at.crowdware.nocode.utils.parseApp
+//import at.crowdware.nocode.utils.parseApp
 //import at.crowdware.nocode.utils.parseBook
 //import at.crowdware.nocode.utils.parseSite
 import java.io.IOException
@@ -216,8 +218,10 @@ class DesktopProjectState : ProjectState() {
         val appFile = File("$folder/app.sml")
         try {
             val uiSml = appFile.readText()
-            val result = parseApp(uiSml)
-            app = result.first
+            //val result = parseApp(uiSml)
+            val (parsedApp, error) = parseSML(uiSml)
+            app = parsedApp?.let { fillAppFromSmlNode(it) }
+            //app = result.first
         } catch (e: Exception) {
             println("Error parsing app.sml: ${e.message}")
         }

@@ -185,7 +185,7 @@ data class Page(
     var color: String = "",
 
     @HexColorAnnotation
-    var backgroundColor: String = "",
+    var backgroundColor: String = "background",
 
     @PaddingAnnotation
     var padding: Padding = Padding(0,0,0,0),
@@ -399,7 +399,7 @@ sealed class UIElement {
         val part: String = "",
 
         @HexColorAnnotation
-        val color: String = "",
+        val color: String = "onPrimary",
 
         @IntAnnotation
         val fontSize: TextUnit = 16.sp,

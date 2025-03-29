@@ -19,6 +19,8 @@
 
 package at.crowdware.nocode.utils
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.parser.Parser
 import com.github.h0tk3y.betterParse.grammar.Grammar
@@ -26,10 +28,11 @@ import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.lexer.*
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.utils.Tuple7
+import com.github.h0tk3y.betterParse.grammar.*
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
-
+/*
 object ElementRegistry {
     private val typeMap = mutableMapOf<String, KClass<out Any>>()
 
@@ -62,7 +65,7 @@ object ElementRegistry {
         register("Markdown", UIElement.MarkdownElement::class)
     }
 }
-
+*/
 fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     if (tuple !is Tuple7<*, *, *, *, *, *, *>) return null
 
@@ -90,18 +93,21 @@ fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     return SmlNode(name, properties, children)
 }
 
+/*
 fun parseApp(sml: String): Pair<App?, String?> {
     ElementRegistry.initDefaults()
 
     val rootList = SmlGrammar.parseToEnd(sml)
     val root = convertTupleToSmlNode(rootList.firstOrNull() ?: return null to "Empty SML")
     val app = root?.let { buildElementTree(it) } as? App
+
+    println("Theme: ${app?.theme}")
     return app to if (app == null) "Root must be App" else null
 }
-
+*/
 fun String.lineWrap(maxLen: Int): String =
     this.chunked(maxLen).joinToString("\n")
-
+/*
 fun parsePage(sml: String, lang: String): Pair<Page?, String?> {
     ElementRegistry.initDefaults()
 
@@ -117,7 +123,8 @@ fun parsePage(sml: String, lang: String): Pair<Page?, String?> {
 
     return page to if (page == null) "Root muss Page sein" else null
 }
-
+*/
+/*
 fun buildElementTree(node: SmlNode): Any? {
     val clazz = ElementRegistry.get(node.name) ?: return null
     val constructor = clazz.primaryConstructor ?: return null
@@ -157,7 +164,28 @@ fun buildElementTree(node: SmlNode): Any? {
         return null
     }
 
-    if (instance is Page) {
+    if (instance is ThemeElement) {
+
+        // Handle ThemeElement properties generically
+        val themeProperties = node.properties
+        ThemeElement::class.members.forEach { member ->
+            if (member is kotlin.reflect.KMutableProperty<*>) {
+                val propertyName = member.name
+                themeProperties[propertyName]?.let { propValue ->
+                    when (propValue) {
+                        is PropertyValue.StringValue -> member.setter.call(instance, propValue.value)
+                        is PropertyValue.BoolValue -> member.setter.call(instance, propValue.value)
+                        is PropertyValue.FloatValue -> member.setter.call(instance, propValue.value)
+                        is PropertyValue.IntValue -> member.setter.call(instance, propValue.value)
+                        is PropertyValue.ElementValue -> { }
+                        else -> {
+
+                        }
+                    }
+                }
+            }
+        }
+    } else if (instance is Page) {
         instance.elements.addAll(node.children.mapNotNull {
             buildElementTree(it) as? UIElement
         })
@@ -169,6 +197,7 @@ fun buildElementTree(node: SmlNode): Any? {
 
     return instance
 }
+*/
 
 val identifier: Token = regexToken("[a-zA-Z_][a-zA-Z0-9_]*")
 val lBrace: Token = literalToken("{")
@@ -208,8 +237,6 @@ object SmlGrammar : Grammar<List<Any>>() {
     override val rootParser: Parser<List<Any>> = (oneOrMore(element) and ignoredParser).map { (elements, _) -> elements }
 }
 
-// Datenklassen-Simulation
-
 data class SmlNode(
     val name: String,
     val properties: Map<String, PropertyValue>,
@@ -220,17 +247,140 @@ sealed class PropertyValue {
     data class StringValue(val value: String) : PropertyValue()
     data class IntValue(val value: Int) : PropertyValue()
     data class FloatValue(val value: Float) : PropertyValue()
-    data class BoolValue(val value: Boolean) : PropertyValue()
-    data class ElementValue(val name: String, val properties: Map<String, PropertyValue>) : PropertyValue()
+    //data class BoolValue(val value: Boolean) : PropertyValue()
+    //data class ElementValue(val name: String, val properties: Map<String, PropertyValue>) : PropertyValue()
 }
 
-fun parsePadding(padding: String): Padding {
-    val paddingValues = padding.split(" ").mapNotNull { it.toIntOrNull() }
+val fontWeightMap = mapOf(
+    "bold" to FontWeight.Bold,
+    "black" to FontWeight.Black,
+    "thin" to FontWeight.Thin,
+    "extrabold" to FontWeight.ExtraBold,
+    "extralight" to FontWeight.ExtraLight,
+    "light" to FontWeight.Light,
+    "medium" to FontWeight.Medium,
+    "semibold" to FontWeight.SemiBold,
+    "" to FontWeight.Normal
+)
+
+val textAlignMap = mapOf(
+    "left" to TextAlign.Start,
+    "center" to TextAlign.Center,
+    "right" to TextAlign.End,
+    "" to TextAlign.Unspecified
+)
+
+fun getStringValue(node: SmlNode, key: String, default: String): String {
+    val value = node.properties[key]
+    return when {
+        value is PropertyValue.StringValue -> value.value
+        value is PropertyValue -> {
+            val type = value.javaClass.simpleName
+            println("Warning: The value for '$key' is not a StringValue (found: $type). Returning default value: \"$default\"")
+            default
+        }
+        else -> default
+    }
+}
+
+fun getIntValue(node: SmlNode, key: String, default: Int): Int {
+    val value = node.properties[key]
+    return when {
+        value is PropertyValue.IntValue -> value.value
+        value is PropertyValue -> {
+            val type = value.javaClass.simpleName
+            println("Warning: The value for '$key' is not an IntValue (found: $type). Returning default value: $default")
+            default
+        }
+        else -> default
+    }
+}
+
+fun getFontWeight(node: SmlNode): FontWeight {
+    val key = getStringValue(node, "fontWeight", "").trim()
+    return fontWeightMap.getOrDefault(key, FontWeight.Normal)
+}
+fun getTextAlign(node: SmlNode): TextAlign {
+    val key = getStringValue(node, "textAlign", "").trim()
+    return textAlignMap.getOrDefault(key, TextAlign.Unspecified)
+}
+
+fun getPadding(node: SmlNode): Padding {
+    val paddingString = getStringValue(node, "padding", "0")
+    val paddingValues = paddingString.split(" ").mapNotNull { it.toIntOrNull() }
 
     return when (paddingValues.size) {
-        1 -> Padding(paddingValues[0], paddingValues[0], paddingValues[0], paddingValues[0]) // Alle Seiten gleich
-        2 -> Padding(paddingValues[0], paddingValues[1], paddingValues[0], paddingValues[1]) // Vertikal und Horizontal gleich
-        4 -> Padding(paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[3]) // Oben, Rechts, Unten, Links
-        else -> Padding(0, 0, 0, 0)
+        1 -> Padding(paddingValues[0], paddingValues[0], paddingValues[0], paddingValues[0]) // All sides the same
+        2 -> Padding(paddingValues[0], paddingValues[1], paddingValues[0], paddingValues[1]) // Vertical and Horizontal same
+        4 -> Padding(paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[3]) // Top, Right, Bottom, Left
+        else -> Padding(0, 0, 0, 0) // Default fallback
     }
+}
+
+fun parseSML(sml: String): Pair<SmlNode?, String?> {
+    val rootList = try {
+        SmlGrammar.parseToEnd(sml)
+    } catch (e: Exception) {
+        return null to "ParseError: ${e.message?.lineWrap(100)}"
+    }
+    return rootList.firstOrNull()?.let { convertTupleToSmlNode(it) } to null
+}
+
+
+fun fillAppFromSmlNode(appNode: SmlNode): App {
+    val app = App()
+
+    appNode.properties.forEach { (key, value) ->
+        when (key) {
+            "name" -> app.name = (value as? PropertyValue.StringValue)?.value ?: ""
+            "description" -> app.description = (value as? PropertyValue.StringValue)?.value ?: ""
+            "icon" -> app.icon = (value as? PropertyValue.StringValue)?.value ?: ""
+            "id" -> app.id = (value as? PropertyValue.StringValue)?.value ?: ""
+            "smlVersion" -> app.smlVersion = (value as? PropertyValue.StringValue)?.value ?: "1.1"
+            "author" -> app.author = (value as? PropertyValue.StringValue)?.value ?: ""
+        }
+    }
+
+    val themeNode = appNode.children.find { it.name == "Theme" }
+    app.theme = themeNode?.let { fillThemeFromSmlNode(it) } ?: ThemeElement()
+    return app
+}
+
+fun fillThemeFromSmlNode(themeNode: SmlNode): ThemeElement {
+    val theme = ThemeElement()
+
+    // Durch die Properties des Theme-Nodes iterieren
+    themeNode.properties.forEach { (key, value) ->
+        when (key) {
+            "primary" -> theme.primary = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "onPrimary" -> theme.onPrimary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "background" -> theme.background = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "onBackground" -> theme.onBackground = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "secondary" -> theme.secondary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "onSecondary" -> theme.onSecondary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "secondaryContainer" -> theme.secondaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "onSecondaryContainer" -> theme.onSecondaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "tertiary" -> theme.tertiary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "onTertiary" -> theme.onTertiary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "tertiaryContainer" -> theme.tertiaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "onTertiaryContainer" -> theme.onTertiaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "error" -> theme.error = (value as? PropertyValue.StringValue)?.value ?: "#FF0000"
+            "onError" -> theme.onError = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "errorContainer" -> theme.errorContainer = (value as? PropertyValue.StringValue)?.value ?: "#FF0000"
+            "onErrorContainer" -> theme.onErrorContainer = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "surface" -> theme.surface = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "onSurface" -> theme.onSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "surfaceVariant" -> theme.surfaceVariant = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "onSurfaceVariant" -> theme.onSurfaceVariant = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "outline" -> theme.outline = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "outlineVariant" -> theme.outlineVariant = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "inversePrimary" -> theme.inversePrimary = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "inverseSurface" -> theme.inverseSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "inverseOnSurface" -> theme.inverseOnSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+            "surfaceTint" -> theme.surfaceTint = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
+            "scrim" -> theme.scrim = (value as? PropertyValue.StringValue)?.value ?: "#000000"
+        }
+    }
+
+    return theme
 }

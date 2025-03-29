@@ -97,10 +97,8 @@ abstract class ProjectState {
     lateinit var modelsNode: TreeNode
     lateinit var texturesNode: TreeNode
     var app: App? by mutableStateOf(null)
-    //var book: Ebook? by mutableStateOf(null)
-    //var site: Site? by mutableStateOf(null)
-    var page: Page? by mutableStateOf(null)
-    var cachedPage: Page? by mutableStateOf(null)
+    var parsedPage: SmlNode? by mutableStateOf(null)
+    var cachedPage: SmlNode? by mutableStateOf(null)
 
     //abstract fun loadSite()
     abstract fun loadApp()
@@ -353,21 +351,23 @@ abstract class ProjectState {
             var fileText = loadFileContent(path, "", "")
             fileText = fileText.replace("\t", "    ")
             if (extension == "sml") {
-                val (parsedPage, error) = parsePage(fileText, lang)
-                page = parsedPage
+
+                val (smlNode, error) = parseSML(fileText)
+                parsedPage = smlNode
 
                 if (path.substringAfterLast(File.separator) == "app.sml") {
                     loadElementData(App())
                 } else {
                     parseError = error
-                    if (page != null) {
-                        cachedPage = page
+                    if (parsedPage != null) {
+                        cachedPage = parsedPage
                         isPageLoaded = true
-                        loadElementData(page)
+                        loadElementData(parsedPage)
                     }
                 }
             } else {
-                page = Page(color = "", backgroundColor = "", title = "", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
+                // TODO
+                //page = Page(color = "", backgroundColor = "", title = "", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
                 elementData = emptyList()
                 val clsName = "at.crowdware.nocode.utils.Markdown"
                 val clazz = Class.forName(clsName).kotlin
@@ -386,18 +386,19 @@ abstract class ProjectState {
     fun reloadPage() {
         println("reloadPage")
         if(extension == "sml" && fileName != "app.sml" && fileName != "ebook.sml") {
-            val result = parsePage(currentFileContent.text, lang)
-            page = result.first
-            parseError = result.second
-            if (page != null) {
-                cachedPage = page
+            val (smlNode, error) = parseSML(currentFileContent.text)
+            parsedPage = smlNode
+            parseError = error
+            if (parsedPage != null) {
+                cachedPage = parsedPage
                 isPageLoaded = true
-                loadElementData(page)
+                loadElementData(parsedPage)
             }
         }
     }
 
     private fun loadElementData(obj: Any?) {
+        /*
         when (obj) {
             is Page -> {
                 elementData = listOf(mapPageToTreeNodes(page!!))
@@ -417,7 +418,7 @@ abstract class ProjectState {
                 val clazz = Class.forName(clsName).kotlin
                 actualElement = clazz
             }*/
-        }
+        }*/
     }
 
     fun mapUIElementToTreeNode(uiElement: UIElement): TreeNode {

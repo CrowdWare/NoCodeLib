@@ -50,22 +50,24 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.theme.ExtendedTheme
-import at.crowdware.nocode.utils.Page
-import at.crowdware.nocode.utils.UIElement
+import at.crowdware.nocode.utils.*
 import at.crowdware.nocode.utils.UIElement.*
 import at.crowdware.nocode.viewmodel.GlobalProjectState
 import at.crowdware.nocode.viewmodel.ProjectState
 import java.io.File
 
+
+
+
 @Composable
 fun mobilePreview(currentProject: ProjectState?) {
-    var page: Page? = if (currentProject?.isPageLoaded == true) currentProject.page else null
+    var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
     val scrollState = rememberScrollState()
     val lang = currentProject?.lang
 
-    if (page == null && currentProject != null) {
+    if (node == null && currentProject != null) {
         // in case of syntax error we keep showing the last page
-        page = currentProject.cachedPage
+        node = currentProject.cachedPage
     }
 
     Column(modifier = Modifier.width(430.dp).fillMaxHeight().background(color = MaterialTheme.colors.primary)) {
@@ -110,35 +112,32 @@ fun mobilePreview(currentProject: ProjectState?) {
                             fontScale = fontScale
                         ),
                     ) {
-                        if (page != null && page.elements.isNotEmpty()) {
-                            println("page in preview: ${page}")
+                        if (node != null && node.children.isNotEmpty()) {
+                            val pageBackgroundColor = hexToColor(getStringValue(node, "backgroundColor", "background"))
                             Box(
                                 modifier = Modifier
                                     .size((1.0 / scale * 360.0).dp, (1.0 / scale * 640).dp)
-                                    .background(hexToColor(page.backgroundColor, colorNameToHex("background")))
+                                    .background(pageBackgroundColor)
 
                             ) {
                                 var modifier = Modifier as Modifier
-                                if (page.scrollable == "true") {
+                                val scrollableProperty = node.properties["scrollable"] as? PropertyValue.StringValue
+                                if (scrollableProperty?.value == "true") {
                                     modifier = modifier.verticalScroll(scrollState)
                                 }
+                                val padding = getPadding(node)
                                 Column(
                                     modifier = modifier
                                         .padding(
-                                            start = page.padding.left.dp,
-                                            top = page.padding.top.dp,
-                                            bottom = page.padding.bottom.dp,
-                                            end = page.padding.right.dp
+                                            start = padding.left.dp,
+                                            top = padding.top.dp,
+                                            bottom = padding.bottom.dp,
+                                            end = padding.right.dp
                                         )
                                         .fillMaxSize()
-                                        .background(
-                                            color = hexToColor(
-                                                page.backgroundColor,
-                                                colorNameToHex("background")
-                                            )
-                                        )
+                                        .background(color = pageBackgroundColor)
                                 ) {
-                                    RenderPage(page, lang!!)
+                                    RenderPage(node, lang!!)
                                 }
                             }
                         } else if (currentProject != null && currentProject.extension == "md") {
@@ -188,7 +187,7 @@ fun mobilePreview(currentProject: ProjectState?) {
                                         }
                                         val altText = match.groupValues[1]
                                         val imageUrl = match.groupValues[2].trim()
-                                        at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
+                                        dynamicImageFromAssets(
                                             modifier = Modifier,
                                             imageUrl,
                                             "fit",
@@ -217,207 +216,235 @@ fun mobilePreview(currentProject: ProjectState?) {
     }
 }
 
-
 @Composable
-fun renderText(element: TextElement) {
+fun renderText(node: SmlNode) {
     CustomText(
-        text = element.text,
-        color = hexToColor( element.color, colorNameToHex("onBackground")),
-        fontSize = element.fontSize,
-        fontWeight = element.fontWeight,
-        textAlign = element.textAlign
+        text = getStringValue(node,"text", ""),
+        color = hexToColor( getStringValue(node, "color", "onBackground")),
+        fontSize = getIntValue(node, "fontSize", 14).sp,
+        fontWeight = getFontWeight(node),
+        textAlign = getTextAlign(node)
     )
 }
 
 @Composable
-fun ColumnScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lang: String) {
-
+fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    if (element.part.isNotEmpty() && currentProject != null) {
+    val part = getStringValue(node, "part", "")
+    val text = getStringValue(node, "text", "")
+    val color = getStringValue(node, "color", "onBackground")
+    val fontSize = getIntValue(node, "fontSize", 16)
+
+    if (part.isNotEmpty() && currentProject != null) {
         var dir = "parts"
         if(lang.isNotEmpty()) {
             dir += "-$lang"
         }
 
         try {
-            txt = File(currentProject.folder + "/$dir", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
-        txt = element.text
+        txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
-    val c = hexToColor(element.color, colorNameToHex("onBackground"))
-    println("renderMarkdown: $parsedMarkdown, $c")
     Text(modifier = modifier,
         text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(element.color, colorNameToHex("onBackground"))),
-        fontSize = element.fontSize,
-        fontWeight = element.fontWeight,
-        textAlign = element.textAlign
+        style = TextStyle(color = hexToColor(color)),
+        fontSize = fontSize.sp,
+        fontWeight = getFontWeight(node),
+        textAlign = getTextAlign(node)
     )
 }
 
 @Composable
-fun RowScope.renderMarkdown(modifier: Modifier, element: MarkdownElement, lang: String) {
+fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    if (element.part.isNotEmpty() && currentProject != null) {
+    val part = getStringValue(node, "part", "")
+    val text = getStringValue(node, "text", "")
+    val color = getStringValue(node, "color", "onBackground")
+    val fontSize = getIntValue(node, "fontSize", 16)
+
+    if (part.isNotEmpty() && currentProject != null) {
         var dir = "parts"
         if (lang.isNotEmpty()) {
             dir += "-$lang"
         }
         try {
-            txt = File(currentProject.folder + "/$dir", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
-        txt = element.text
+        txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
     Text(modifier = modifier,
         text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(element.color, colorNameToHex("onBackground"))),
-        fontSize = element.fontSize,
-        fontWeight = element.fontWeight,
-        textAlign = element.textAlign
+        style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
+        fontSize = fontSize.sp,
+        fontWeight = getFontWeight(node),
+        textAlign = getTextAlign(node)
     )
 }
 
 @Composable
-fun renderMarkdown(element: MarkdownElement, lang: String) {
+fun renderMarkdown(node: SmlNode, lang: String) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    if (element.part.isNotEmpty() && currentProject != null) {
+    val part = getStringValue(node, "part", "")
+    val text = getStringValue(node, "text", "")
+    val color = getStringValue(node, "color", "onBackground")
+    val fontSize = getIntValue(node, "fontSize", 16)
+
+    if (part.isNotEmpty() && currentProject != null) {
         var dir = "parts"
         if (lang.isNotEmpty()) {
             dir += "-$lang"
         }
         try {
-            txt = File(currentProject.folder + "/$dir", element.part).readText()
+            txt = File(currentProject.folder + "/$dir", part).readText()
         } catch(e: Exception) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
-        txt = element.text
+        txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
     Text(
         text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(element.color, colorNameToHex("onBackground"))),
-        fontSize = element.fontSize,
-        fontWeight = element.fontWeight,
-        textAlign = element.textAlign
+        style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
+        fontSize = fontSize.sp,
+        fontWeight = getFontWeight(node),
+        textAlign = getTextAlign(node)
     )
 }
 
 @Composable
-fun renderButton(modifier: Modifier, element: ButtonElement) {
+fun renderButton(modifier: Modifier, node: SmlNode) {
     var colors: ButtonColors
-    if(element.color.isNotEmpty() && element.backgroundColor.isNotEmpty())
-        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor(element.backgroundColor), contentColor = hexToColor(element.color))
-    else if(element.color.isNotEmpty())
-        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor("primary"), contentColor = hexToColor(element.color))
-    else if(element.backgroundColor.isNotEmpty())
-        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor(element.backgroundColor), contentColor = hexToColor("onPrimary"))
+    val width = getIntValue(node, "width", 0)
+    val height = getIntValue(node, "height", 0)
+    val color = getStringValue(node, "color", "")
+    val backgroundColor = getStringValue(node, "backgroundColor", "")
+
+    if(color.isNotEmpty() && backgroundColor.isNotEmpty())
+        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor(backgroundColor), contentColor = hexToColor(color))
+    else if(color.isNotEmpty())
+        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor("primary"), contentColor = hexToColor(color))
+    else if(backgroundColor.isNotEmpty())
+        colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor(backgroundColor), contentColor = hexToColor("onPrimary"))
     else
         colors = ButtonDefaults.buttonColors(backgroundColor = hexToColor("primary"), contentColor = hexToColor("onPrimary"))
     Button(
         modifier = modifier
-            .then(if (element.width > 0) Modifier.width(element.width.dp) else Modifier.fillMaxWidth())
-            .then(if (element.height > 0) Modifier.height(element.height.dp) else Modifier) ,
+            .then(if (width > 0) Modifier.width(width.dp) else Modifier.fillMaxWidth())
+            .then(if (height > 0) Modifier.height(height.dp) else Modifier) ,
         colors = colors,
-        onClick =  { handleButtonClick(element.link) }
+        onClick =  { handleButtonClick(getStringValue(node,"link", "")) }
     ) {
-        Text(text = element.label)
+        Text(text = getStringValue(node, "label", ""))
     }
 }
 
 @Composable
-fun renderColumn(modifier: Modifier, element: ColumnElement, lang: String) {
+fun renderColumn(modifier: Modifier, node: SmlNode, lang: String) {
+    val padding = getPadding(node)
     Column(modifier = modifier
         .padding(
-        top = element.padding.top.dp,
-        bottom = element.padding.bottom.dp,
-        start = element.padding.left.dp,
-        end = element.padding.right.dp
+        top = padding.top.dp,
+        bottom = padding.bottom.dp,
+        start = padding.left.dp,
+        end = padding.right.dp
     )) {
-        for (childElement in element.uiElements) {
+        for (childElement in node.children) {
             RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun renderRow(element: RowElement, lang: String) {
-    Row(modifier = Modifier.padding(
-        top = element.padding.top.dp,
-        bottom = element.padding.bottom.dp,
-        start = element.padding.left.dp,
-        end = element.padding.right.dp)
-        .fillMaxWidth()
-        .then(if(element.height > 0) Modifier.height(element.height.dp) else Modifier)
-        .then(if(element.width > 0) Modifier.width(element.width.dp) else Modifier),
-        horizontalArrangement = Arrangement.SpaceBetween){
-        for (childElement in element.uiElements) {
+fun renderRow(node: SmlNode, lang: String) {
+    val padding = getPadding(node)
+    val height = getIntValue(node, "height", 0)
+    val width = getIntValue(node, "width", 0)
+    Row(
+        modifier = Modifier.padding(
+            top = padding.top.dp,
+            bottom = padding.bottom.dp,
+            start = padding.left.dp,
+            end = padding.right.dp
+        )
+            .fillMaxWidth()
+            .then(if (height > 0) Modifier.height(height.dp) else Modifier)
+            .then(if (width > 0) Modifier.width(width.dp) else Modifier),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        for (childElement in node.children) {
             RenderUIElement(childElement, lang)
         }
     }
 }
 
 @Composable
-fun renderBox(element: BoxElement, lang: String) {
+fun renderBox(node: SmlNode, lang: String) {
+    val padding = getPadding(node)
+    val height = getIntValue(node, "height", 0)
+    val width = getIntValue(node, "width", 0)
     Box(modifier = Modifier.padding(
-        top = element.padding.top.dp,
-        bottom = element.padding.bottom.dp,
-        start = element.padding.left.dp,
-        end = element.padding.right.dp)
-        .then(if(element.height > 0) Modifier.height(element.height.dp) else Modifier.fillMaxHeight())
-        .then(if(element.width > 0) Modifier.width(element.width.dp) else Modifier.fillMaxWidth())){
-        for (childElement in element.uiElements) {
-            RenderUIElement(childElement, lang)
+        top = padding.top.dp,
+        bottom = padding.bottom.dp,
+        start = padding.left.dp,
+        end = padding.right.dp)
+        .then(if(height > 0) Modifier.height(height.dp) else Modifier.fillMaxHeight())
+        .then(if(width > 0) Modifier.width(width.dp) else Modifier.fillMaxWidth())){
+        for (child in node.children) {
+            RenderUIElement(child, lang)
         }
     }
 }
 
 @Composable
-fun renderLazyColumn(modifier: Modifier, element: LazyColumnElement, lang: String) {
+fun renderLazyColumn(modifier: Modifier, node: SmlNode, lang: String) {
     Column(modifier = modifier) {
-        for (childElement in element.uiElements) {
-            RenderUIElement(childElement, lang)
+        for (child in node.children) {
+            RenderUIElement(child, lang)
         }
     }
 }
 
 @Composable
-fun renderLazyRow(element: LazyRowElement, lang: String) {
-    Row (modifier = if(element.height > 0) Modifier.height(element.height.dp) else Modifier) {
-        for (childElement in element.uiElements) {
-            RenderUIElement(childElement, lang)
+fun renderLazyRow(node: SmlNode, lang: String) {
+    val height = getIntValue(node, "height", 0)
+    Row (modifier = if(height > 0) Modifier.height(height.dp) else Modifier) {
+        for (child in node.children) {
+            RenderUIElement(child, lang)
         }
     }
 }
 
+/*
 @Composable
-fun RenderUIElement(element: UIElement, lang: String, inBox: Boolean = false) {
-    when (element) {
+fun RenderUIElement(node: SmlNode, lang: String, inBox: Boolean = false) {
+    when (node.name) {
         is TextElement -> {
-            renderText(element)
+            //renderText(element)
         }
         is MarkdownElement -> {
             renderMarkdown(element, lang)
         }
         is ButtonElement -> {
-            renderButton(modifier = Modifier.fillMaxWidth(), element)
+           // renderButton(modifier = Modifier.fillMaxWidth(), node)
         }
         is ColumnElement -> {
-            renderColumn(Modifier, element, lang = lang)
+            //renderColumn(Modifier, element, lang = lang)
         }
         is RowElement -> {
-            renderRow(element, lang)
+            //renderRow(element, lang)
         }
         is BoxElement -> {
             renderBox(element, lang)
@@ -455,202 +482,40 @@ fun RenderUIElement(element: UIElement, lang: String, inBox: Boolean = false) {
         }
     }
 }
+*/
 
 @Composable
-fun RowScope.RenderUIElement(element: UIElement, lang: String) {
-    when (element) {
-        is TextElement -> {
-            renderText(element)
-        }
-        is MarkdownElement -> {
-            renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
-        }
-        is ButtonElement -> {
-            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier.weight(1f), element)
-        }
-        is ColumnElement -> {
-            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
-        }
-        is RowElement -> {
-            renderRow(element, lang)
-        }
-        is BoxElement -> {
-            renderBox(element, lang)
-        }
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
-        }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
-        }
-        is ImageElement -> {
-            at.crowdware.nocode.view.desktop.dynamicImageFromAssets(
-                modifier = if (element.weight > 0) Modifier.weight(
-                    element.weight.toFloat()
-                ) else Modifier, element
-            )
-        }
-        is AsyncImageElement -> {
-            asyncImage(
-                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
-            )
-        }
-        is SoundElement -> {
-            at.crowdware.nocode.view.desktop.dynamicSoundfromAssets(element.src)
-        }
-        is SpacerElement -> {
-            var mod = Modifier as Modifier
+fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
+    val weight = getIntValue(node, "weight", 0)
 
-            if (element.amount > 0 )
-                mod = mod.then(Modifier.width(element.amount.dp))
-            if (element.weight > 0.0)
-                mod = mod.then(Modifier.weight(element.weight.toFloat()))
+    when (node.name) {
+        "Column" -> {
+            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
+        }
+        "Row" -> {
+            renderRow(node, lang)
+        }
+        "Spacer" -> {
+            var mod = Modifier as Modifier
+            val amount = getIntValue(node, "amount", 0)
+            if (amount > 0 )
+                mod = mod.then(Modifier.width(amount.dp))
+            if (weight > 0.0)
+                mod = mod.then(Modifier.weight(weight.toFloat()))
 
             Spacer(modifier = mod)
         }
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
-                at.crowdware.nocode.view.desktop.dynamicVideofromUrl(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
-                    } else {
-                        Modifier
-                    }
-                )
-            } else {
-                at.crowdware.nocode.view.desktop.dynamicVideofromAssets(
-                    modifier = if (element.weight > 0) {
-                        Modifier.weight(element.weight.toFloat())
-                    } else {
-                        Modifier
-                    }, element.src
-                )
-            }
+        "Text" -> {
+            renderText(node)
         }
-        is YoutubeElement -> {
-            at.crowdware.nocode.view.desktop.dynamicYoutube(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
-                } else {
-                    Modifier
-                }
-            )
+        "Markdown" -> {
+            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang = lang)
         }
-        is SceneElement -> {
-            at.crowdware.nocode.view.desktop.dynamicScene(
-                modifier = if (element.weight > 0) {
-                    Modifier.weight(element.weight.toFloat())
-                } else {
-                    Modifier
-                }, element.width, element.height
-            )
+        "Button" -> {
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node)
         }
-        else -> {
-            println("Unsupported element: $element")
-        }
-    }
-}
+        /*
 
-fun String.toAlignment(): Alignment {
-    return when (this) {
-        "topStart" -> Alignment.TopStart
-        "topCenter" -> Alignment.TopCenter
-        "topEnd" -> Alignment.TopEnd
-        "centerStart" -> Alignment.CenterStart
-        "center" -> Alignment.Center
-        "centerEnd" -> Alignment.CenterEnd
-        "bottomStart" -> Alignment.BottomStart
-        "bottomCenter" -> Alignment.BottomCenter
-        "bottomEnd" -> Alignment.BottomEnd
-        else -> Alignment.TopStart // Default fallback
-    }
-}
-
-@Composable
-fun BoxScope.RenderUIElement(element: UIElement, lang: String) {
-    when (element) {
-        is TextElement -> {
-           renderText(element)
-        }
-        is MarkdownElement -> {
-            renderMarkdown(element, lang)
-        }
-        is ButtonElement -> {
-            renderButton(modifier = Modifier, element)
-        }
-        is ColumnElement -> {
-            renderColumn(modifier = Modifier, element, lang)
-        }
-        is RowElement -> {
-            renderRow(element, lang)
-        }
-        is BoxElement -> {
-            renderBox(element, lang)
-        }
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
-        }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
-        }
-        is ImageElement -> {
-            val alignment = if (element.align.isNotEmpty()) element.align.toAlignment() else Alignment.TopStart
-            dynamicImageFromAssets(
-                modifier = Modifier.align(alignment),
-                element = element
-            )
-        }
-        is AsyncImageElement -> {
-            asyncImage(modifier = Modifier, "", element.scale, "", element.width, element.height)
-        }
-        is SoundElement -> {
-            dynamicSoundfromAssets(element.src)
-        }
-        is SpacerElement -> {
-            var mod = Modifier as Modifier
-
-            if (element.amount >0 )
-                mod = mod.then(Modifier.height(element.amount.dp))
-            Spacer(modifier = mod)
-        }
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
-                dynamicVideofromUrl(modifier = Modifier)
-            } else {
-                dynamicVideofromAssets(modifier = Modifier, element.src)
-            }
-        }
-        is YoutubeElement -> {
-            dynamicYoutube(modifier = Modifier)
-        }
-        is SceneElement -> {
-            dynamicScene(modifier = Modifier, element.width, element.height)
-        }
-        else -> {
-            println("Unsupported element: $element")
-        }
-    }
-}
-
-@Composable
-fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
-    println("renderUIElement: $element")
-    when (element) {
-        is TextElement -> {
-            renderText(element)
-        }
-        is MarkdownElement -> {
-            renderMarkdown(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat())else Modifier, element = element, lang = lang)
-        }
-        is ButtonElement -> {
-            renderButton(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat()) else Modifier, element)
-        }
-        is ColumnElement -> {
-            renderColumn(modifier = if(element.weight > 0)Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
-        }
-        is RowElement -> {
-            renderRow(element, lang)
-        }
         is BoxElement -> {
             renderBox(element, lang)
         }
@@ -705,6 +570,195 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
             }
         }
         is YoutubeElement -> {
+            at.crowdware.nocode.view.desktop.dynamicYoutube(
+                modifier = if (element.weight > 0) {
+                    Modifier.weight(element.weight.toFloat())
+                } else {
+                    Modifier
+                }
+            )
+        }
+        is SceneElement -> {
+            dynamicScene(
+                modifier = if (element.weight > 0) {
+                    Modifier.weight(element.weight.toFloat())
+                } else {
+                    Modifier
+                }, element.width, element.height
+            )
+        }*/
+        else -> {
+            println("Unsupported element: ${node.name}")
+        }
+    }
+}
+
+fun String.toAlignment(): Alignment {
+    return when (this) {
+        "topStart" -> Alignment.TopStart
+        "topCenter" -> Alignment.TopCenter
+        "topEnd" -> Alignment.TopEnd
+        "centerStart" -> Alignment.CenterStart
+        "center" -> Alignment.Center
+        "centerEnd" -> Alignment.CenterEnd
+        "bottomStart" -> Alignment.BottomStart
+        "bottomCenter" -> Alignment.BottomCenter
+        "bottomEnd" -> Alignment.BottomEnd
+        else -> Alignment.TopStart // Default fallback
+    }
+}
+
+@Composable
+fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
+    when (node.name) {
+        "Text" -> {
+           renderText(node)
+        }
+        "Markdown" -> {
+            renderMarkdown(node, lang)
+        }
+        "Button" -> {
+            renderButton(modifier = Modifier, node)
+        }
+        "Column" -> {
+            renderColumn(modifier = Modifier, node, lang)
+        }
+        "Row" -> {
+            renderRow(node, lang)
+        }
+        "Box" -> {
+            renderBox(node, lang)
+        }
+        "Spacer" -> {
+            var mod = Modifier as Modifier
+            val amount = getIntValue(node, "amount", 0)
+            if (amount >0 )
+                mod = mod.then(Modifier.height(amount.dp))
+            Spacer(modifier = mod)
+        }
+        /*
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element, lang)
+        }
+        is ImageElement -> {
+            val alignment = if (element.align.isNotEmpty()) element.align.toAlignment() else Alignment.TopStart
+            dynamicImageFromAssets(
+                modifier = Modifier.align(alignment),
+                element = element
+            )
+        }
+        is AsyncImageElement -> {
+            asyncImage(modifier = Modifier, "", element.scale, "", element.width, element.height)
+        }
+        is SoundElement -> {
+            dynamicSoundfromAssets(element.src)
+        }
+        is SpacerElement -> {
+            var mod = Modifier as Modifier
+
+            if (element.amount >0 )
+                mod = mod.then(Modifier.height(element.amount.dp))
+            Spacer(modifier = mod)
+        }
+        is VideoElement -> {
+            if (element.src.startsWith("http")) {
+                dynamicVideofromUrl(modifier = Modifier)
+            } else {
+                dynamicVideofromAssets(modifier = Modifier, element.src)
+            }
+        }
+        is YoutubeElement -> {
+            dynamicYoutube(modifier = Modifier)
+        }
+        is SceneElement -> {
+            dynamicScene(modifier = Modifier, element.width, element.height)
+        }*/
+        else -> {
+            println("Unsupported node: $node")
+        }
+    }
+}
+
+@Composable
+fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
+    val weight = getIntValue(node, "weight", 0)
+    when (node.name) {
+        "Column" -> {
+            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
+        }
+        "Row" -> {
+            renderRow(node, lang)
+        }
+        "Spacer" -> {
+            var mod = Modifier as Modifier
+            val amount = getIntValue(node, "amount", 0)
+            if (amount > 0 )
+                mod = mod.then(Modifier.width(amount.dp))
+            if (weight > 0.0)
+                mod = mod.then(Modifier.weight(weight.toFloat()))
+
+            Spacer(modifier = mod)
+        }
+        "Markdown" -> {
+            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang)
+        }
+        "Text" -> {
+            renderText(node)
+        }
+        "Button" -> {
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node)
+        }
+        "Box" -> {
+            renderBox(node, lang)
+        }
+        /*
+
+
+        is LazyColumnElement -> {
+            renderLazyColumn(modifier = if(element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier, element = element, lang = lang)
+        }
+        is LazyRowElement -> {
+            renderLazyRow(element, lang)
+        }
+        is ImageElement -> {
+            dynamicImageFromAssets(
+                modifier = if (element.weight > 0) Modifier.weight(
+                    element.weight.toFloat()
+                ) else Modifier, element
+            )
+        }
+        is AsyncImageElement -> {
+            asyncImage(
+                modifier = if (element.weight > 0) Modifier.weight(element.weight.toFloat()) else Modifier,"", element.scale, "", element.width, element.height
+            )
+        }
+        is SoundElement -> {
+            dynamicSoundfromAssets(element.src)
+        }
+
+        is VideoElement -> {
+            if (element.src.startsWith("http")) {
+                dynamicVideofromUrl(
+                    modifier = if (element.weight > 0) {
+                        Modifier.weight(element.weight.toFloat())
+                    } else {
+                        Modifier
+                    }
+                )
+            } else {
+                dynamicVideofromAssets(
+                    modifier = if (element.weight > 0) {
+                        Modifier.weight(element.weight.toFloat())
+                    } else {
+                        Modifier
+                    }, element.src
+                )
+            }
+        }
+        is YoutubeElement -> {
             dynamicYoutube(
                 modifier = if (element.weight > 0) {
                     Modifier.weight(element.weight.toFloat())
@@ -724,7 +778,7 @@ fun ColumnScope.RenderUIElement(element: UIElement, lang: String) {
         }
         else -> {
             println("Unsupported element: $element")
-        }
+        }*/
     }
 }
 
@@ -893,9 +947,9 @@ fun hexToColor(hex: String, default: String = "#000000"): Color {
 }
 
 @Composable
-fun ColumnScope.RenderPage(page: Page, lang: String) {
-    for (element in page.elements) {
-        RenderUIElement(element, lang)
+fun ColumnScope.RenderPage(node: SmlNode, lang: String) {
+    for (child in node.children) {
+        RenderUIElement(child, lang)
     }
 }
 
