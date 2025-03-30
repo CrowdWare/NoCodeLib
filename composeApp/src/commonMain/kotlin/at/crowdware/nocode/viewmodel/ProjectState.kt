@@ -236,6 +236,7 @@ abstract class ProjectState {
         file.writeText(sml)
     }
 */
+    /*
     fun save(app: App) {
         // TODO: Navigation is missing, but not used yet
         val file = File(folder, "app.sml")
@@ -280,7 +281,7 @@ abstract class ProjectState {
         sml += "\t}\n"
         sml += "}\n"
         file.writeText(sml)
-    }
+    }*/
 
     fun ImportVideoFile(list: List<MPFile<Any>>) {
         for (file in list) {
