@@ -233,6 +233,7 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) 
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
+    println("renderMd: ${hexToColor(color)}")
     if (part.isNotEmpty() && currentProject != null) {
         var dir = "parts"
         if(lang.isNotEmpty()) {
@@ -682,7 +683,7 @@ fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
             var mod = Modifier as Modifier
             val amount = getIntValue(node, "amount", 0)
             if (amount > 0 )
-                mod = mod.then(Modifier.width(amount.dp))
+                mod = mod.then(Modifier.height(amount.dp))
             if (weight > 0.0)
                 mod = mod.then(Modifier.weight(weight.toFloat()))
 
@@ -881,6 +882,7 @@ fun hexToColor(hex: String, default: String = "#000000"): Color {
     if (hex.isEmpty()) {
         value = default
     }
+
     if(!hex.startsWith("#") && currentProject!= null) {
         when(hex) {
             "primary" -> {value = currentProject.app?.theme?.primary ?: "" }
@@ -905,6 +907,7 @@ fun hexToColor(hex: String, default: String = "#000000"): Color {
             "inversePrimary" -> {value = currentProject.app?.theme?.inversePrimary ?: "" }
             "inverseOnSurface" -> {value = currentProject.app?.theme?.inverseOnSurface ?: "" }
             "background" -> {value = currentProject.app?.theme?.background ?: "" }
+            "onBackground" -> {value = currentProject.app?.theme?.onBackground ?: "" }
             "error" -> {value = currentProject.app?.theme?.error ?: "" }
             "scrim" -> {value = currentProject.app?.theme?.scrim ?: "" }
             else -> {value = default}
