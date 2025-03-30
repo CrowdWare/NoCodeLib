@@ -32,40 +32,7 @@ import com.github.h0tk3y.betterParse.grammar.*
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
-/*
-object ElementRegistry {
-    private val typeMap = mutableMapOf<String, KClass<out Any>>()
 
-    fun register(type: String, clazz: KClass<out Any>) {
-        typeMap[type] = clazz
-    }
-
-    fun get(type: String): KClass<out Any>? = typeMap[type]
-
-    fun initDefaults() {
-        register("App", App::class)
-        register("Page", Page::class)
-        register("Theme", ThemeElement::class)
-        register("Deployment", DeploymentElement::class)
-
-        register("Scene", UIElement.SceneElement::class)
-        register("Image", UIElement.ImageElement::class)
-        register("AsyncImage", UIElement.AsyncImageElement::class)
-        register("Spacer", UIElement.SpacerElement::class)
-        register("Video", UIElement.VideoElement::class)
-        register("Youtube", UIElement.YoutubeElement::class)
-        register("Sound", UIElement.SoundElement::class)
-        register("Text", UIElement.TextElement::class)
-        register("Box", UIElement.BoxElement::class)
-        register("Column", UIElement.ColumnElement::class)
-        register("LazyColumn", UIElement.LazyColumnElement::class)
-        register("LazyRow", UIElement.LazyRowElement::class)
-        register("Row", UIElement.RowElement::class)
-        register("Button", UIElement.ButtonElement::class)
-        register("Markdown", UIElement.MarkdownElement::class)
-    }
-}
-*/
 fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     if (tuple !is Tuple7<*, *, *, *, *, *, *>) return null
 
@@ -93,111 +60,9 @@ fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     return SmlNode(name, properties, children)
 }
 
-/*
-fun parseApp(sml: String): Pair<App?, String?> {
-    ElementRegistry.initDefaults()
-
-    val rootList = SmlGrammar.parseToEnd(sml)
-    val root = convertTupleToSmlNode(rootList.firstOrNull() ?: return null to "Empty SML")
-    val app = root?.let { buildElementTree(it) } as? App
-
-    println("Theme: ${app?.theme}")
-    return app to if (app == null) "Root must be App" else null
-}
-*/
 fun String.lineWrap(maxLen: Int): String =
     this.chunked(maxLen).joinToString("\n")
-/*
-fun parsePage(sml: String, lang: String): Pair<Page?, String?> {
-    ElementRegistry.initDefaults()
 
-    val rootList = try {
-        SmlGrammar.parseToEnd(sml)
-    } catch (e: Exception) {
-        return null to "Parsefehler: ${e.message?.lineWrap(100)}"
-    }
-
-    val root = convertTupleToSmlNode(rootList.firstOrNull() ?: return null to "Leeres SML")
-    val page = root?.let { buildElementTree(it) } as? Page
-    page?.language = lang // trigger recompose
-
-    return page to if (page == null) "Root muss Page sein" else null
-}
-*/
-/*
-fun buildElementTree(node: SmlNode): Any? {
-    val clazz = ElementRegistry.get(node.name) ?: return null
-    val constructor = clazz.primaryConstructor ?: return null
-
-    val args = constructor.parameters.mapNotNull { param ->
-        if (param.name == "elements") return@mapNotNull null
-
-        val prop = node.properties[param.name]
-        val value = when (prop) {
-            is PropertyValue.StringValue -> {
-                if (param.name == "padding") parsePadding(prop.value)
-                else prop.value
-            }
-            is PropertyValue.FloatValue -> prop.value
-            is PropertyValue.BoolValue -> prop.value
-            is PropertyValue.ElementValue -> buildElementTree(
-                SmlNode(prop.name, prop.properties, emptyList())
-            )
-            else -> null
-        }
-
-        //println("➡️ Parameter: ${param.name}, expected: ${param.type}, actual: ${value?.let { it::class.simpleName }}, value=$value")
-
-        if (value != null) param to value else null
-    }.toMap()
-
-
-    val instance = try {
-        constructor.callBy(args)
-    } catch (e: InvocationTargetException) {
-        println("❌ Fehler beim Erzeugen von ${clazz.simpleName}: ${e.targetException}")
-        e.targetException.printStackTrace() // Die echte Exception im Konstruktor
-        return null
-    } catch (e: Exception) {
-        println("❌ Allgemeiner Fehler bei ${clazz.simpleName}: ${e.message}")
-        e.printStackTrace()
-        return null
-    }
-
-    if (instance is ThemeElement) {
-
-        // Handle ThemeElement properties generically
-        val themeProperties = node.properties
-        ThemeElement::class.members.forEach { member ->
-            if (member is kotlin.reflect.KMutableProperty<*>) {
-                val propertyName = member.name
-                themeProperties[propertyName]?.let { propValue ->
-                    when (propValue) {
-                        is PropertyValue.StringValue -> member.setter.call(instance, propValue.value)
-                        is PropertyValue.BoolValue -> member.setter.call(instance, propValue.value)
-                        is PropertyValue.FloatValue -> member.setter.call(instance, propValue.value)
-                        is PropertyValue.IntValue -> member.setter.call(instance, propValue.value)
-                        is PropertyValue.ElementValue -> { }
-                        else -> {
-
-                        }
-                    }
-                }
-            }
-        }
-    } else if (instance is Page) {
-        instance.elements.addAll(node.children.mapNotNull {
-            buildElementTree(it) as? UIElement
-        })
-    }
-
-    if (instance is UIElement) {
-        instance.uiElements.addAll(node.children.mapNotNull { buildElementTree(it) as? UIElement })
-    }
-
-    return instance
-}
-*/
 
 val identifier: Token = regexToken("[a-zA-Z_][a-zA-Z0-9_]*")
 val lBrace: Token = literalToken("{")
@@ -247,8 +112,6 @@ sealed class PropertyValue {
     data class StringValue(val value: String) : PropertyValue()
     data class IntValue(val value: Int) : PropertyValue()
     data class FloatValue(val value: Float) : PropertyValue()
-    //data class BoolValue(val value: Boolean) : PropertyValue()
-    //data class ElementValue(val name: String, val properties: Map<String, PropertyValue>) : PropertyValue()
 }
 
 val fontWeightMap = mapOf(
@@ -267,7 +130,7 @@ val textAlignMap = mapOf(
     "left" to TextAlign.Start,
     "center" to TextAlign.Center,
     "right" to TextAlign.End,
-    "" to TextAlign.Unspecified
+    "" to TextAlign.Start
 )
 
 fun getStringValue(node: SmlNode, key: String, default: String): String {
@@ -302,7 +165,7 @@ fun getFontWeight(node: SmlNode): FontWeight {
 }
 fun getTextAlign(node: SmlNode): TextAlign {
     val key = getStringValue(node, "textAlign", "").trim()
-    return textAlignMap.getOrDefault(key, TextAlign.Unspecified)
+    return textAlignMap.getOrDefault(key, TextAlign.Start)
 }
 
 fun getPadding(node: SmlNode): Padding {

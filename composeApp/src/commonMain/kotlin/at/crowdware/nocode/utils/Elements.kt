@@ -25,25 +25,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import java.time.LocalDateTime
 
-/*
-data class Site(
-    @StringAnnotation("Version of the current SML. default is 1.1")
-    var smlVersion: String = "1.1",
-    @StringAnnotation("Name of the site.")
-    var name: String = "",
-    @StringAnnotation("Put a description about the site here.")
-    var description: String = "",
-    @StringAnnotation("The name of the author.")
-    var author: String = "",
-    @StringAnnotation("Theme for the site. Atm there is only \"bootstrap\".")
-    var template: String = "bootstrap",
-    @StringAnnotation("The folder name where you want to deploy the HTML output.")
-    var deployDirHtml: String ="",
-    var authorBio: String = "",
-    var theme: ThemeElement = ThemeElement(),
-    var course: UIElement.Course = UIElement.Course(),
-)
-*/
 
 data class App(
     @StringAnnotation("Name of the book.")
@@ -63,31 +44,6 @@ data class App(
     var deployment: DeploymentElement = DeploymentElement()
 )
 
-/*
-data class Ebook (
-    @StringAnnotation("Version of the current SML. Default is 1.1")
-    var smlVersion: String = "1.1",
-    @StringAnnotation("Theme for the book. Atm there is only \"Epub3\".")
-    var theme: String = "Epub3",
-    @StringAnnotation("Name of the book")
-    var name: String = "",
-    @StringAnnotation("Language of the book. Atm only \"en\" and \"de\"")
-    var language: String = "en",
-    @StringAnnotation("The folder name where you want to deploy the EPUB output.")
-    var deployDirEpub: String ="",
-    @StringAnnotation("Name of the author")
-    var creator: String = "",
-    @StringAnnotation("Link to the website of the author")
-    var creatorLink: String = "#",
-    @StringAnnotation("Name of the license. Example: 'All rights reserved'")
-    var license: String = "",
-    @StringAnnotation("Link to the website of the license")
-    var licenseLink: String = "#",
-    @StringAnnotation("Link to the book.")
-    var bookLink: String = "#",
-    val parts: MutableList<PartElement> = mutableListOf()
-)
-*/
 data class ThemeElement(
     var primary: String = "",
     var onPrimary: String = "",
