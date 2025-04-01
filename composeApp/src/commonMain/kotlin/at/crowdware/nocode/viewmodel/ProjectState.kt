@@ -50,13 +50,6 @@ expect fun renameFile(pathBefore: String, pathAfter: String)
 expect fun copyAssetFile(path: String, target: String)
 expect fun copyResourceToFile(resourcePath: String, outputPath: String)
 
-enum class LicenseType {
-    UNDEFINED,
-    FREE,
-    STARTER,
-    PRO,
-    EXPIRED
-}
 
 abstract class ProjectState {
     var currentFileContent by mutableStateOf(TextFieldValue(""))
@@ -78,14 +71,11 @@ abstract class ProjectState {
     var isImportSoundDialogVisible by mutableStateOf(false)
     var isImportModelDialogVisible by mutableStateOf(false)
     var isImportTextureDialogVisible by mutableStateOf(false)
-    var isCreateEbookVisible by mutableStateOf(false)
-    var isCreateHTMLVisible by mutableStateOf(false)
-    var isCreateCourseVisible by mutableStateOf(false)
     var isAboutDialogOpen by  mutableStateOf(false)
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
     var isPageLoaded by mutableStateOf(false)
-    var actualElement: KClass<*>? by mutableStateOf(null)
+    //var actualElement: KClass<*>? by mutableStateOf(null)
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")
 
@@ -100,9 +90,7 @@ abstract class ProjectState {
     var parsedPage: SmlNode? by mutableStateOf(null)
     var cachedPage: SmlNode? by mutableStateOf(null)
 
-    //abstract fun loadSite()
     abstract fun loadApp()
-    //abstract fun loadBook()
     abstract suspend fun loadProjectFiles(path: String, uuid: String, pid: String)
     abstract suspend fun createProjectFiles(
         path: String,
@@ -111,31 +99,9 @@ abstract class ProjectState {
         name: String,
         appId: String,
         theme: String,
-        //createBook: Boolean,
-        //createApp: Boolean,
-        //createWebsite: Boolean,
         langs: List<String>
     )
 
-    /*
-    fun createEbook(title: String, folder: String, langs: List<String>, generator: String) {
-        book?.let { CreateEbook.start(title, folder, this.folder, it, langs, generator = generator) }
-    }
-*/
-    /*
-    fun createHTML(folder: String) {
-        site!!.deployDirHtml  = folder
-        save(site!!)
-        site?.let { CreateHTML.start(folder, this.folder, it) }
-    }
-*/
-    /*
-    fun createCourse(folder: String, lang: String) {
-        site!!.deployDirHtml  = folder
-        save(site!!)
-        site?.let { CreateCourse.start(folder, this.folder, it, lang) }
-    }
-*/
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
         folder = path
         println("loadProject: $folder")
@@ -166,122 +132,6 @@ abstract class ProjectState {
             imagesNode.children.add(node)
         }
     }
-
-    fun saveCourse(course: UIElement.Course): String {
-        var sml = "\tCourse {\n"
-        for (topic in course.topics) {
-            sml += "\t\tTopic {label: \"${topic.label}\""
-            topic.page?.let { sml += " page: \"$it\"" }
-            if (topic.subtopics.isNotEmpty()) {
-                sml += "\n"
-                for (subtopic in topic.subtopics) {
-                    sml += "\t\t\tSubtopic {label: \"${subtopic.label}\" id: \"${subtopic.id}\"}\n"
-                }
-                sml += "\t\t"
-            }
-            sml += "}\n"
-        }
-        sml += "\t}\n\n"
-        return sml
-    }
-
-    /*
-    fun save(site: Site) {
-        val file = File(folder, "site.sml")
-        var sml = "Site {\n"
-        sml += "\tsmlVersion: \"${site.smlVersion}\"\n"
-        sml += "\tname: \"${site.name}\"\n"
-        sml += "\ttheme: \"${site.theme}\"\n"
-        sml += "\tdescription: \"${site.description}\"\n"
-        sml += "\tdeployDirHtml: \"${site.deployDirHtml}\"\n"
-        sml += "\tauthor: \"${site.author}\"\n"
-        sml += "\tauthorBio: \"${site.authorBio}\"\n"
-        sml += "\n"
-        if (site.course.topics.isNotEmpty()) {
-            sml += saveCourse(site.course)
-        }
-        sml += "\n"
-        sml += "\tTheme {\n"
-        sml += "\t\tprimary: \"" + site.theme.primary.toString() + "\"\n"
-        sml += "\t\tonPrimary: \"" + site.theme.onPrimary.toString() + "\"\n"
-        sml += "\t\tprimaryContainer: \"" + site.theme.primaryContainer.toString() + "\"\n"
-        sml += "\t\tonPrimaryContainer: \"" + site.theme.onPrimaryContainer.toString() + "\"\n"
-        sml += "\t\tsecondary: \"" + site.theme.secondary.toString() + "\"\n"
-        sml += "\t\tonSecondary: \"" + site.theme.onSecondary.toString() + "\"\n"
-        sml += "\t\tsecondaryContainer: \"" + site.theme.secondaryContainer.toString() + "\"\n"
-        sml += "\t\tonSecondaryContainer: \"" + site.theme.onSecondaryContainer.toString() + "\"\n"
-        sml += "\t\ttertiary: \"" + site.theme.tertiary.toString() + "\"\n"
-        sml += "\t\tonTertiary: \"" + site.theme.onTertiary.toString() + "\"\n"
-        sml += "\t\ttertiaryContainer: \"" + site.theme.tertiaryContainer.toString() + "\"\n"
-        sml += "\t\tonTertiaryContainer: \"" + site.theme.onTertiaryContainer.toString() + "\"\n"
-        sml += "\t\terror: \"" + site.theme.error.toString() + "\"\n"
-        sml += "\t\terrorContainer: \"" + site.theme.errorContainer.toString() + "\"\n"
-        sml += "\t\tonError: \"" + site.theme.onError.toString() + "\"\n"
-        sml += "\t\tonErrorContainer: \"" + site.theme.onErrorContainer.toString() + "\"\n"
-        sml += "\t\tbackground: \"" + site.theme.background.toString() + "\"\n"
-        sml += "\t\tonBackground: \"" + site.theme.onBackground.toString() + "\"\n"
-        sml += "\t\tsurface: \"" + site.theme.surface.toString() + "\"\n"
-        sml += "\t\tonSurface: \"" + site.theme.onSurface.toString() + "\"\n"
-        sml += "\t\tsurfaceVariant: \"" + site.theme.surfaceVariant.toString() + "\"\n"
-        sml += "\t\tonSurfaceVariant: \"" + site.theme.onSurfaceVariant.toString() + "\"\n"
-        sml += "\t\toutline: \"" + site.theme.outline.toString() + "\"\n"
-        sml += "\t\tinverseOnSurface: \"" + site.theme.inverseOnSurface.toString() + "\"\n"
-        sml += "\t\tinverseSurface: \"" + site.theme.inverseSurface.toString() + "\"\n"
-        sml += "\t\tinversePrimary: \"" + site.theme.inversePrimary.toString() + "\"\n"
-        sml += "\t\tsurfaceTint: \"" + site.theme.surfaceTint.toString() + "\"\n"
-        sml += "\t\toutlineVariant: \"" + site.theme.outlineVariant.toString() + "\"\n"
-        sml += "\t\tscrim: \"" + site.theme.scrim.toString() + "\"\n"
-        sml += "\t}\n"
-        sml += "}\n"
-        file.writeText(sml)
-    }
-*/
-    /*
-    fun save(app: App) {
-        // TODO: Navigation is missing, but not used yet
-        val file = File(folder, "app.sml")
-        var sml = "App {\n"
-        sml += "\tsmlVersion: \"${app.smlVersion}\"\n"
-        sml += "\tname: \"${app.name}\"\n"
-        sml += "\tdescription: \"${app.description}\"\n"
-        sml += "\tid: \"${app.id}\"\n"
-        sml += "\ticon: \"${app.icon}\"\n"
-        sml += "\tauthor: \"${app.author}\"\n"
-        sml += "\n"
-        sml += "\tTheme {\n"
-        sml += "\t\tprimary: \"" + app.theme.primary.toString() + "\"\n"
-        sml += "\t\tonPrimary: \"" + app.theme.onPrimary.toString() + "\"\n"
-        sml += "\t\tprimaryContainer: \"" + app.theme.primaryContainer.toString() + "\"\n"
-        sml += "\t\tonPrimaryContainer: \"" + app.theme.onPrimaryContainer.toString() + "\"\n"
-        sml += "\t\tsecondary: \"" + app.theme.secondary.toString() + "\"\n"
-        sml += "\t\tonSecondary: \"" + app.theme.onSecondary.toString() + "\"\n"
-        sml += "\t\tsecondaryContainer: \"" + app.theme.secondaryContainer.toString() + "\"\n"
-        sml += "\t\tonSecondaryContainer: \"" + app.theme.onSecondaryContainer.toString() + "\"\n"
-        sml += "\t\ttertiary: \"" + app.theme.tertiary.toString() + "\"\n"
-        sml += "\t\tonTertiary: \"" + app.theme.onTertiary.toString() + "\"\n"
-        sml += "\t\ttertiaryContainer: \"" + app.theme.tertiaryContainer.toString() + "\"\n"
-        sml += "\t\tonTertiaryContainer: \"" + app.theme.onTertiaryContainer.toString() + "\"\n"
-        sml += "\t\terror: \"" + app.theme.error.toString() + "\"\n"
-        sml += "\t\terrorContainer: \"" + app.theme.errorContainer.toString() + "\"\n"
-        sml += "\t\tonError: \"" + app.theme.onError.toString() + "\"\n"
-        sml += "\t\tonErrorContainer: \"" + app.theme.onErrorContainer.toString() + "\"\n"
-        sml += "\t\tbackground: \"" + app.theme.background.toString() + "\"\n"
-        sml += "\t\tonBackground: \"" + app.theme.onBackground.toString() + "\"\n"
-        sml += "\t\tsurface: \"" + app.theme.surface.toString() + "\"\n"
-        sml += "\t\tonSurface: \"" + app.theme.onSurface.toString() + "\"\n"
-        sml += "\t\tsurfaceVariant: \"" + app.theme.surfaceVariant.toString() + "\"\n"
-        sml += "\t\tonSurfaceVariant: \"" + app.theme.onSurfaceVariant.toString() + "\"\n"
-        sml += "\t\toutline: \"" + app.theme.outline.toString() + "\"\n"
-        sml += "\t\tinverseOnSurface: \"" + app.theme.inverseOnSurface.toString() + "\"\n"
-        sml += "\t\tinverseSurface: \"" + app.theme.inverseSurface.toString() + "\"\n"
-        sml += "\t\tinversePrimary: \"" + app.theme.inversePrimary.toString() + "\"\n"
-        sml += "\t\tsurfaceTint: \"" + app.theme.surfaceTint.toString() + "\"\n"
-        sml += "\t\toutlineVariant: \"" + app.theme.outlineVariant.toString() + "\"\n"
-        sml += "\t\tscrim: \"" + app.theme.scrim.toString() + "\"\n"
-        sml += "\t}\n"
-        sml += "}\n"
-        file.writeText(sml)
-    }*/
 
     fun ImportVideoFile(list: List<MPFile<Any>>) {
         for (file in list) {
@@ -357,7 +207,14 @@ abstract class ProjectState {
                 parsedPage = smlNode
 
                 if (path.substringAfterLast(File.separator) == "app.sml") {
-                    loadElementData(App())
+                    val properties = mutableMapOf<String, PropertyValue>()
+                    val children = mutableListOf<SmlNode>()
+                    properties.put("smlVersion", PropertyValue.StringValue("1.1"))
+                    properties.put("name", PropertyValue.StringValue(""))
+                    properties.put("description", PropertyValue.StringValue(""))
+                    properties.put("id", PropertyValue.StringValue("com.example.appname"))
+                    properties.put("icon", PropertyValue.StringValue("icon.png"))
+                    loadElementData(SmlNode("App", properties, children))
                 } else {
                     parseError = error
                     if (parsedPage != null) {
@@ -369,10 +226,10 @@ abstract class ProjectState {
             } else {
                 // TODO
                 //page = Page(color = "", backgroundColor = "", title = "", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
-                elementData = emptyList()
-                val clsName = "at.crowdware.nocode.utils.Markdown"
-                val clazz = Class.forName(clsName).kotlin
-                actualElement = clazz
+                //elementData = emptyList()
+                //val clsName = "at.crowdware.nocode.utils.Markdown"
+                //val clazz = Class.forName(clsName).kotlin
+                //actualElement = clazz
             }
 
             currentFileContent = TextFieldValue(
@@ -397,8 +254,22 @@ abstract class ProjectState {
         }
     }
 
-    private fun loadElementData(obj: Any?) {
-        // TODO
+    private fun loadElementData(node: SmlNode?) {
+        when (node?.name) {
+            "Page" -> {
+                //elementData = listOf(mapPageToTreeNodes(node))
+                //val clsName = "at.crowdware.nocode.utils.Page"
+                //val clazz = Class.forName(clsName).kotlin
+                //actualElement = clazz
+            }
+            "App" -> {
+                //elementData = listOf(mapAppToTreeNode(node))
+                //val clsName = "at.crowdware.nocode.utils.App"
+                //val clazz = Class.forName(clsName).kotlin
+                //actualElement = clazz
+            }
+        }
+    // TODO
         /*
         when (obj) {
             is Page -> {
@@ -413,15 +284,10 @@ abstract class ProjectState {
                 val clazz = Class.forName(clsName).kotlin
                 actualElement = clazz
             }
-            /*is Ebook -> {
-                elementData = listOf(mapBookToTreeNode(obj as Ebook))
-                val clsName = "at.crowdware.nocode.utils.Ebook"
-                val clazz = Class.forName(clsName).kotlin
-                actualElement = clazz
-            }*/
+
         }*/
     }
-
+    /*
     fun mapUIElementToTreeNode(uiElement: UIElement): TreeNode {
         // Create a TreeNode based on the type of the UIElement
         return when (uiElement) {
@@ -565,7 +431,7 @@ abstract class ProjectState {
                 expanded = mutableStateOf(false)
             )
         }
-    }
+    }*/
 
     /*
     fun mapBookToTreeNode(book: Ebook): TreeNode {
@@ -579,7 +445,7 @@ abstract class ProjectState {
         return rootNode
     }*/
 
-    fun mapAppToTreeNode(app: App): TreeNode {
+    fun mapAppToTreeNode(node: SmlNode): TreeNode {
         val rootNode = TreeNode(
             title = mutableStateOf("App"),
             type = mutableStateOf("App"),
@@ -590,7 +456,7 @@ abstract class ProjectState {
         return rootNode
     }
 
-    fun mapPageToTreeNodes(page: Page): TreeNode {
+    fun mapPageToTreeNodes(node: SmlNode): TreeNode {
         val rootNode = TreeNode(
             title = mutableStateOf("Page"),
             type = NodeType.DIRECTORY,
@@ -598,7 +464,8 @@ abstract class ProjectState {
             children = mutableStateListOf(),
             expanded = mutableStateOf(true)  // Root is expanded by default
         )
-        rootNode.children.addAll(page.elements.map { mapUIElementToTreeNode(it) })
+        // TODO
+        //rootNode.children.addAll(page.elements.map { mapUIElementToTreeNode(it) })
 
         return rootNode
     }

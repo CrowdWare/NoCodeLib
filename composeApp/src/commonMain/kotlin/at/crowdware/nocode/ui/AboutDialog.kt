@@ -27,7 +27,7 @@ import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.unit.dp
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.viewmodel.GlobalAppState
-import at.crowdware.nocode.viewmodel.LicenseType
+
 import java.io.InputStream
 
 @Composable

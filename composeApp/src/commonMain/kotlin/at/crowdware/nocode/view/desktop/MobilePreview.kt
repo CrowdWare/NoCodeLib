@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.*
-import at.crowdware.nocode.utils.UIElement.*
+//import at.crowdware.nocode.utils.UIElement.*
 import at.crowdware.nocode.viewmodel.GlobalProjectState
 import at.crowdware.nocode.viewmodel.ProjectState
 import java.io.File
@@ -664,7 +664,7 @@ fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
             dynamicScene(modifier = Modifier, width, height)
         }
         else -> {
-            println("Unsupported node: $node")
+            //println("Unsupported node: $node")
         }
     }
 }
@@ -764,7 +764,7 @@ fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
             )
         }
         else -> {
-            println("Unsupported node: ${node.name}")
+            //println("Unsupported node: ${node.name}")
         }
     }
 }

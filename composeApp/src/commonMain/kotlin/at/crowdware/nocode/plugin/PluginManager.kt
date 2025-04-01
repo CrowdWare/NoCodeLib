@@ -22,9 +22,9 @@ object PluginManager {
         val plugins = mutableListOf<SmlExportPlugin>()
 
         if (!folder.exists() || !folder.isDirectory) return plugins
-
+        println("loadPlugin")
         val pluginZips = folder.listFiles { file ->
-            file.extension == "zip" && file.name.endsWith("-plugin.zip")
+            file.extension == "zip" && file.name.endsWith(".zip")
         } ?: return plugins
 
         for (zip in pluginZips) {
@@ -39,14 +39,16 @@ object PluginManager {
 
     fun loadPluginFromZip(zipFile: File): SmlExportPlugin? {
         try {
-            val tempDir = File(".plugin-cache/${zipFile.nameWithoutExtension}")
-            if (tempDir.exists()) tempDir.deleteRecursively()
-            tempDir.mkdirs()
+            val pluginDir = File(System.getProperty("user.home") + "/Library/Application Support/NoCodeDesigner/plugin-cache/")
+            pluginDir.mkdirs()
+            //val tempDir = File(".plugin-cache/${zipFile.nameWithoutExtension}")
+            if (pluginDir.exists()) pluginDir.deleteRecursively()
+            pluginDir.mkdirs()
 
             // Entpacken
             ZipFile(zipFile).use { zip ->
                 zip.entries().asSequence().forEach { entry ->
-                    val outFile = File(tempDir, entry.name)
+                    val outFile = File(pluginDir, entry.name)
                     if (entry.isDirectory) {
                         outFile.mkdirs()
                     } else {
@@ -61,14 +63,14 @@ object PluginManager {
             }
 
             // plugin.json lesen
-            val pluginJsonFile = File(tempDir, "plugin.json")
+            val pluginJsonFile = File(pluginDir, "plugin.json")
             if (!pluginJsonFile.exists()) {
                 println("⚠️ plugin.json fehlt in ${zipFile.name}")
                 return null
             }
 
             val metadata = Json.decodeFromString<PluginMetadata>(pluginJsonFile.readText())
-            val jarFile = File(tempDir, metadata.entry)
+            val jarFile = File(pluginDir, metadata.entry)
             if (!jarFile.exists()) {
                 println("⚠️ JAR nicht gefunden: ${metadata.entry}")
                 return null

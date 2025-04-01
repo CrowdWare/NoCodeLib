@@ -28,10 +28,6 @@ import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.lexer.*
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.utils.Tuple7
-import com.github.h0tk3y.betterParse.grammar.*
-import java.lang.reflect.InvocationTargetException
-import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
 
 fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     if (tuple !is Tuple7<*, *, *, *, *, *, *>) return null

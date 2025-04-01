@@ -52,7 +52,7 @@ fun propertyPanel(currentProject: ProjectState?) {
             overflow = TextOverflow.Ellipsis
         )
         val scrollState = rememberScrollState()
-        val element = currentProject?.actualElement
+        //val element = currentProject?.actualElement
         
         Box(
             modifier = Modifier
@@ -66,6 +66,7 @@ fun propertyPanel(currentProject: ProjectState?) {
                     .verticalScroll(scrollState)
                     .padding(end = 10.dp)
             ) {
+                /*
                 Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {
                     Column() {
                         if (element != null) {
@@ -211,7 +212,7 @@ fun propertyPanel(currentProject: ProjectState?) {
                             }
                         }
                     }
-                }
+                }*/
             }
             VerticalScrollbar(
                 adapter = rememberScrollbarAdapter(scrollState),

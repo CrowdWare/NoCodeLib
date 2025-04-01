@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.viewmodel.GlobalAppState
-import at.crowdware.nocode.viewmodel.LicenseType
 import java.awt.Desktop
 import java.net.URI
 

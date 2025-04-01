@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.input.TextFieldValue
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.viewmodel.GlobalAppState
-import at.crowdware.nocode.viewmodel.LicenseType
 
 
 @Composable

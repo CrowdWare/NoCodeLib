@@ -301,7 +301,7 @@ fun projectStructure(currentProject: ProjectState) {
                     }
                     try {
                         val clazz = Class.forName(clsName).kotlin
-                        currentProject.actualElement = clazz
+                        //currentProject.actualElement = clazz
                     } catch(e: Exception) {
                         println("Error: ${e.message}")
                     }

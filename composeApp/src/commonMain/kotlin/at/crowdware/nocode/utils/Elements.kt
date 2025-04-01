@@ -82,8 +82,8 @@ data class DeploymentElement(
 
 data class FileElement(val path: String, val time: LocalDateTime)
 
-data class PartElement (val src: String, val pdfOnly: Boolean = false)
-
+//data class PartElement (val src: String, val pdfOnly: Boolean = false)
+/*
 data class Markdown (
     @StringAnnotation("Headers in Markdown allow you to define section titles and headings." +
             "They are created using the `#` symbol, with the number of `#` symbols corresponding to the header level. " +
@@ -129,7 +129,8 @@ data class Markdown (
             "`(tm)` renders a ™ trademark symbol ")
     var Special: String
 )
-
+*/
+/*
 @ElementAnnotation("A **Page** is the base element of the NoCodeApp. You can put all other Elements inside a Page.")
 data class Page(
     var language: String = "",  // only used for plugins and is not parsed
@@ -151,8 +152,9 @@ data class Page(
 
     @IgnoreForDocumentation
     val elements: MutableList<UIElement> = mutableListOf()
-)
+)*/
 
+/*
 sealed class UIElement {
     val uiElements: MutableList<UIElement> = mutableListOf()
 
@@ -476,7 +478,36 @@ sealed class UIElement {
         //val uiElements: MutableList<UIElement> = mutableListOf()
     ) : UIElement()
 }
-
+*/
 data class Padding(val top: Int, val right: Int, val bottom: Int, val left: Int)
 
 
+data class MarkdownElement(
+    @MarkdownAnnotation
+    val text: String = "",
+
+    @StringAnnotation("Name of the part (from the ebook project) which will be inserted here. Like: home.md")
+    val part: String = "",
+
+    @HexColorAnnotation
+    val color: String = "onPrimary",
+
+    @IntAnnotation
+    val fontSize: TextUnit = 16.sp,
+
+    @StringAnnotation("Enter one of the following weights normal, extralight, thin, medium, bold, semibold, extrabold, black like **fontWeight: \"bold\"**")
+    val fontWeight: FontWeight = FontWeight.Normal,
+
+    @StringAnnotation("Enter one of the following alignments left, center, right like **textAlign: \"center\"**")
+    val textAlign: TextAlign = TextAlign.Start,
+
+    @WeightAnnotation
+    val weight: Int = 0,
+
+    @IntAnnotation
+    val width: Int = 0,
+
+    @IntAnnotation
+    val height: Int = 0,
+
+    )

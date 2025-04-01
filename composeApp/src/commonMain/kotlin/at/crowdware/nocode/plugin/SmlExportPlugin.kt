@@ -1,9 +1,6 @@
 package at.crowdware.nocode.plugin
 
 
-import at.crowdware.nocode.utils.App
-import at.crowdware.nocode.utils.PartElement
-import at.crowdware.nocode.utils.SmlNode
 import java.io.File
 
 
