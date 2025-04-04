@@ -19,8 +19,6 @@
 
 package at.crowdware.nocode.utils
 
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.parser.Parser
 import com.github.h0tk3y.betterParse.grammar.Grammar
@@ -110,25 +108,6 @@ sealed class PropertyValue {
     data class FloatValue(val value: Float) : PropertyValue()
 }
 
-val fontWeightMap = mapOf(
-    "bold" to FontWeight.Bold,
-    "black" to FontWeight.Black,
-    "thin" to FontWeight.Thin,
-    "extrabold" to FontWeight.ExtraBold,
-    "extralight" to FontWeight.ExtraLight,
-    "light" to FontWeight.Light,
-    "medium" to FontWeight.Medium,
-    "semibold" to FontWeight.SemiBold,
-    "" to FontWeight.Normal
-)
-
-val textAlignMap = mapOf(
-    "left" to TextAlign.Start,
-    "center" to TextAlign.Center,
-    "right" to TextAlign.End,
-    "" to TextAlign.Start
-)
-
 fun getStringValue(node: SmlNode, key: String, default: String): String {
     val value = node.properties[key]
     return when {
@@ -136,6 +115,19 @@ fun getStringValue(node: SmlNode, key: String, default: String): String {
         value is PropertyValue -> {
             val type = value.javaClass.simpleName
             println("Warning: The value for '$key' is not a StringValue (found: $type). Returning default value: \"$default\"")
+            default
+        }
+        else -> default
+    }
+}
+
+fun getFloatValue(node: SmlNode, key: String, default: Float): Float {
+    val value = node.properties[key]
+    return when {
+        value is PropertyValue.FloatValue -> value.value
+        value is PropertyValue -> {
+            val type = value.javaClass.simpleName
+            println("Warning: The value for '$key' is not a FloatValue (found: $type). Returning default: $default")
             default
         }
         else -> default
@@ -153,15 +145,6 @@ fun getIntValue(node: SmlNode, key: String, default: Int): Int {
         }
         else -> default
     }
-}
-
-fun getFontWeight(node: SmlNode): FontWeight {
-    val key = getStringValue(node, "fontWeight", "").trim()
-    return fontWeightMap.getOrDefault(key, FontWeight.Normal)
-}
-fun getTextAlign(node: SmlNode): TextAlign {
-    val key = getStringValue(node, "textAlign", "").trim()
-    return textAlignMap.getOrDefault(key, TextAlign.Start)
 }
 
 fun getPadding(node: SmlNode): Padding {
@@ -183,63 +166,4 @@ fun parseSML(sml: String): Pair<SmlNode?, String?> {
         return null to "ParseError: ${e.message?.lineWrap(100)}"
     }
     return rootList.firstOrNull()?.let { convertTupleToSmlNode(it) } to null
-}
-
-
-fun fillAppFromSmlNode(appNode: SmlNode): App {
-    val app = App()
-
-    appNode.properties.forEach { (key, value) ->
-        when (key) {
-            "name" -> app.name = (value as? PropertyValue.StringValue)?.value ?: ""
-            "description" -> app.description = (value as? PropertyValue.StringValue)?.value ?: ""
-            "icon" -> app.icon = (value as? PropertyValue.StringValue)?.value ?: ""
-            "id" -> app.id = (value as? PropertyValue.StringValue)?.value ?: ""
-            "smlVersion" -> app.smlVersion = (value as? PropertyValue.StringValue)?.value ?: "1.1"
-            "author" -> app.author = (value as? PropertyValue.StringValue)?.value ?: ""
-        }
-    }
-
-    val themeNode = appNode.children.find { it.name == "Theme" }
-    app.theme = themeNode?.let { fillThemeFromSmlNode(it) } ?: ThemeElement()
-    return app
-}
-
-fun fillThemeFromSmlNode(themeNode: SmlNode): ThemeElement {
-    val theme = ThemeElement()
-
-    // Durch die Properties des Theme-Nodes iterieren
-    themeNode.properties.forEach { (key, value) ->
-        when (key) {
-            "primary" -> theme.primary = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "onPrimary" -> theme.onPrimary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "background" -> theme.background = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "onBackground" -> theme.onBackground = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "secondary" -> theme.secondary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "onSecondary" -> theme.onSecondary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "secondaryContainer" -> theme.secondaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "onSecondaryContainer" -> theme.onSecondaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "tertiary" -> theme.tertiary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "onTertiary" -> theme.onTertiary = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "tertiaryContainer" -> theme.tertiaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "onTertiaryContainer" -> theme.onTertiaryContainer = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "error" -> theme.error = (value as? PropertyValue.StringValue)?.value ?: "#FF0000"
-            "onError" -> theme.onError = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "errorContainer" -> theme.errorContainer = (value as? PropertyValue.StringValue)?.value ?: "#FF0000"
-            "onErrorContainer" -> theme.onErrorContainer = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "surface" -> theme.surface = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "onSurface" -> theme.onSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "surfaceVariant" -> theme.surfaceVariant = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "onSurfaceVariant" -> theme.onSurfaceVariant = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "outline" -> theme.outline = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "outlineVariant" -> theme.outlineVariant = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "inversePrimary" -> theme.inversePrimary = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "inverseSurface" -> theme.inverseSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "inverseOnSurface" -> theme.inverseOnSurface = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-            "surfaceTint" -> theme.surfaceTint = (value as? PropertyValue.StringValue)?.value ?: "#FFFFFF"
-            "scrim" -> theme.scrim = (value as? PropertyValue.StringValue)?.value ?: "#000000"
-        }
-    }
-
-    return theme
 }
