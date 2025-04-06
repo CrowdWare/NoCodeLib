@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -44,13 +45,19 @@ import at.crowdware.nocode.viewmodel.ProjectState
 import at.crowdware.nocode.ui.SyntaxTextField
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.darkrockstudios.texteditor.TextEditor
+import com.darkrockstudios.texteditor.rememberTextEditorStyle
+import com.darkrockstudios.texteditor.state.SpanClickType
+import com.darkrockstudios.texteditor.state.TextEditorState
+import com.darkrockstudios.texteditor.state.rememberTextEditorState
 
 
 @Composable
 fun RowScope.syntaxEditor(
     currentProject: ProjectState?,
-    textFieldValue: TextFieldValue,
-    onTextFieldValueChange: (TextFieldValue) -> Unit
+    //textFieldValue: TextFieldValue,
+    //onTextFieldValueChange: (TextFieldValue) -> Unit
+    state: TextEditorState
 ) {
     val relative = currentProject?.folder?.let { currentProject.path.removePrefix(it).removePrefix("/") }
     val coroutineScope = rememberCoroutineScope()
@@ -64,6 +71,26 @@ fun RowScope.syntaxEditor(
                     style = TextStyle(color = MaterialTheme.colors.onPrimary),
                     overflow = TextOverflow.Ellipsis
                 )
+                val style = rememberTextEditorStyle(
+                    placeholderText = "Enter text here",
+                    textColor = MaterialTheme.colors.onSurface,
+                )
+
+
+                TextEditor(modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxSize(),
+                    state = state,
+                    style = style,
+                    onRichSpanClick = { span, clickType, _ ->
+                        when (clickType) {
+                            SpanClickType.TAP -> println("Touch tap on span: $span")
+                            SpanClickType.PRIMARY_CLICK -> println("Left click on span: $span")
+                            SpanClickType.SECONDARY_CLICK -> println("Right click on span: $span")
+                        }
+                        true
+                    })
+                /*
                 SyntaxTextField(
                     onValueChange = { newValue ->
                         val oldText = textFieldValue.text
@@ -93,7 +120,7 @@ fun RowScope.syntaxEditor(
                     },
                     extension = currentProject.extension ?: "",
                     textFieldValue = textFieldValue
-                )
+                )*/
             }
             if (currentProject.parseError != null) {
                 CustomSelectionColors {

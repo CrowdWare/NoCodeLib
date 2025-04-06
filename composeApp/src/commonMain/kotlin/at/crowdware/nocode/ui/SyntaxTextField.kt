@@ -50,11 +50,7 @@ import at.crowdware.nocode.theme.ExtendedColors
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.uiStates
 import at.crowdware.nocode.viewmodel.GlobalProjectState
-import com.darkrockstudios.texteditor.TextEditor
-import com.darkrockstudios.texteditor.rememberTextEditorStyle
-import com.darkrockstudios.texteditor.state.SpanClickType
-import com.darkrockstudios.texteditor.state.TextEditorState
-import com.darkrockstudios.texteditor.state.rememberTextEditorState
+
 
 @Composable
 fun SyntaxTextField(
@@ -103,6 +99,7 @@ fun SyntaxTextField(
                 if (currentProject != null) {
                     if (currentProject.fileName.length > 0) {
                         key(currentProject.fileName) {
+                            /*
                             val style = rememberTextEditorStyle(
                                 placeholderText = "Enter text here",
                                 textColor = MaterialTheme.colors.onSurface,
@@ -123,7 +120,9 @@ fun SyntaxTextField(
                                     }
                                     true
                                 })
-                            /*
+
+                             */
+
                             BasicTextField(
                                 value = textFieldValue,
                                 onValueChange = onValueChange,
@@ -177,7 +176,7 @@ fun SyntaxTextField(
                                     else -> VisualTransformation.None
                                 },
                                 maxLines = Int.MAX_VALUE
-                            )*/
+                            )
                         }
                     }
                 }
