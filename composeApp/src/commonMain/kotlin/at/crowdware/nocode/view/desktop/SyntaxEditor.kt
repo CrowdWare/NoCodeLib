@@ -33,9 +33,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,7 +45,8 @@ import at.crowdware.nocode.viewmodel.ProjectState
 import at.crowdware.nocode.ui.SyntaxTextField
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.darkrockstudios.texteditor.TextEditor
+import com.darkrockstudios.texteditor.codeeditor.CodeEditor
+import com.darkrockstudios.texteditor.codeeditor.rememberCodeEditorStyle
 import com.darkrockstudios.texteditor.rememberTextEditorStyle
 import com.darkrockstudios.texteditor.state.SpanClickType
 import com.darkrockstudios.texteditor.state.TextEditorState
@@ -72,12 +73,15 @@ fun RowScope.syntaxEditor(
                     style = TextStyle(color = MaterialTheme.colors.onPrimary),
                     overflow = TextOverflow.Ellipsis
                 )
-                val style = rememberTextEditorStyle(
+                val style = rememberCodeEditorStyle(
                     placeholderText = "Enter text here",
-                    textColor = MaterialTheme.colors.onSurface,
+                    placeholderColor = MaterialTheme.colors.onPrimary,
+                    backgroundColor = MaterialTheme.colors.surface,
+                    cursorColor = MaterialTheme.colors.onSurface,
+                    gutterTextColor = MaterialTheme.colors.onPrimary,
                 )
 
-                TextEditor(modifier = Modifier
+                CodeEditor(modifier = Modifier
                     .padding(8.dp)
                     .fillMaxSize(),
                     state = state,
