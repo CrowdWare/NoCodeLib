@@ -50,6 +50,7 @@ import com.darkrockstudios.texteditor.rememberTextEditorStyle
 import com.darkrockstudios.texteditor.state.SpanClickType
 import com.darkrockstudios.texteditor.state.TextEditorState
 import com.darkrockstudios.texteditor.state.rememberTextEditorState
+import kotlin.system.exitProcess
 
 
 @Composable
@@ -76,7 +77,6 @@ fun RowScope.syntaxEditor(
                     textColor = MaterialTheme.colors.onSurface,
                 )
 
-
                 TextEditor(modifier = Modifier
                     .padding(8.dp)
                     .fillMaxSize(),
@@ -90,6 +90,48 @@ fun RowScope.syntaxEditor(
                         }
                         true
                     })
+                LaunchedEffect(Unit) {
+                    state.editOperations.collect { operation ->
+                        val newText = state.getAllText().text
+                        val oldText = currentProject.currentFileContent.text ?: ""
+                        currentProject.currentFileContent = TextFieldValue(newText)
+
+                        if (oldText != newText) {
+                            delay(500)
+                            currentProject.saveFileContent()
+                            when (currentProject.path.substringAfterLast("/")) {
+                                "app.sml" -> {
+                                    currentProject.loadApp()
+                                }
+                                else -> {
+                                    currentProject.reloadPage()
+                                }
+                            }
+                        }
+                    }
+                }
+                /*
+                LaunchedEffect(state.getAllText()) {
+                    // Speichere den aktuellen Text im Projekt
+                    val newText = state.getAllText().text
+                    val oldText = currentProject.currentFileContent.text ?: ""
+                    currentProject.currentFileContent = TextFieldValue(newText)
+                    
+                    // Speichere nur, wenn sich der Text tatsächlich geändert hat
+                    if (oldText != newText) {
+                        // Automatisches Speichern des Inhalts nach jeder Änderung
+                        delay(500) // Kurze Verzögerung, um häufige Speichervorgänge zu vermeiden
+                        currentProject.saveFileContent()
+                        when (currentProject.path.substringAfterLast("/")) {
+                            "app.sml" -> {
+                                currentProject.loadApp()
+                            }
+                            else -> {
+                                currentProject.reloadPage()
+                            }
+                        }
+                    }
+                }*/
                 /*
                 SyntaxTextField(
                     onValueChange = { newValue ->
