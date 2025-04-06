@@ -68,7 +68,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:3.0.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
-
+                implementation("com.darkrockstudios:composetexteditor:0.7.0") // Hinzufügen der ComposeTextEditorLibrary
                 kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
             }
         }

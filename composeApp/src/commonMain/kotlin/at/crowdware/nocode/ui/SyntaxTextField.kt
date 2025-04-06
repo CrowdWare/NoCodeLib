@@ -50,7 +50,11 @@ import at.crowdware.nocode.theme.ExtendedColors
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.uiStates
 import at.crowdware.nocode.viewmodel.GlobalProjectState
-
+import com.darkrockstudios.texteditor.TextEditor
+import com.darkrockstudios.texteditor.rememberTextEditorStyle
+import com.darkrockstudios.texteditor.state.SpanClickType
+import com.darkrockstudios.texteditor.state.TextEditorState
+import com.darkrockstudios.texteditor.state.rememberTextEditorState
 
 @Composable
 fun SyntaxTextField(
@@ -99,6 +103,27 @@ fun SyntaxTextField(
                 if (currentProject != null) {
                     if (currentProject.fileName.length > 0) {
                         key(currentProject.fileName) {
+                            val style = rememberTextEditorStyle(
+                                placeholderText = "Enter text here",
+                                textColor = MaterialTheme.colors.onSurface,
+                            )
+                            val state: TextEditorState = rememberTextEditorState(AnnotatedString("App {}"))
+
+
+                            TextEditor(modifier = Modifier
+                                .padding(8.dp)
+                                .fillMaxSize(),
+                                state = state,
+                                style = style,
+                                onRichSpanClick = { span, clickType, _ ->
+                                    when (clickType) {
+                                        SpanClickType.TAP -> println("Touch tap on span: $span")
+                                        SpanClickType.PRIMARY_CLICK -> println("Left click on span: $span")
+                                        SpanClickType.SECONDARY_CLICK -> println("Right click on span: $span")
+                                    }
+                                    true
+                                })
+                            /*
                             BasicTextField(
                                 value = textFieldValue,
                                 onValueChange = onValueChange,
@@ -152,7 +177,7 @@ fun SyntaxTextField(
                                     else -> VisualTransformation.None
                                 },
                                 maxLines = Int.MAX_VALUE
-                            )
+                            )*/
                         }
                     }
                 }
