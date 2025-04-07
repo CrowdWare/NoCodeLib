@@ -257,193 +257,18 @@ abstract class ProjectState {
     private fun loadElementData(node: SmlNode?) {
         when (node?.name) {
             "Page" -> {
-                //elementData = listOf(mapPageToTreeNodes(node))
-                //val clsName = "at.crowdware.nocode.utils.Page"
-                //val clazz = Class.forName(clsName).kotlin
-                //actualElement = clazz
+                elementData = listOf(mapPageToTreeNodes(node))
             }
             "App" -> {
-                //elementData = listOf(mapAppToTreeNode(node))
-                //val clsName = "at.crowdware.nocode.utils.App"
-                //val clazz = Class.forName(clsName).kotlin
-                //actualElement = clazz
+                elementData = listOf(mapAppToTreeNode(node))
+            } else ->{
+                println("loadElementData: ${node?.name} not implemented")
             }
         }
-    // TODO
-        /*
-        when (obj) {
-            is Page -> {
-                elementData = listOf(mapPageToTreeNodes(page!!))
-                val clsName = "at.crowdware.nocode.utils.Page"
-                val clazz = Class.forName(clsName).kotlin
-                actualElement = clazz
-            }
-            is App -> {
-                elementData = listOf(mapAppToTreeNode(obj as App))
-                val clsName = "at.crowdware.nocode.utils.App"
-                val clazz = Class.forName(clsName).kotlin
-                actualElement = clazz
-            }
-
-        }*/
     }
-    /*
-    fun mapUIElementToTreeNode(uiElement: UIElement): TreeNode {
-        // Create a TreeNode based on the type of the UIElement
-        return when (uiElement) {
-            is UIElement.TextElement -> TreeNode(
-                title = mutableStateOf("Text"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.ButtonElement -> TreeNode(
-                title = mutableStateOf("Button"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.ImageElement -> TreeNode(
-                title = mutableStateOf("Image"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.AsyncImageElement -> TreeNode(
-                title = mutableStateOf("AsyncImage"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.SpacerElement -> TreeNode(
-                title = mutableStateOf("Spacer"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.VideoElement -> TreeNode(
-                title = mutableStateOf("Video"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.YoutubeElement -> TreeNode(
-                title = mutableStateOf("Youtube"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.SoundElement -> TreeNode(
-                title = mutableStateOf("Sound"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.MarkdownElement -> TreeNode(
-                title = mutableStateOf("Markdown"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.RowElement -> TreeNode(
-                title = mutableStateOf("Row"),
-                type = NodeType.DIRECTORY,
-                path = "",
-                children = mutableStateListOf(
-                    *uiElement.uiElements.map { mapUIElementToTreeNode(it) }.toTypedArray()
-                ),
-                expanded = mutableStateOf(true)
-            )
-            is UIElement.ColumnElement -> TreeNode(
-                title = mutableStateOf("Column"),
-                type = NodeType.DIRECTORY,
-                path = "",
-                children = mutableStateListOf(
-                    *uiElement.uiElements.map { mapUIElementToTreeNode(it) }.toTypedArray()
-                ),
-                expanded = mutableStateOf(true)
-            )
-            is UIElement.BoxElement -> TreeNode(
-                title = mutableStateOf("Box"),
-                type = NodeType.DIRECTORY,
-                path = "",
-                children = mutableStateListOf(
-                    *uiElement.uiElements.map { mapUIElementToTreeNode(it) }.toTypedArray()
-                ),
-                expanded = mutableStateOf(true)
-            )
-            is UIElement.SceneElement -> TreeNode(
-                title = mutableStateOf("Scene"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.Zero -> TreeNode(
-                title = mutableStateOf("Zero Element"),
-                type = NodeType.OTHER,
-                path = "",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.Course ->  TreeNode(
-                title = mutableStateOf("Course"),
-                type = NodeType.OTHER,
-                path ="",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.Topic ->  TreeNode(
-                title = mutableStateOf("Topic"),
-                type = NodeType.OTHER,
-                path ="",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.Subtopic ->  TreeNode(
-                title = mutableStateOf("Subtopic"),
-                type = NodeType.OTHER,
-                path ="",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.LazyColumnElement -> TreeNode(
-                title = mutableStateOf("LazyColumn"),
-                type = NodeType.OTHER,
-                path ="",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-            is UIElement.LazyRowElement -> TreeNode(
-                title = mutableStateOf("LazyRow"),
-                type = NodeType.OTHER,
-                path ="",
-                children = mutableStateListOf(),
-                expanded = mutableStateOf(false)
-            )
-        }
-    }*/
 
-    /*
-    fun mapBookToTreeNode(book: Ebook): TreeNode {
-        val rootNode = TreeNode(
-            title = mutableStateOf("Ebook"),
-            type = mutableStateOf("Ebook"),
-            path = "",
-            children = mutableStateListOf(),
-            expanded = mutableStateOf(true)
-        )
-        return rootNode
-    }*/
+
+
 
     fun mapAppToTreeNode(node: SmlNode): TreeNode {
         val rootNode = TreeNode(
@@ -464,20 +289,32 @@ abstract class ProjectState {
             children = mutableStateListOf(),
             expanded = mutableStateOf(true)  // Root is expanded by default
         )
-        // TODO
-        //rootNode.children.addAll(page.elements.map { mapUIElementToTreeNode(it) })
-
+        mapSmlNodeToTreeItem(rootNode, node)
         return rootNode
     }
 
+    fun mapSmlNodeToTreeItem(root: TreeNode, node: SmlNode) {
+        node.children.forEach { child ->
+            val treeNode = TreeNode(
+                title = mutableStateOf(child.name),
+                type = if (child.children.isNotEmpty()) NodeType.DIRECTORY else NodeType.OTHER,
+                children = mutableStateListOf(),
+                expanded = mutableStateOf(true)
+            )
+            root.children.add(treeNode)
+            mapSmlNodeToTreeItem(treeNode, child)
+        }
+    }
+
     fun saveFileContent() {
-        if (path.isEmpty()) return
-        at.crowdware.nocode.viewmodel.saveFileContent(path, "", "", currentFileContent.text)
+        if (path.isEmpty())
+            return
+        saveFileContent(path, "", "", currentFileContent.text)
     }
 
     fun addPage(name: String, currentTreeNode: TreeNode?) {
         val path = "${currentTreeNode?.path}${File.separator}$name.sml"
-        at.crowdware.nocode.viewmodel.createPage(path, name)
+        createPage(path, name)
 
         val newNode = TreeNode(title = mutableStateOf( "${name}.sml"), path = path, type= NodeType.SML)
         val updatedChildren = pageNode.children + newNode
@@ -488,7 +325,7 @@ abstract class ProjectState {
 
     fun addPart(name: String, currentTreeNode: TreeNode?) {
         val path = "${currentTreeNode?.path}${File.separator}$name.md"
-        at.crowdware.nocode.viewmodel.createPart(path)
+        createPart(path)
 
         val newNode = TreeNode(title = mutableStateOf( "${name}.md"), path = path, type= NodeType.MD)
         val updatedChildren = partsNode.children + newNode
@@ -498,7 +335,7 @@ abstract class ProjectState {
     }
 
     fun deleteItem(treeNode: TreeNode) {
-        at.crowdware.nocode.viewmodel.deleteFile(treeNode.path)
+        deleteFile(treeNode.path)
 
         if (treeNode.type == NodeType.SML) {
             val title = treeNode.title.value
