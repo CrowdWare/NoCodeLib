@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.*
 import at.crowdware.nocode.viewmodel.ProjectState
+import at.crowdware.nocode.viewmodel.loadTextFromResource
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
@@ -52,7 +53,7 @@ fun propertyPanel(currentProject: ProjectState?) {
             overflow = TextOverflow.Ellipsis
         )
         val scrollState = rememberScrollState()
-        //val element = currentProject?.actualElement
+        val element = currentProject?.actualElement
         
         Box(
             modifier = Modifier
@@ -66,19 +67,39 @@ fun propertyPanel(currentProject: ProjectState?) {
                     .verticalScroll(scrollState)
                     .padding(end = 10.dp)
             ) {
-                /*
+
                 Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {
                     Column() {
-                        if (element != null) {
-                            element.simpleName?.let {
+                        if (element!= null && element.isNotEmpty()) {
+                            Text(
+                                text = element,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ExtendedTheme.colors.syntaxColor
+                            )
+                            val content = loadTextFromResource("sml/${element}.sml")
+                            val (parsedElement, error) = parseSML(content)
+                            if (parsedElement != null) {
+                                val description = getStringValue(parsedElement, "description", "")
+                                val md = parseMarkdown(description)
                                 Text(
-                                    text = it.substringBefore("Element"),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ExtendedTheme.colors.syntaxColor
+                                    text = md,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = MaterialTheme.colors.onPrimary
                                 )
+
+                                for(properties in parsedElement.children) {
+                                    if(properties.name == "Properties") {
+                                        for(property in properties.children) {
+                                            renderAnnotation(getStringValue(property, "name", ""), getStringValue(property, "description", ""))
+                                        }
+                                    }
+
+                                }
                             }
 
+                            /*
                             element.members.forEach { member ->
                                 if (member is KProperty<*>) {
                                     if (member.annotations.any { it is IgnoreForDocumentation }) {
@@ -90,34 +111,46 @@ fun propertyPanel(currentProject: ProjectState?) {
                                             is WeightAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is HexColorAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is PaddingAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description,)
                                             }
+
                                             is MarkdownAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is IntAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is StringAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is LinkAnnotation -> {
                                                 renderAnnotation(member.name, annotation.description)
                                             }
+
                                             is ChildrenAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description, isChildrenAnnotation = true)
+                                                renderAnnotation(
+                                                    member.name,
+                                                    annotation.description,
+                                                    isChildrenAnnotation = true
+                                                )
                                             }
                                         }
                                     }
                                 }
-                            }
+                            }*/
                         }
                     }
                 }
+                /*
                 if (element != null) {
                     if (element.simpleName == "App") {
                         Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {

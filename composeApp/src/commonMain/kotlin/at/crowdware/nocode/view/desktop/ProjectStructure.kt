@@ -291,20 +291,7 @@ fun projectStructure(currentProject: ProjectState) {
                 onNodeDoubleClick = { node -> },
                 onNodeRightClick = { _, _, _ -> },
                 onClick = { node ->
-                    var clsName = ""
-                    if (node.title.value == "Page") {
-                        clsName = "at.crowdware.nocode.utils.Page"
-                    } else if (node.title.value == "Ebook") {
-                        clsName = "at.crowdware.nocode.utils.Ebook"
-                    } else {
-                        clsName = "at.crowdware.nocode.utils.UIElement\$${node.title.value}Element"
-                    }
-                    try {
-                        val clazz = Class.forName(clsName).kotlin
-                        //currentProject.actualElement = clazz
-                    } catch(e: Exception) {
-                        println("Error: ${e.message}")
-                    }
+                    currentProject.actualElement = node.title.value
                 }
             )
         }

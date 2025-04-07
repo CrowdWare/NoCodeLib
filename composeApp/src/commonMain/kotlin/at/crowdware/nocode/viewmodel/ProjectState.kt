@@ -49,7 +49,7 @@ expect fun createPart(path: String)
 expect fun renameFile(pathBefore: String, pathAfter: String)
 expect fun copyAssetFile(path: String, target: String)
 expect fun copyResourceToFile(resourcePath: String, outputPath: String)
-
+expect fun loadTextFromResource(fileName: String): String
 
 abstract class ProjectState {
     var currentFileContent by mutableStateOf(TextFieldValue(""))
@@ -75,7 +75,7 @@ abstract class ProjectState {
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
     var isPageLoaded by mutableStateOf(false)
-    //var actualElement: KClass<*>? by mutableStateOf(null)
+    var actualElement: String by mutableStateOf("")
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")
 
@@ -257,14 +257,15 @@ abstract class ProjectState {
     }
 
     private fun loadElementData(node: SmlNode?) {
-        when (node?.name) {
+        actualElement = node?.name!!
+        when (node.name) {
             "Page" -> {
                 elementData = listOf(mapPageToTreeNodes(node))
             }
             "App" -> {
                 elementData = listOf(mapAppToTreeNode(node))
             } else ->{
-                println("loadElementData: ${node?.name} not implemented")
+                println("loadElementData: ${node.name} not implemented")
             }
         }
     }

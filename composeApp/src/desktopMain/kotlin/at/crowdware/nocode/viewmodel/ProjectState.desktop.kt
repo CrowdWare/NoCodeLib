@@ -62,6 +62,11 @@ actual fun saveFileContent(path: String, uuid: String, pid: String, content: Str
     }
 }
 
+actual fun loadTextFromResource(fileName: String): String {
+    return object {}.javaClass.getResource("/$fileName")
+        ?.readText() ?: error("File not found: $fileName")
+}
+
 class DesktopProjectState : ProjectState() {
     override suspend fun loadProjectFiles(path: String, uuid: String, pid: String) {
         val file = File(path)
