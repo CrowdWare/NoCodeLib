@@ -33,36 +33,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.viewmodel.ProjectState
-import at.crowdware.nocode.ui.SyntaxTextField
+import at.crowdware.nocode.texteditor.codeeditor.CodeEditor
+import at.crowdware.nocode.texteditor.codeeditor.rememberCodeEditorStyle
+import at.crowdware.nocode.texteditor.state.SpanClickType
+import at.crowdware.nocode.texteditor.state.TextEditorState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import com.darkrockstudios.texteditor.codeeditor.CodeEditor
-import com.darkrockstudios.texteditor.codeeditor.rememberCodeEditorStyle
-import com.darkrockstudios.texteditor.rememberTextEditorStyle
-import com.darkrockstudios.texteditor.state.SpanClickType
-import com.darkrockstudios.texteditor.state.TextEditorState
-import com.darkrockstudios.texteditor.state.rememberTextEditorState
-import kotlin.system.exitProcess
 
 
 @Composable
 fun RowScope.syntaxEditor(
     currentProject: ProjectState?,
-    //textFieldValue: TextFieldValue,
-    //onTextFieldValueChange: (TextFieldValue) -> Unit
     state: TextEditorState
 ) {
     val relative = currentProject?.folder?.let { currentProject.path.removePrefix(it).removePrefix("/") }
-    val coroutineScope = rememberCoroutineScope()
     if (currentProject != null && currentProject.isEditorVisible) {
         Column(modifier = Modifier.weight(1F).fillMaxHeight()) {
             Column(modifier = Modifier.weight(1F).fillMaxHeight().background(color = MaterialTheme.colors.primary)) {
@@ -114,59 +105,6 @@ fun RowScope.syntaxEditor(
                         }
                     }
                 }
-                /*
-                LaunchedEffect(state.getAllText()) {
-                    // Speichere den aktuellen Text im Projekt
-                    val newText = state.getAllText().text
-                    val oldText = currentProject.currentFileContent.text ?: ""
-                    currentProject.currentFileContent = TextFieldValue(newText)
-                    
-                    // Speichere nur, wenn sich der Text tatsächlich geändert hat
-                    if (oldText != newText) {
-                        // Automatisches Speichern des Inhalts nach jeder Änderung
-                        delay(500) // Kurze Verzögerung, um häufige Speichervorgänge zu vermeiden
-                        currentProject.saveFileContent()
-                        when (currentProject.path.substringAfterLast("/")) {
-                            "app.sml" -> {
-                                currentProject.loadApp()
-                            }
-                            else -> {
-                                currentProject.reloadPage()
-                            }
-                        }
-                    }
-                }*/
-                /*
-                SyntaxTextField(
-                    onValueChange = { newValue ->
-                        val oldText = textFieldValue.text
-                        onTextFieldValueChange(newValue)
-                        currentProject.currentFileContent = newValue
-                        // don't save if only the cursor has moved (no text has changed)
-                        if (oldText != newValue.text) {
-                            // Automatically save the content to disk after each change
-                            coroutineScope.launch(at.crowdware.nocode.ui.ioDispatcher()) {
-                                delay(500)
-                                currentProject.saveFileContent()
-                                when (currentProject.path.substringAfterLast("/")) {
-                                    "app.sml" -> {
-                                        currentProject.loadApp()
-                                    }
-
-                                    /*"book.sml" -> {
-                                        currentProject.loadBook()
-                                    }*/
-
-                                    else -> {
-                                        currentProject.reloadPage()
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    extension = currentProject.extension ?: "",
-                    textFieldValue = textFieldValue
-                )*/
             }
             if (currentProject.parseError != null) {
                 CustomSelectionColors {

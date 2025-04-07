@@ -27,16 +27,6 @@ repositories {
     mavenCentral()
     google()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-    flatDir {
-        dirs("libs")
-    }
-}
-
-val jarFile = file("../libs/ComposeTextEditor-desktop-0.7.5.jar")
-println(">>> Exists? ${jarFile.exists()}") // ← sollte jetzt true sagen!
-
-if (!jarFile.exists()) {
-    throw GradleException("❌ JAR nicht gefunden: ${jarFile.path}")
 }
 
 kotlin {
@@ -78,8 +68,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:3.0.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
-                //implementation("com.darkrockstudios:composetexteditor:0.7.0")
-                implementation(files(jarFile))
+                implementation(files("../../../CodeEditor/ComposeTextEditor/build/libs/ComposeTextEditor-desktop-1.0.0.jar"))
                 kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
             }
         }
