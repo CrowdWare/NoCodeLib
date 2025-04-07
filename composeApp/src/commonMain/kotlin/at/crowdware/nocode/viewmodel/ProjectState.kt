@@ -224,12 +224,14 @@ abstract class ProjectState {
                     }
                 }
             } else {
-                // TODO
-                //page = Page(color = "", backgroundColor = "", title = "", padding = Padding(0, 0, 0, 0), scrollable =  "false", elements = mutableListOf())
-                //elementData = emptyList()
-                //val clsName = "at.crowdware.nocode.utils.Markdown"
-                //val clazz = Class.forName(clsName).kotlin
-                //actualElement = clazz
+                val rootNode = TreeNode(
+                    title = mutableStateOf("Markdown"),
+                    type = NodeType.OTHER,
+                    path = "",
+                    children = mutableStateListOf(),
+                    expanded = mutableStateOf(false)
+                )
+                elementData = listOf(rootNode)
             }
 
             currentFileContent = TextFieldValue(
@@ -266,9 +268,6 @@ abstract class ProjectState {
             }
         }
     }
-
-
-
 
     fun mapAppToTreeNode(node: SmlNode): TreeNode {
         val rootNode = TreeNode(
