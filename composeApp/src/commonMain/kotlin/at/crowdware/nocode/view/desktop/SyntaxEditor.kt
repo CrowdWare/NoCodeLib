@@ -45,6 +45,7 @@ import at.crowdware.nocode.texteditor.codeeditor.CodeEditor
 import at.crowdware.nocode.texteditor.codeeditor.rememberCodeEditorStyle
 import at.crowdware.nocode.texteditor.state.SpanClickType
 import at.crowdware.nocode.texteditor.state.TextEditorState
+import at.crowdware.nocode.texteditor.syntax.SyntaxMode
 import kotlinx.coroutines.delay
 
 
@@ -77,14 +78,15 @@ fun RowScope.syntaxEditor(
                     .fillMaxSize(),
                     state = state,
                     style = style,
-                    onRichSpanClick = { span, clickType, _ ->
-                        when (clickType) {
-                            SpanClickType.TAP -> println("Touch tap on span: $span")
-                            SpanClickType.PRIMARY_CLICK -> println("Left click on span: $span")
-                            SpanClickType.SECONDARY_CLICK -> println("Right click on span: $span")
-                        }
-                        true
-                    })
+                    //onRichSpanClick = { span, clickType, _ ->
+                        //when (clickType) {
+                            //SpanClickType.TAP -> println("Touch tap on span: $span")
+                            //SpanClickType.PRIMARY_CLICK -> println("Left click on span: $span")
+                            //SpanClickType.SECONDARY_CLICK -> println("Right click on span: $span")
+                        //}
+                        //true
+                    //}
+                    syntaxMode = if(currentProject.extension == "sml") SyntaxMode.SML else if(currentProject.extension == "md") SyntaxMode.MARKDOWN else SyntaxMode.NONE)
                 LaunchedEffect(Unit) {
                     state.editOperations.collect { operation ->
                         val newText = state.getAllText().text
@@ -92,7 +94,7 @@ fun RowScope.syntaxEditor(
                         currentProject.currentFileContent = TextFieldValue(newText)
 
                         if (oldText != newText) {
-                            delay(500)
+                            //delay(500)
                             currentProject.saveFileContent()
                             when (currentProject.path.substringAfterLast("/")) {
                                 "app.sml" -> {
