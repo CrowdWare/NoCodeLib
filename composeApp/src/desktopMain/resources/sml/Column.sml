@@ -32,14 +32,6 @@ ElementDefinition {
             description: "Space around the content. Accepts 1, 2 or 4 integers (in dp): '8' (all), '8 16' (vertical horizontal), or '8 16 16 8' (top right bottom left)."
         }
 
-        /*
-        Property {
-            name: "spacing"
-            type: "Int"
-            default: "0"
-            description: "Spacing between child elements. Example: '8'."
-        }*/
-
         Property {
             name: "background"
             type: "String"

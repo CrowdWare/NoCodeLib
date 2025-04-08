@@ -77,7 +77,7 @@ abstract class ProjectState {
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
     var isPageLoaded by mutableStateOf(false)
-    var isPortrait by mutableStateOf(false)
+    var isPortrait by mutableStateOf(true)
     var actualElement: String by mutableStateOf("")
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")

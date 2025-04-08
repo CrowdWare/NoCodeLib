@@ -14,6 +14,12 @@ ElementDefinition {
             description: "The version of the sml dialect."
         }
         Property {
+             name: "background"
+             type: "String"
+             default: "background"
+             description: "The color of the background as hexvalue or colorname. Example: '#FFFFFF'"
+        }
+        Property {
             name: "title"
             type: "String"
             default: ""

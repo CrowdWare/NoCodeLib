@@ -125,7 +125,8 @@ fun mobilePreview(currentProject: ProjectState?) {
                         ),
                     ) {
                         if (node != null && node.children.isNotEmpty() && currentProject?.extension == "sml") {
-                            val pageBackgroundColor = hexToColor(getStringValue(node, "backgroundColor", "background"))
+                            val pageBackgroundColor = hexToColor(getStringValue(node, "background", "background"))
+
                             Box(
                                 modifier = Modifier
                                     .size((1.0 / scale * 360.0).dp, (1.0 / scale * 640).dp)
@@ -366,7 +367,9 @@ fun renderButton(modifier: Modifier, node: SmlNode) {
 @Composable
 fun renderColumn(modifier: Modifier, node: SmlNode, lang: String) {
     val padding = getPadding(node)
-    Column(modifier = modifier
+    val background = getStringValue(node, "background", "background")
+
+    Column(modifier = modifier.background(hexToColor(background))
         .padding(
         top = padding.top.dp,
         bottom = padding.bottom.dp,
@@ -384,8 +387,11 @@ fun renderRow(node: SmlNode, lang: String) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
     val width = getIntValue(node, "width", 0)
+    val background = getStringValue(node, "background", "background")
+
     Row(
-        modifier = Modifier.padding(
+        modifier = Modifier.background(hexToColor(background))
+            .padding(
             top = padding.top.dp,
             bottom = padding.bottom.dp,
             start = padding.left.dp,
@@ -407,7 +413,10 @@ fun renderBox(node: SmlNode, lang: String) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
     val width = getIntValue(node, "width", 0)
-    Box(modifier = Modifier.padding(
+    val background = getStringValue(node, "background", "background")
+
+    Box(modifier = Modifier.background(hexToColor(background))
+        .padding(
         top = padding.top.dp,
         bottom = padding.bottom.dp,
         start = padding.left.dp,
@@ -438,63 +447,6 @@ fun renderLazyRow(node: SmlNode, lang: String) {
         }
     }
 }
-
-/*
-@Composable
-fun RenderUIElement(node: SmlNode, lang: String, inBox: Boolean = false) {
-    when (node.name) {
-        is TextElement -> {
-            //renderText(element)
-        }
-        is MarkdownElement -> {
-            renderMarkdown(element, lang)
-        }
-        is ButtonElement -> {
-           // renderButton(modifier = Modifier.fillMaxWidth(), node)
-        }
-        is ColumnElement -> {
-            //renderColumn(Modifier, element, lang = lang)
-        }
-        is RowElement -> {
-            //renderRow(element, lang)
-        }
-        is BoxElement -> {
-            renderBox(element, lang)
-        }
-        is LazyColumnElement -> {
-            renderLazyColumn(modifier = Modifier, element = element, lang = lang)
-        }
-        is LazyRowElement -> {
-            renderLazyRow(element, lang)
-        }
-        is ImageElement -> {
-            at.crowdware.nocode.view.desktop.dynamicImageFromAssets(modifier = Modifier, element)
-        }
-        is AsyncImageElement -> {
-            at.crowdware.nocode.view.desktop.asyncImage(modifier = Modifier, "", scale = element.scale, "", element.width, element.height)
-        }
-        is SoundElement -> {
-            at.crowdware.nocode.view.desktop.dynamicSoundfromAssets(element.src)
-        }
-        is VideoElement -> {
-            if (element.src.startsWith("http")) {
-                at.crowdware.nocode.view.desktop.dynamicVideofromUrl(modifier = Modifier)
-            } else {
-                at.crowdware.nocode.view.desktop.dynamicVideofromAssets(modifier = Modifier, element.src)
-            }
-        }
-        is YoutubeElement -> {
-            at.crowdware.nocode.view.desktop.dynamicYoutube()
-        }
-        is SceneElement -> {
-            at.crowdware.nocode.view.desktop.dynamicScene(modifier = Modifier, element.width, element.height)
-        }
-        else -> {
-            println("Unknown element: $element")
-        }
-    }
-}
-*/
 
 @Composable
 fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
