@@ -233,7 +233,6 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) 
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
-    println("renderMd: ${hexToColor(color)}")
     if (part.isNotEmpty() && currentProject != null) {
         var dir = "parts"
         if(lang.isNotEmpty()) {

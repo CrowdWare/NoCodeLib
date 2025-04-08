@@ -74,19 +74,11 @@ fun RowScope.syntaxEditor(
                 )
 
                 CodeEditor(modifier = Modifier
-                    .padding(8.dp)
                     .fillMaxSize(),
                     state = state,
                     style = style,
-                    //onRichSpanClick = { span, clickType, _ ->
-                        //when (clickType) {
-                            //SpanClickType.TAP -> println("Touch tap on span: $span")
-                            //SpanClickType.PRIMARY_CLICK -> println("Left click on span: $span")
-                            //SpanClickType.SECONDARY_CLICK -> println("Right click on span: $span")
-                        //}
-                        //true
-                    //}
-                    syntaxMode = if(currentProject.extension == "sml") SyntaxMode.SML else if(currentProject.extension == "md") SyntaxMode.MARKDOWN else SyntaxMode.NONE)
+                    syntaxMode = if(currentProject.extension == "sml") SyntaxMode.SML else if(currentProject.extension == "md") SyntaxMode.MARKDOWN else SyntaxMode.NONE
+                )
                 LaunchedEffect(Unit) {
                     state.editOperations.collect { operation ->
                         val newText = state.getAllText().text

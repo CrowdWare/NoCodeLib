@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
+import at.crowdware.nocode.plugin.SmlExportPlugin
 import at.crowdware.nocode.utils.*
 import com.darkrockstudios.libraries.mpfilepicker.MPFile
 import kotlinx.coroutines.CoroutineScope
@@ -71,6 +72,7 @@ abstract class ProjectState {
     var isImportSoundDialogVisible by mutableStateOf(false)
     var isImportModelDialogVisible by mutableStateOf(false)
     var isImportTextureDialogVisible by mutableStateOf(false)
+    var isExportDialogVisible by mutableStateOf(false)
     var isAboutDialogOpen by  mutableStateOf(false)
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
@@ -78,6 +80,7 @@ abstract class ProjectState {
     var actualElement: String by mutableStateOf("")
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")
+    var exportPlugin: SmlExportPlugin? by mutableStateOf(null)
 
     lateinit var pageNode: TreeNode
     lateinit var imagesNode: TreeNode

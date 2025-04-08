@@ -19,7 +19,6 @@
 
 package at.crowdware.nocode.ui
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -27,12 +26,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.input.TextFieldValue
 import at.crowdware.nocode.theme.ExtendedTheme
-import at.crowdware.nocode.viewmodel.GlobalAppState
 
 
 @Composable
-fun createHTMLDialog(
+fun createExportDialog(
     folder: TextFieldValue,
+    caption: String,
     onFolderChange: (TextFieldValue) -> Unit,
     onDismissRequest: () -> Unit,
     onCreateRequest: () -> Unit
@@ -40,7 +39,7 @@ fun createHTMLDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(text = "Create HTML")
+            Text(text = caption)
         },
         text = {
             InputRow(label = "Folder:", value = folder, onValueChange = onFolderChange, hasIcon = true)
