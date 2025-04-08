@@ -41,9 +41,9 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
 
 @Composable
-fun propertyPanel(currentProject: ProjectState?) {
+fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
     Column(
-        modifier = Modifier.width(320.dp).fillMaxHeight().background(color = MaterialTheme.colors.primary)
+        modifier = modifier.fillMaxHeight().background(color = MaterialTheme.colors.primary)
     ) {
         BasicText(
             text = "Properties",

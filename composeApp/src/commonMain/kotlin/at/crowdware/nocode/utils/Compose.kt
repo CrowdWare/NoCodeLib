@@ -23,12 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 
 fun getFontWeight(node: SmlNode): FontWeight {
-    val key = getStringValue(node, "fontWeight", "").trim()
+    val key = getStringValue(node, "fontWeight", "").trim().lowercase()
     return fontWeightMap.getOrDefault(key, FontWeight.Normal)
 }
 
 fun getTextAlign(node: SmlNode): TextAlign {
-    val key = getStringValue(node, "textAlign", "").trim()
+    val key = getStringValue(node, "textAlign", "").trim().lowercase()
     return textAlignMap.getOrDefault(key, TextAlign.Start)
 }
 

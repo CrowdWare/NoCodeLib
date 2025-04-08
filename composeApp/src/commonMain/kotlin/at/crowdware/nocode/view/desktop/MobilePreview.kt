@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -50,6 +51,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.theme.ExtendedTheme
+import at.crowdware.nocode.ui.HoverableIcon
+import at.crowdware.nocode.ui.TooltipPosition
 import at.crowdware.nocode.utils.*
 //import at.crowdware.nocode.utils.UIElement.*
 import at.crowdware.nocode.viewmodel.GlobalProjectState
@@ -68,13 +71,25 @@ fun mobilePreview(currentProject: ProjectState?) {
     }
 
     Column(modifier = Modifier.width(430.dp).fillMaxHeight().background(color = MaterialTheme.colors.primary)) {
-        BasicText(
-            text = "Mobile Preview",
-            modifier = Modifier.padding(8.dp),
-            maxLines = 1,
-            style = TextStyle(color = MaterialTheme.colors.onPrimary),
-            overflow = TextOverflow.Ellipsis
-        )
+        Row() {
+            BasicText(
+                text = "Mobile Preview",
+                modifier = Modifier.padding(8.dp),
+                maxLines = 1,
+                style = TextStyle(color = MaterialTheme.colors.onPrimary),
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Box(modifier = Modifier.height(24.dp)) {
+                HoverableIcon(
+                    painter = painterResource("drawable/landscape.xml"),
+                    onClick = { currentProject?.isPortrait = false },
+                    tooltipText = "Desktop Preview",
+                    isSelected = false,
+                    tooltipPosition = TooltipPosition.Left
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -248,7 +263,7 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) 
         txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
-    Text(modifier = modifier,
+    Text(modifier = modifier.fillMaxWidth(),
         text = parsedMarkdown,
         style = TextStyle(color = hexToColor(color)),
         fontSize = fontSize.sp,
@@ -1178,7 +1193,7 @@ fun CustomText(
 
     // Use a Box to apply the desired alignment
     Box(
-        //modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = alignment as Alignment
     ) {
         Text(

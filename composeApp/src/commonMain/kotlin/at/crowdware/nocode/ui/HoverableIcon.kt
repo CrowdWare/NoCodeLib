@@ -28,24 +28,29 @@ import androidx.compose.ui.graphics.lerp
 //import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.graphics.painter.Painter
 
-@OptIn(ExperimentalComposeUiApi::class)
+enum class TooltipPosition {
+    Left, Right
+}
+
+
 @Composable
 fun HoverableIcon(
     onClick: () -> Unit,
     painter: Painter,
     tooltipText: String,
-    isSelected: Boolean
+    isSelected: Boolean,
+    tooltipPosition: TooltipPosition = TooltipPosition.Right
 ) {
     var isHovered by remember { mutableStateOf(false) }
 
-    at.crowdware.nocode.ui.HoverableIconContent(
+    HoverableIconContent(
         isHovered = isHovered,
         onClick = onClick,
-        //imageVector = imageVector,
         painter = painter,
         tooltipText = tooltipText,
         isSelected = isSelected,
-        onHoverChange = { hover -> isHovered = hover }
+        onHoverChange = { hover -> isHovered = hover},
+        tooltipPosition = tooltipPosition
     )
 }
 
@@ -56,19 +61,27 @@ expect fun HoverableIconContent(
     painter: Painter,
     tooltipText: String,
     isSelected: Boolean,
-    onHoverChange: (Boolean) -> Unit
+    onHoverChange: (Boolean) -> Unit,
+    tooltipPosition: TooltipPosition = TooltipPosition.Right
 )
 
 
-fun TriangleShape(): Shape {
+fun TriangleShape(flipped: Boolean = false): Shape {
     return GenericShape { size, _ ->
-        moveTo(size.width, 0f)
-        lineTo(0f, size.height / 2)
-        lineTo(size.width, size.height)
+        if (!flipped) {
+            // ▶️ zeigt nach links (Standard)
+            moveTo(size.width, 0f)
+            lineTo(0f, size.height / 2)
+            lineTo(size.width, size.height)
+        } else {
+            // ◀️ zeigt nach rechts (gedreht)
+            moveTo(0f, 0f)
+            lineTo(size.width, size.height / 2)
+            lineTo(0f, size.height)
+        }
         close()
     }
 }
-
 @Composable
 fun LightenColor(color: Color, lightenFactor: Float = 0.3f): Color {
     // Mischt die Farbe mit Weiß, um sie aufzuhellen (ohne Transparenz)

@@ -34,6 +34,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.TextStyle
@@ -44,6 +45,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import at.crowdware.nocode.theme.ExtendedTheme
 
+/*
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 actual fun HoverableIconContent(
@@ -82,6 +84,16 @@ actual fun HoverableIconContent(
                 properties = PopupProperties(focusable = false)
             ) {
                 Row(
+                    modifier = Modifier.pointerMoveFilter(
+                        onEnter = {
+                            onHoverChange(true)
+                            false
+                        },
+                        onExit = {
+                            onHoverChange(false)
+                            false
+                        }
+                    ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -105,5 +117,118 @@ actual fun HoverableIconContent(
                 }
             }
         }
+    }
+}*/
+
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+actual fun HoverableIconContent(
+    isHovered: Boolean,
+    onClick: () -> Unit,
+    painter: Painter,
+    tooltipText: String,
+    isSelected: Boolean,
+    onHoverChange: (Boolean) -> Unit,
+    tooltipPosition: TooltipPosition
+) {
+    val lightenedBackgroundColor = LightenColor(MaterialTheme.colors.primary, 0.1f)
+
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .pointerMoveFilter(
+                onEnter = {
+                    onHoverChange(true)
+                    false
+                },
+                onExit = {
+                    onHoverChange(false)
+                    false
+                }
+            )
+            .clickable { onClick() }
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = "Hoverable Icon",
+            tint = if (isHovered || isSelected) ExtendedTheme.colors.accentColor else MaterialTheme.colors.onPrimary,
+            modifier = Modifier
+                .size(32.dp)
+                .align(Alignment.Center)
+        )
+
+        if (isHovered) {
+            // Position abhängig von Tooltip-Seite
+            val offset = when (tooltipPosition) {
+                TooltipPosition.Right -> IntOffset(38, 8)
+                TooltipPosition.Left -> IntOffset(-110, 8) // anpassen je nach Tooltip-Breite
+            }
+
+            Popup(
+                alignment = Alignment.TopStart,
+                offset = offset,
+                properties = PopupProperties(focusable = false)
+            ) {
+                Row(
+                    modifier = Modifier.pointerMoveFilter(
+                        onEnter = {
+                            onHoverChange(true)
+                            false
+                        },
+                        onExit = {
+                            onHoverChange(false)
+                            false
+                        }
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (tooltipPosition == TooltipPosition.Left) {
+                        // Dreieck rechts zeigen
+                        TooltipBubble(lightenedBackgroundColor, tooltipText, triangleOnLeft = false)
+                    } else {
+                        // Dreieck links zeigen
+                        TooltipBubble(lightenedBackgroundColor, tooltipText, triangleOnLeft = true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TooltipBubble(
+    backgroundColor: Color,
+    text: String,
+    triangleOnLeft: Boolean
+) {
+    if (triangleOnLeft) {
+        Box(
+            modifier = Modifier
+                .size(12.dp, 16.dp)
+                .background(backgroundColor, TriangleShape())
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .background(backgroundColor, shape = RoundedCornerShape(4.dp))
+            .padding(8.dp)
+    ) {
+        BasicText(
+            text = text,
+            style = TextStyle(
+                color = MaterialTheme.colors.onSurface,
+                fontSize = 12.sp
+            )
+        )
+    }
+
+    if (!triangleOnLeft) {
+        Box(
+            modifier = Modifier
+                .size(12.dp, 16.dp)
+                .background(backgroundColor, TriangleShape(true))
+        )
     }
 }
