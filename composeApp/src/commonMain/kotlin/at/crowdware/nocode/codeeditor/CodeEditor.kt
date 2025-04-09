@@ -23,6 +23,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
@@ -171,12 +172,16 @@ fun CodeEditor(
                                     fontFamily = fontFamily
                                 )
                             )
-                            drawIntoCanvas { canvas ->
-                                canvas.save()
-                                canvas.translate(xOffset, yOffset)
-                                layoutResult.multiParagraph.paint(canvas)
-                                canvas.restore()
-                            }
+                            drawText(
+                                textMeasurer = textMeasurer,
+                                text = buildAnnotatedString { append(token.text) },
+                                topLeft = Offset(xOffset, yOffset),
+                                style = TextStyle(
+                                    color = token.color,
+                                    fontSize = fontSize,
+                                    fontFamily = fontFamily
+                                )
+                            )
                             xOffset += layoutResult.size.width
                         }
 
