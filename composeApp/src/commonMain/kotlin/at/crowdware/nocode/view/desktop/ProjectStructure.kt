@@ -297,4 +297,3 @@ fun projectStructure(currentProject: ProjectState) {
         }
     }
 }
-

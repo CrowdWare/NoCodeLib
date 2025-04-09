@@ -142,13 +142,16 @@ fun CodeEditor(
                                 cursorLine = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
                                 val lineText = lines.getOrNull(cursorLine) ?: ""
                                 val position = (offset.x + horizontalScroll.value - 60f).toInt()
+                                var found = false
                                 for (i in 1..lineText.length) {
                                     if (measureTextWidth(lineText, i) > position) {
                                         cursorColumn = i - 1
-                                        return@detectTapGestures
+                                        found = true
+                                        break
                                     }
                                 }
-                                cursorColumn = lineText.length
+                                if (!found)
+                                    cursorColumn = lineText.length
                             }
                         }
                 ) {
