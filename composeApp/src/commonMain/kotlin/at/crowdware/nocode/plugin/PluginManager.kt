@@ -20,31 +20,31 @@ object PluginManager {
 
     fun loadAllFromPluginsFolder(folder: File): List<SmlExportPlugin> {
         val plugins = mutableListOf<SmlExportPlugin>()
-
         if (!folder.exists() || !folder.isDirectory) return plugins
-        println("loadPlugin")
+
+        // create an empty folder for the plugins
+        val pluginDir = File(System.getProperty("user.home") + "/Library/Application Support/NoCodeDesigner/plugin-cache/")
+        if (pluginDir.exists())
+            pluginDir.deleteRecursively()
+        else
+            pluginDir.mkdirs()
+
         val pluginZips = folder.listFiles { file ->
             file.extension == "zip" && file.name.endsWith(".zip")
         } ?: return plugins
 
         for (zip in pluginZips) {
-            loadPluginFromZip(zip)?.let { plugin ->
+            val pluginId = zip.name.substringBefore(".")
+            loadPluginFromZip(zip, File(pluginDir, pluginId))?.let { plugin ->
                 plugins.add(plugin)
-                PluginManager.register(plugin)
+                register(plugin)
             }
         }
-
         return plugins
     }
 
-    fun loadPluginFromZip(zipFile: File): SmlExportPlugin? {
+    fun loadPluginFromZip(zipFile: File, pluginDir: File): SmlExportPlugin? {
         try {
-            val pluginDir = File(System.getProperty("user.home") + "/Library/Application Support/NoCodeDesigner/plugin-cache/")
-            pluginDir.mkdirs()
-            //val tempDir = File(".plugin-cache/${zipFile.nameWithoutExtension}")
-            if (pluginDir.exists()) pluginDir.deleteRecursively()
-            pluginDir.mkdirs()
-
             // Entpacken
             ZipFile(zipFile).use { zip ->
                 zip.entries().asSequence().forEach { entry ->
