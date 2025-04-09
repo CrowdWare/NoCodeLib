@@ -52,6 +52,15 @@ fun CodeEditor(
     val fontSize = 14.sp
     val fontFamily = FontFamily.Monospace
 
+    var isCursorVisible by remember { mutableStateOf(true) }
+
+    LaunchedEffect(cursorLine, cursorColumn) {
+        while (true) {
+            isCursorVisible = !isCursorVisible
+            kotlinx.coroutines.delay(500)
+        }
+    }
+
     fun measureTextWidth(text: String, upToColumn: Int): Float {
         val textToMeasure = text.take(upToColumn.coerceAtMost(text.length))
         val result = textMeasurer.measure(
@@ -77,12 +86,22 @@ fun CodeEditor(
                 if (event.type == KeyEventType.KeyDown) {
                     when (event.key) {
                         Key.DirectionLeft -> {
-                            if (cursorColumn > 0) cursorColumn--
+                            if (cursorColumn > 0) {
+                                cursorColumn--
+                            } else if (cursorLine > 0) {
+                                cursorLine--
+                                cursorColumn = lines.getOrNull(cursorLine)?.length ?: 0
+                            }
                             true
                         }
                         Key.DirectionRight -> {
                             val line = lines.getOrNull(cursorLine) ?: ""
-                            if (cursorColumn < line.length) cursorColumn++
+                            if (cursorColumn < line.length) {
+                                cursorColumn++
+                            } else if (cursorLine < lines.lastIndex) {
+                                cursorLine++
+                                cursorColumn = 0
+                            }
                             true
                         }
                         Key.DirectionUp -> {
@@ -158,13 +177,13 @@ fun CodeEditor(
                             xOffset += layoutResult.size.width
                         }
 
-                        if (index == cursorLine) {
+                        if (index == cursorLine && isCursorVisible) {
                             val lineText = lines.getOrNull(cursorLine) ?: ""
                             val cursorX = 60f + measureTextWidth(lineText, cursorColumn) - horizontalScroll.value
                             drawLine(
                                 color = style.cursorColor,
                                 start = Offset(cursorX, yOffset),
-                                end = Offset(cursorX, yOffset + lineHeight),
+                                end = Offset(cursorX, yOffset + lineHeight - 5),
                                 strokeWidth = 1f
                             )
                         }
