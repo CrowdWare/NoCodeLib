@@ -3,18 +3,23 @@ package at.crowdware.nocode.codeeditor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -59,10 +64,51 @@ fun CodeEditor(
         return result.size.width.toFloat()
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown) {
+                    when (event.key) {
+                        Key.DirectionLeft -> {
+                            if (cursorColumn > 0) cursorColumn--
+                            true
+                        }
+                        Key.DirectionRight -> {
+                            val line = lines.getOrNull(cursorLine) ?: ""
+                            if (cursorColumn < line.length) cursorColumn++
+                            true
+                        }
+                        Key.DirectionUp -> {
+                            if (cursorLine > 0) {
+                                cursorLine--
+                                val line = lines.getOrNull(cursorLine) ?: ""
+                                cursorColumn = minOf(cursorColumn, line.length)
+                            }
+                            true
+                        }
+                        Key.DirectionDown -> {
+                            if (cursorLine < lines.lastIndex) {
+                                cursorLine++
+                                val line = lines.getOrNull(cursorLine) ?: ""
+                                cursorColumn = minOf(cursorColumn, line.length)
+                            }
+                            true
+                        }
+                        else -> false
+                    }
+                } else false
+            }
+            .focusRequester(focusRequester)
+            .focusable()
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .padding(end = 12.dp, bottom = 12.dp)
@@ -92,6 +138,7 @@ fun CodeEditor(
                     for ((index, line) in lines.withIndex()) {
                         val (tokens, nextInString) = highlighter.highlightLine(line, inString)
                         inString = nextInString
+
                         var xOffset = 60f
                         for (token in tokens) {
                             val layoutResult = textMeasurer.measure(
@@ -117,7 +164,7 @@ fun CodeEditor(
                             drawLine(
                                 color = style.cursorColor,
                                 start = Offset(cursorX, yOffset),
-                                end = Offset(cursorX, yOffset + lineHeight - 5),
+                                end = Offset(cursorX, yOffset + lineHeight),
                                 strokeWidth = 1f
                             )
                         }
