@@ -10,6 +10,12 @@ ElementDefinition {
             description: "The version of the sml dialect."
         }
         Property {
+            name: "version"
+            type: "String"
+            default: "1.0"
+            description: "The version of the app."
+        }
+        Property {
             name: "name"
             type: "String"
             default: ""

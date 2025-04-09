@@ -10,10 +10,6 @@ ElementDefinition {
         Root { name: "LazyContent"}
     }
 
-    AllowedChildren {
-        // Keine Kinder erlaubt
-    }
-
     Properties {
         Property {
             name: "label"
