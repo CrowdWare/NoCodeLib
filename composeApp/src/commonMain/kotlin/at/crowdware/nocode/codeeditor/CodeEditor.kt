@@ -87,10 +87,11 @@ fun CodeEditor(
                             }
                         }
                 ) {
-                    highlighter.reset()
+                    var inString = false
                     var yOffset = yOffsetStart - verticalScroll.value
                     for ((index, line) in lines.withIndex()) {
-                        val tokens = highlighter.highlightLine(line)
+                        val (tokens, nextInString) = highlighter.highlightLine(line, inString)
+                        inString = nextInString
                         var xOffset = 60f
                         for (token in tokens) {
                             val layoutResult = textMeasurer.measure(
@@ -116,7 +117,7 @@ fun CodeEditor(
                             drawLine(
                                 color = style.cursorColor,
                                 start = Offset(cursorX, yOffset),
-                                end = Offset(cursorX, yOffset + lineHeight),
+                                end = Offset(cursorX, yOffset + lineHeight - 5),
                                 strokeWidth = 1f
                             )
                         }
