@@ -40,18 +40,20 @@ fun CodeEditor(
     var cursorLine by remember { mutableStateOf(0) }
     var cursorColumn by remember { mutableStateOf(0) }
 
-    val lineHeight = 20f
+    val lineHeight = 25f
     val yOffsetStart = 8f
     val canvasHeight = (lines.size * lineHeight).toInt()
     val canvasWidth = 2000
+    val fontSize = 14.sp
+    val fontFamily = FontFamily.Monospace
 
     fun measureTextWidth(text: String, upToColumn: Int): Float {
         val textToMeasure = text.take(upToColumn.coerceAtMost(text.length))
         val result = textMeasurer.measure(
             text = buildAnnotatedString { append(textToMeasure) },
             style = TextStyle(
-                fontSize = 14.sp,
-                fontFamily = FontFamily.Monospace
+                fontSize = fontSize,
+                fontFamily = fontFamily
             )
         )
         return result.size.width.toFloat()
@@ -95,8 +97,8 @@ fun CodeEditor(
                                 text = buildAnnotatedString { append(token.text) },
                                 style = TextStyle(
                                     color = token.color,
-                                    fontSize = 14.sp,
-                                    fontFamily = FontFamily.Monospace
+                                    fontSize = fontSize,
+                                    fontFamily = fontFamily
                                 )
                             )
                             drawIntoCanvas { canvas ->
