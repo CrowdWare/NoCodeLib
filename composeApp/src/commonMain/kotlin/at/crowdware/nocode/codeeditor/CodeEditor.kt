@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.io.File
 
+
 @Composable
 fun CodeEditor(
     modifier: Modifier = Modifier,
@@ -37,7 +38,12 @@ fun CodeEditor(
     style: CodeEditorStyle
 ) {
     val file = File(filePath)
-    var lines by remember { mutableStateOf(if (file.exists()) file.readLines() else listOf("")) }
+    val editorState = remember {
+        val initialLines = if (file.exists()) file.readLines().toMutableStateList() else mutableStateListOf("")
+        EditorState(initialLines)
+    }
+    val commandManager = remember { CommandManager() }
+
     val verticalScroll = rememberScrollState()
     val horizontalScroll = rememberScrollState()
     val highlighter = remember { SmlSyntaxHighlighter(style.colors) }
@@ -48,7 +54,10 @@ fun CodeEditor(
 
     val lineHeight = 25f
     val yOffsetStart = 8f
-    val canvasHeight = (lines.size * lineHeight).toInt()
+    val canvasHeight by remember(editorState.lines) {
+        derivedStateOf { (editorState.lines.size * lineHeight).toInt() }
+    }
+
     val canvasWidth = 2000
     val fontSize = 14.sp
     val fontFamily = FontFamily.Monospace
@@ -80,45 +89,83 @@ fun CodeEditor(
         focusRequester.requestFocus()
     }
 
+    fun insertText(text: String) {
+        val cmd = InsertTextCommand(editorState, cursorLine, cursorColumn, text)
+        commandManager.executeCommand(cmd)
+        cursorColumn += text.length
+    }
+
+    fun splitLine() {
+        val cmd = SplitLineCommand(editorState, cursorLine, cursorColumn)
+        commandManager.executeCommand(cmd)
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown) {
-                    when (event.key) {
-                        Key.DirectionLeft -> {
+                    when {
+                        event.key == Key.Enter -> {
+                            splitLine()
+                            cursorLine = commandManager.cursorLine
+                            cursorColumn = commandManager.cursorColumn
+                            true
+                        }
+                        event.key == Key.Tab -> {
+                            insertText("    ")
+                            true
+                        }
+                        event.key == Key.Z && (event.isCtrlPressed || event.isMetaPressed) && !event.isShiftPressed -> {
+                            commandManager.undo()
+                            cursorLine = commandManager.cursorLine
+                            cursorColumn = commandManager.cursorColumn
+                            true
+                        }
+                        event.key == Key.Z && (event.isCtrlPressed || event.isMetaPressed) && event.isShiftPressed -> {
+                            commandManager.redo()
+                            cursorLine = commandManager.cursorLine
+                            cursorColumn = commandManager.cursorColumn
+                            true
+                        }
+                        event.key == Key.DirectionLeft -> {
                             if (cursorColumn > 0) {
                                 cursorColumn--
                             } else if (cursorLine > 0) {
                                 cursorLine--
-                                cursorColumn = lines.getOrNull(cursorLine)?.length ?: 0
+                                cursorColumn = editorState.lines.getOrNull(cursorLine)?.length ?: 0
                             }
                             true
                         }
-                        Key.DirectionRight -> {
-                            val line = lines.getOrNull(cursorLine) ?: ""
+                        event.key == Key.DirectionRight -> {
+                            val line = editorState.lines.getOrNull(cursorLine) ?: ""
                             if (cursorColumn < line.length) {
                                 cursorColumn++
-                            } else if (cursorLine < lines.lastIndex) {
+                            } else if (cursorLine < editorState.lines.lastIndex) {
                                 cursorLine++
                                 cursorColumn = 0
                             }
                             true
                         }
-                        Key.DirectionUp -> {
+                        event.key == Key.DirectionUp -> {
                             if (cursorLine > 0) {
                                 cursorLine--
-                                val line = lines.getOrNull(cursorLine) ?: ""
+                                val line = editorState.lines.getOrNull(cursorLine) ?: ""
                                 cursorColumn = minOf(cursorColumn, line.length)
                             }
                             true
                         }
-                        Key.DirectionDown -> {
-                            if (cursorLine < lines.lastIndex) {
+                        event.key == Key.DirectionDown -> {
+                            if (cursorLine < editorState.lines.lastIndex) {
                                 cursorLine++
-                                val line = lines.getOrNull(cursorLine) ?: ""
+                                val line = editorState.lines.getOrNull(cursorLine) ?: ""
                                 cursorColumn = minOf(cursorColumn, line.length)
                             }
+                            true
+                        }
+                        event.key.nativeKeyCode in 32..126 -> {
+                            val char = event.utf16CodePoint.toChar()
+                            insertText(char.toString())
                             true
                         }
                         else -> false
@@ -141,7 +188,7 @@ fun CodeEditor(
                         .pointerInput(Unit) {
                             detectTapGestures { offset ->
                                 cursorLine = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
-                                val lineText = lines.getOrNull(cursorLine) ?: ""
+                                val lineText = editorState.lines.getOrNull(cursorLine) ?: ""
                                 val position = (offset.x + horizontalScroll.value - 60f).toInt()
                                 var found = false
                                 for (i in 1..lineText.length) {
@@ -158,7 +205,8 @@ fun CodeEditor(
                 ) {
                     var inString = false
                     var yOffset = yOffsetStart - verticalScroll.value
-                    for ((index, line) in lines.withIndex()) {
+
+                    for ((index, line) in editorState.lines.withIndex()) {
                         val (tokens, nextInString) = highlighter.highlightLine(line, inString)
                         inString = nextInString
 
@@ -172,6 +220,7 @@ fun CodeEditor(
                                     fontFamily = fontFamily
                                 )
                             )
+
                             drawText(
                                 textMeasurer = textMeasurer,
                                 text = buildAnnotatedString { append(token.text) },
@@ -182,11 +231,12 @@ fun CodeEditor(
                                     fontFamily = fontFamily
                                 )
                             )
+
                             xOffset += layoutResult.size.width
                         }
 
                         if (index == cursorLine && isCursorVisible) {
-                            val lineText = lines.getOrNull(cursorLine) ?: ""
+                            val lineText = editorState.lines.getOrNull(cursorLine) ?: ""
                             val cursorX = 60f + measureTextWidth(lineText, cursorColumn) - horizontalScroll.value
                             drawLine(
                                 color = style.cursorColor,
