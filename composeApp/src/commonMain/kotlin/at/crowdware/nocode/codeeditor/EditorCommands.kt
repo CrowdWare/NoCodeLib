@@ -1,6 +1,9 @@
 package at.crowdware.nocode.codeeditor
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 interface EditorCommand {
     val cursorLineBefore: Int
@@ -27,10 +30,12 @@ class InsertTextCommand(
 
     override fun execute() {
         editorState.insertText(cursor.line, cursor.column, text)
+        editorState.updateTextFlow()
     }
 
     override fun undo() {
         editorState.deleteText(cursor.line, cursor.column, text.length)
+        editorState.updateTextFlow()
     }
 }
 
@@ -57,11 +62,13 @@ class SplitLineCommand(
 
         cursorLineAfter = index + 1
         cursorColumnAfter = 0
+        editorState.updateTextFlow()
     }
 
     override fun undo() {
         editorState.lines[index] = before + remainder
         editorState.lines.removeAt(index + 1)
+        editorState.updateTextFlow()
     }
 }
 
@@ -89,6 +96,7 @@ class BackspaceCommand(
             editorState.lines[cursor.line] = line.removeRange(col - 1, col)
             cursorLineAfter = cursor.line
             cursorColumnAfter = col - 1
+            editorState.updateTextFlow()
         } else if (cursor.line > 0) {
             // Merge with previous line
             val currentLine = editorState.lines.removeAt(cursor.line)
@@ -100,6 +108,7 @@ class BackspaceCommand(
             merged = true
             cursorLineAfter = prevLineIndex
             cursorColumnAfter = mergedLine.length
+            editorState.updateTextFlow()
         }
     }
 
@@ -108,10 +117,12 @@ class BackspaceCommand(
             val prevLineIndex = cursorLineAfter
             editorState.lines[prevLineIndex] = mergedLine
             editorState.lines.add(prevLineIndex + 1, removedLine)
+            editorState.updateTextFlow()
         } else {
             val line = editorState.lines[cursorLineAfter]
             editorState.lines[cursorLineAfter] =
                 line.substring(0, cursorColumnAfter) + deletedChar + line.substring(cursorColumnAfter)
+            editorState.updateTextFlow()
         }
     }
 }
@@ -119,11 +130,19 @@ class BackspaceCommand(
 class EditorState(
     var lines: SnapshotStateList<String>
 ) {
+    private val _textFlow = MutableStateFlow(lines.joinToString("\n"))
+    val textFlow: StateFlow<String> = _textFlow.asStateFlow()
+
+    fun updateTextFlow() {
+        _textFlow.value = lines.joinToString("\n")
+    }
+
     fun insertText(lineIndex: Int, columnIndex: Int, text: String) {
         if (lineIndex in lines.indices) {
             val line = lines[lineIndex]
             lines[lineIndex] =
                 line.substring(0, columnIndex) + text + line.substring(columnIndex)
+            updateTextFlow()
         }
     }
 
@@ -133,6 +152,7 @@ class EditorState(
             val end = (columnIndex + length).coerceAtMost(line.length)
             lines[lineIndex] =
                 line.removeRange(columnIndex, end)
+            updateTextFlow()
         }
     }
 }

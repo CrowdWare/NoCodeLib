@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -51,11 +55,31 @@ fun CodeEditor(
     val fontFamily = FontFamily.Monospace
 
     var isCursorVisible by remember { mutableStateOf(true) }
+    /*var blinkJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    fun restartCursorBlink(scope: CoroutineScope) {
+        isCursorVisible = true
+        blinkJob?.cancel()
+        blinkJob = scope.launch {
+            delay(1000)
+            while (true) {
+                isCursorVisible = false
+                delay(300)
+                isCursorVisible = true
+                delay(300)
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        restartCursorBlink(coroutineScope)
+    }*/
+
 
     LaunchedEffect(cursorPosition) {
         while (true) {
             isCursorVisible = !isCursorVisible
-            kotlinx.coroutines.delay(300)
+            delay(300)
         }
     }
 
@@ -113,6 +137,7 @@ fun CodeEditor(
                                 cursorPosition.line--
                                 cursorPosition.column = editorState.lines.getOrNull(cursorPosition.line)?.length ?: 0
                             }
+                            //restartCursorBlink(coroutineScope)
                             true
                         }
                         event.key == Key.DirectionRight -> {
@@ -123,6 +148,7 @@ fun CodeEditor(
                                 cursorPosition.line++
                                 cursorPosition.column = 0
                             }
+                            //restartCursorBlink(coroutineScope)
                             true
                         }
                         event.key == Key.DirectionUp -> {
@@ -131,6 +157,7 @@ fun CodeEditor(
                                 val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
                                 cursorPosition.column = minOf(cursorPosition.column, line.length)
                             }
+                            //restartCursorBlink(coroutineScope)
                             true
                         }
                         event.key == Key.DirectionDown -> {
@@ -139,6 +166,7 @@ fun CodeEditor(
                                 val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
                                 cursorPosition.column = minOf(cursorPosition.column, line.length)
                             }
+                            //restartCursorBlink(coroutineScope)
                             true
                         }
                         event.key.nativeKeyCode in 32..126 -> {
