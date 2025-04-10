@@ -1,24 +1,14 @@
 package at.crowdware.nocode.codeeditor
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.HorizontalScrollbar
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
@@ -50,9 +40,6 @@ fun CodeEditor(
     val highlighter = remember { SmlSyntaxHighlighter(style.colors) }
     val textMeasurer = rememberTextMeasurer()
 
-    //var cursorLine by remember { mutableStateOf(0) }
-    //var cursorColumn by remember { mutableStateOf(0) }
-
     val lineHeight = 25f
     val yOffsetStart = 8f
     val canvasHeight by remember(editorState.lines) {
@@ -65,17 +52,10 @@ fun CodeEditor(
 
     var isCursorVisible by remember { mutableStateOf(true) }
 
-    /*LaunchedEffect(cursorLine, cursorColumn) {
-        while (true) {
-            isCursorVisible = !isCursorVisible
-            kotlinx.coroutines.delay(500)
-        }
-    }*/
-
     LaunchedEffect(cursorPosition) {
         while (true) {
             isCursorVisible = !isCursorVisible
-            kotlinx.coroutines.delay(500)
+            kotlinx.coroutines.delay(300)
         }
     }
 
@@ -104,12 +84,17 @@ fun CodeEditor(
                 if (event.type == KeyEventType.KeyDown) {
                     when {
                         event.key == Key.Enter -> {
-                            val cmd = SplitLineCommand(editorState, cursorPosition.line, cursorPosition.column)
+                            val cmd = SplitLineCommand(editorState, cursorPosition)
+                            commandManager.executeCommand(cmd)
+                            true
+                        }
+                        event.key == Key.Backspace -> {
+                            val cmd = BackspaceCommand(editorState, cursorPosition)
                             commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.Tab -> {
-                            val cmd = InsertTextCommand(editorState, cursorPosition.line, cursorPosition.column, "    ")
+                            val cmd = InsertTextCommand(editorState, cursorPosition, "    ")
                             commandManager.executeCommand(cmd)
                             true
                         }
@@ -122,12 +107,6 @@ fun CodeEditor(
                             true
                         }
                         event.key == Key.DirectionLeft -> {
-                            /*if (cursorColumn > 0) {
-                                cursorColumn--
-                            } else if (cursorLine > 0) {
-                                cursorLine--
-                                cursorColumn = editorState.lines.getOrNull(cursorLine)?.length ?: 0
-                            }*/
                             if (cursorPosition.column > 0) {
                                 cursorPosition.column--
                             } else if (cursorPosition.line > 0) {
@@ -138,12 +117,6 @@ fun CodeEditor(
                         }
                         event.key == Key.DirectionRight -> {
                             val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
-                            /*if (cursorColumn < line.length) {
-                                cursorColumn++
-                            } else if (cursorLine < editorState.lines.lastIndex) {
-                                cursorLine++
-                                cursorColumn = 0
-                            }*/
                             if (cursorPosition.column < line.length) {
                                 cursorPosition.column++
                             } else if (cursorPosition.line < editorState.lines.lastIndex) {
@@ -153,11 +126,6 @@ fun CodeEditor(
                             true
                         }
                         event.key == Key.DirectionUp -> {
-                            /*if (cursorLine > 0) {
-                                cursorLine--
-                                val line = editorState.lines.getOrNull(cursorLine) ?: ""
-                                cursorColumn = minOf(cursorColumn, line.length)
-                            }*/
                             if (cursorPosition.line > 0) {
                                 cursorPosition.line--
                                 val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
@@ -166,11 +134,6 @@ fun CodeEditor(
                             true
                         }
                         event.key == Key.DirectionDown -> {
-                            /*if (cursorLine < editorState.lines.lastIndex) {
-                                cursorLine++
-                                val line = editorState.lines.getOrNull(cursorLine) ?: ""
-                                cursorColumn = minOf(cursorColumn, line.length)
-                            }*/
                             if (cursorPosition.line < editorState.lines.lastIndex) {
                                 cursorPosition.line++
                                 val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
@@ -180,7 +143,7 @@ fun CodeEditor(
                         }
                         event.key.nativeKeyCode in 32..126 -> {
                             val char = event.utf16CodePoint.toChar()
-                            val cmd = InsertTextCommand(editorState, cursorPosition.line, cursorPosition.column, char.toString())
+                            val cmd = InsertTextCommand(editorState, cursorPosition, char.toString())
                             commandManager.executeCommand(cmd)
                             true
                         }
