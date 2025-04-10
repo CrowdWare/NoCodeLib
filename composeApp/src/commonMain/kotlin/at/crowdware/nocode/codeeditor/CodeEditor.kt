@@ -42,15 +42,16 @@ fun CodeEditor(
         val initialLines = if (file.exists()) file.readLines().toMutableStateList() else mutableStateListOf("")
         EditorState(initialLines)
     }
-    val commandManager = remember { CommandManager() }
+    val cursorPosition = remember { CursorPosition(0, 0) }
+    val commandManager = remember { CommandManager(cursorPosition) }
 
     val verticalScroll = rememberScrollState()
     val horizontalScroll = rememberScrollState()
     val highlighter = remember { SmlSyntaxHighlighter(style.colors) }
     val textMeasurer = rememberTextMeasurer()
 
-    var cursorLine by remember { mutableStateOf(0) }
-    var cursorColumn by remember { mutableStateOf(0) }
+    //var cursorLine by remember { mutableStateOf(0) }
+    //var cursorColumn by remember { mutableStateOf(0) }
 
     val lineHeight = 25f
     val yOffsetStart = 8f
@@ -64,7 +65,14 @@ fun CodeEditor(
 
     var isCursorVisible by remember { mutableStateOf(true) }
 
-    LaunchedEffect(cursorLine, cursorColumn) {
+    /*LaunchedEffect(cursorLine, cursorColumn) {
+        while (true) {
+            isCursorVisible = !isCursorVisible
+            kotlinx.coroutines.delay(500)
+        }
+    }*/
+
+    LaunchedEffect(cursorPosition) {
         while (true) {
             isCursorVisible = !isCursorVisible
             kotlinx.coroutines.delay(500)
@@ -89,17 +97,6 @@ fun CodeEditor(
         focusRequester.requestFocus()
     }
 
-    fun insertText(text: String) {
-        val cmd = InsertTextCommand(editorState, cursorLine, cursorColumn, text)
-        commandManager.executeCommand(cmd)
-        cursorColumn += text.length
-    }
-
-    fun splitLine() {
-        val cmd = SplitLineCommand(editorState, cursorLine, cursorColumn)
-        commandManager.executeCommand(cmd)
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -107,65 +104,84 @@ fun CodeEditor(
                 if (event.type == KeyEventType.KeyDown) {
                     when {
                         event.key == Key.Enter -> {
-                            splitLine()
-                            cursorLine = commandManager.cursorLine
-                            cursorColumn = commandManager.cursorColumn
+                            val cmd = SplitLineCommand(editorState, cursorPosition.line, cursorPosition.column)
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.Tab -> {
-                            insertText("    ")
+                            val cmd = InsertTextCommand(editorState, cursorPosition.line, cursorPosition.column, "    ")
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.Z && (event.isCtrlPressed || event.isMetaPressed) && !event.isShiftPressed -> {
                             commandManager.undo()
-                            cursorLine = commandManager.cursorLine
-                            cursorColumn = commandManager.cursorColumn
                             true
                         }
                         event.key == Key.Z && (event.isCtrlPressed || event.isMetaPressed) && event.isShiftPressed -> {
                             commandManager.redo()
-                            cursorLine = commandManager.cursorLine
-                            cursorColumn = commandManager.cursorColumn
                             true
                         }
                         event.key == Key.DirectionLeft -> {
-                            if (cursorColumn > 0) {
+                            /*if (cursorColumn > 0) {
                                 cursorColumn--
                             } else if (cursorLine > 0) {
                                 cursorLine--
                                 cursorColumn = editorState.lines.getOrNull(cursorLine)?.length ?: 0
+                            }*/
+                            if (cursorPosition.column > 0) {
+                                cursorPosition.column--
+                            } else if (cursorPosition.line > 0) {
+                                cursorPosition.line--
+                                cursorPosition.column = editorState.lines.getOrNull(cursorPosition.line)?.length ?: 0
                             }
                             true
                         }
                         event.key == Key.DirectionRight -> {
-                            val line = editorState.lines.getOrNull(cursorLine) ?: ""
-                            if (cursorColumn < line.length) {
+                            val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
+                            /*if (cursorColumn < line.length) {
                                 cursorColumn++
                             } else if (cursorLine < editorState.lines.lastIndex) {
                                 cursorLine++
                                 cursorColumn = 0
+                            }*/
+                            if (cursorPosition.column < line.length) {
+                                cursorPosition.column++
+                            } else if (cursorPosition.line < editorState.lines.lastIndex) {
+                                cursorPosition.line++
+                                cursorPosition.column = 0
                             }
                             true
                         }
                         event.key == Key.DirectionUp -> {
-                            if (cursorLine > 0) {
+                            /*if (cursorLine > 0) {
                                 cursorLine--
                                 val line = editorState.lines.getOrNull(cursorLine) ?: ""
                                 cursorColumn = minOf(cursorColumn, line.length)
+                            }*/
+                            if (cursorPosition.line > 0) {
+                                cursorPosition.line--
+                                val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
+                                cursorPosition.column = minOf(cursorPosition.column, line.length)
                             }
                             true
                         }
                         event.key == Key.DirectionDown -> {
-                            if (cursorLine < editorState.lines.lastIndex) {
+                            /*if (cursorLine < editorState.lines.lastIndex) {
                                 cursorLine++
                                 val line = editorState.lines.getOrNull(cursorLine) ?: ""
                                 cursorColumn = minOf(cursorColumn, line.length)
+                            }*/
+                            if (cursorPosition.line < editorState.lines.lastIndex) {
+                                cursorPosition.line++
+                                val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
+                                cursorPosition.column = minOf(cursorPosition.column, line.length)
                             }
                             true
                         }
                         event.key.nativeKeyCode in 32..126 -> {
                             val char = event.utf16CodePoint.toChar()
-                            insertText(char.toString())
+                            val cmd = InsertTextCommand(editorState, cursorPosition.line, cursorPosition.column, char.toString())
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         else -> false
@@ -187,19 +203,19 @@ fun CodeEditor(
                         .size(canvasWidth.dp, canvasHeight.dp)
                         .pointerInput(Unit) {
                             detectTapGestures { offset ->
-                                cursorLine = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
-                                val lineText = editorState.lines.getOrNull(cursorLine) ?: ""
+                                cursorPosition.line = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
+                                val lineText = editorState.lines.getOrNull(cursorPosition.line) ?: ""
                                 val position = (offset.x + horizontalScroll.value - 60f).toInt()
                                 var found = false
                                 for (i in 1..lineText.length) {
                                     if (measureTextWidth(lineText, i) > position) {
-                                        cursorColumn = i - 1
+                                        cursorPosition.column = i - 1
                                         found = true
                                         break
                                     }
                                 }
                                 if (!found)
-                                    cursorColumn = lineText.length
+                                    cursorPosition.column = lineText.length
                             }
                         }
                 ) {
@@ -235,9 +251,9 @@ fun CodeEditor(
                             xOffset += layoutResult.size.width
                         }
 
-                        if (index == cursorLine && isCursorVisible) {
-                            val lineText = editorState.lines.getOrNull(cursorLine) ?: ""
-                            val cursorX = 60f + measureTextWidth(lineText, cursorColumn) - horizontalScroll.value
+                        if (index == cursorPosition.line && isCursorVisible) {
+                            val lineText = editorState.lines.getOrNull(cursorPosition.line) ?: ""
+                            val cursorX = 60f + measureTextWidth(lineText, cursorPosition.column) - horizontalScroll.value
                             drawLine(
                                 color = style.cursorColor,
                                 start = Offset(cursorX, yOffset),

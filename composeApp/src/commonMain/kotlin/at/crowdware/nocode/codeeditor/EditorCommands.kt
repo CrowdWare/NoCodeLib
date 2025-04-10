@@ -12,6 +12,8 @@ interface EditorCommand {
     fun undo()
 }
 
+data class CursorPosition(var line: Int, var column: Int)
+
 class InsertTextCommand(
     private val editorState: EditorState,
     private val lineIndex: Int,
@@ -42,8 +44,8 @@ class SplitLineCommand(
 
     override val cursorLineBefore = lineIndex
     override val cursorColumnBefore = columnIndex
-    override val cursorLineAfter = lineIndex + 1
-    override val cursorColumnAfter = 0
+    override var cursorLineAfter = lineIndex + 1
+    override var cursorColumnAfter = 0
 
     override fun execute() {
         val line = editorState.lines[lineIndex]
@@ -52,6 +54,10 @@ class SplitLineCommand(
         remainder = line.substring(safeColumn)
         editorState.lines[lineIndex] = before
         editorState.lines.add(lineIndex + 1, remainder)
+
+        // cursor position after actual effect
+        cursorLineAfter = lineIndex + 1
+        cursorColumnAfter = 0
     }
 
     override fun undo() {
@@ -81,29 +87,24 @@ class EditorState(
     }
 }
 
-class CommandManager {
+class CommandManager(private val cursor: CursorPosition) {
     private val undoStack = mutableListOf<EditorCommand>()
     private val redoStack = mutableListOf<EditorCommand>()
-
-    var cursorLine: Int = 0
-        private set
-    var cursorColumn: Int = 0
-        private set
 
     fun executeCommand(cmd: EditorCommand) {
         cmd.execute()
         undoStack.add(cmd)
         redoStack.clear()
-        cursorLine = cmd.cursorLineAfter
-        cursorColumn = cmd.cursorColumnAfter
+        cursor.line = cmd.cursorLineAfter
+        cursor.column = cmd.cursorColumnAfter
     }
 
     fun undo() {
         undoStack.removeLastOrNull()?.let {
             it.undo()
             redoStack.add(it)
-            cursorLine = it.cursorLineBefore
-            cursorColumn = it.cursorColumnBefore
+            cursor.line = it.cursorLineBefore
+            cursor.column = it.cursorColumnBefore
         }
     }
 
@@ -111,8 +112,8 @@ class CommandManager {
         redoStack.removeLastOrNull()?.let {
             it.execute()
             undoStack.add(it)
-            cursorLine = it.cursorLineAfter
-            cursorColumn = it.cursorColumnAfter
+            cursor.line = it.cursorLineAfter
+            cursor.column = it.cursorColumnAfter
         }
     }
 }
