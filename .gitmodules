@@ -1,0 +1,3 @@
+[submodule "composeApp/src/desktopMain/resources/sml"]
+	path = composeApp/src/desktopMain/resources/sml
+	url = https://github.com/CrowdWare/sml
