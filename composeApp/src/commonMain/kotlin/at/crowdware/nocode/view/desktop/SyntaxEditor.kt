@@ -68,22 +68,21 @@ fun RowScope.syntaxEditor(
                     style = TextStyle(color = MaterialTheme.colors.onPrimary),
                     overflow = TextOverflow.Ellipsis
                 )
-                /*
+
                 val style = rememberCodeEditorStyle(
                     placeholderText = "Enter text here",
                     placeholderColor = MaterialTheme.colors.onPrimary,
                     backgroundColor = MaterialTheme.colors.surface,
                     cursorColor = MaterialTheme.colors.onSurface,
                     gutterTextColor = MaterialTheme.colors.onPrimary,
-                )*/
-
-                /*
+                )
                 CodeEditor(modifier = Modifier
                     .fillMaxSize(),
                     state = state,
                     style = style,
                     syntaxMode = if(currentProject.extension == "sml") SyntaxMode.SML else if(currentProject.extension == "md") SyntaxMode.MARKDOWN else SyntaxMode.NONE
-                )*/
+                )
+                /* our own code editor in development
                 val style = at.crowdware.nocode.codeeditor.CodeEditorStyle(
                     backgroundColor = MaterialTheme.colors.surface,
                     textColor = MaterialTheme.colors.onPrimary,
@@ -91,7 +90,11 @@ fun RowScope.syntaxEditor(
                     gutterTextColor = MaterialTheme.colors.onPrimary,
                     colors = ExtendedTheme.colors
                 )
-                at.crowdware.nocode.codeeditor.CodeEditor(modifier = Modifier.fillMaxSize(), "/Users/art/test.sml", style = style)
+                at.crowdware.nocode.codeeditor.CodeEditor(
+                    modifier = Modifier.fillMaxSize(),
+                    "/Users/art/test.sml",
+                    style = style)
+                */
                 LaunchedEffect(Unit) {
                     state.editOperations.collect { operation ->
                         val newText = state.getAllText().text
