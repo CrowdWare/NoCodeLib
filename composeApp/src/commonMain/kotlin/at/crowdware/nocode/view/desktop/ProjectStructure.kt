@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
+import at.crowdware.nocode.texteditor.state.TextEditorState
 import at.crowdware.nocode.ui.TreeView
 import at.crowdware.nocode.viewmodel.ProjectState
 import java.awt.Cursor
@@ -55,7 +56,7 @@ import java.awt.Cursor
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun projectStructure(currentProject: ProjectState) {
+fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
     var totalHeight by remember { mutableStateOf(0f) }
     var expanded by remember { mutableStateOf(false) }
     var treeNode by remember { mutableStateOf(TreeNode(mutableStateOf(""), NodeType.OTHER)) }
@@ -150,6 +151,31 @@ fun projectStructure(currentProject: ProjectState) {
                                 }
                             ) {
                                 Text(text = "Delete", fontSize = 12.sp)
+                            }
+
+                            if (treeNode.type == NodeType.IMAGE) {
+                                DropdownMenuItem(onClick = {
+                                    expanded = false
+                                    state.insertStringAtCursor("Image { src: \"${treeNode.path.substringAfterLast("/")}\"}\n")
+                                }) {
+                                    Text(text = "Paste", fontSize = 12.sp)
+                                }
+                            }
+                            if (treeNode.type == NodeType.VIDEO) {
+                                DropdownMenuItem(onClick = {
+                                    expanded = false
+                                    state.insertStringAtCursor("Video { src: \"${treeNode.path.substringAfterLast("/")}\"}\n")
+                                }) {
+                                    Text(text = "Paste", fontSize = 12.sp)
+                                }
+                            }
+                            if (treeNode.type == NodeType.SOUND) {
+                                DropdownMenuItem(onClick = {
+                                    expanded = false
+                                    state.insertStringAtCursor("Sound { src: \"${treeNode.path.substringAfterLast("/")}\"}\n")
+                                }) {
+                                    Text(text = "Paste", fontSize = 12.sp)
+                                }
                             }
                         }
                     } else if (treeNode.title.value.startsWith("pages")) {
