@@ -43,10 +43,11 @@ import androidx.compose.ui.unit.dp
 import at.crowdware.nocode.ui.ClickableIcon
 import at.crowdware.nocode.viewmodel.ProjectState
 import androidx.compose.ui.res.painterResource
+import at.crowdware.nocode.texteditor.state.TextEditorState
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun widgetPalette(currentProject: ProjectState?) {
+fun widgetPalette(currentProject: ProjectState?, state: TextEditorState) {
     var totalHeight by remember { mutableStateOf(0f) }
     Column(
         modifier = Modifier.width(320.dp).fillMaxHeight().background(color = MaterialTheme.colors.primary)
@@ -115,13 +116,15 @@ fun widgetPalette(currentProject: ProjectState?) {
                                     ClickableIcon(
                                         painter = painterResource("drawable/row.xml"),
                                         label = "Row",
-                                        sml = "\tRow {\n\n}\n"
+                                        sml = "    Row {\n\n}\n",
+                                        state = state
                                     )
                                     ClickableIcon(
                                         //imageVector = Icons.Outlined.TextFields,
                                         painter = painterResource("drawable/column.xml"),
                                         label = "Column",
-                                        sml ="\tColumn {\n\n}\n"
+                                        sml ="    Column {\n\n}\n",
+                                        state = state
                                     )
                                 }
                             }
@@ -173,17 +176,20 @@ fun widgetPalette(currentProject: ProjectState?) {
                                     ClickableIcon(
                                         painter = painterResource("drawable/text.xml"),
                                         label = "Text",
-                                        sml ="\tText { text: \"Lorem ipsum dolor\" }\n"
+                                        sml ="    Text { text: \"Lorem ipsum dolor\" }\n",
+                                        state = state
                                     )
                                     ClickableIcon(
                                         painter = painterResource("drawable/markdown.xml"),
                                         label = "Markdown",
-                                        sml ="\tMarkdown { text: \"# Header\" }\n"
+                                        sml ="    Markdown { text: \"# Header\" }\n",
+                                        state = state
                                     )
                                     ClickableIcon(
                                         painter = painterResource("drawable/spacer.xml"),
                                         label = "Spacer",
-                                        sml = "\tSpacer { amount: 8 }\n"
+                                        sml = "    Spacer { amount: 8 }\n",
+                                        state = state
                                     )
 
                                 }
@@ -194,17 +200,20 @@ fun widgetPalette(currentProject: ProjectState?) {
                                         ClickableIcon(
                                             painter = painterResource("drawable/image.xml"),
                                             label = "Image",
-                                            sml ="\tImage { src: \"sample.png\" }\n"
+                                            sml ="    Image { src: \"sample.png\" }\n",
+                                            state = state
                                         )
                                         ClickableIcon(
                                             painter = painterResource("drawable/video.xml"),
                                             label = "Video",
-                                            sml ="\tVideo { src: \"sample.mp4\" }\n"
+                                            sml ="    Video { src: \"sample.mp4\" }\n",
+                                            state = state
                                         )
                                         ClickableIcon(
                                             painter = painterResource("drawable/youtube.xml"),
                                             label = "Youtube",
-                                            sml ="\tYoutube { id: \"xyz\" }\n"
+                                            sml ="    Youtube { id: \"xyz\" }\n",
+                                            state = state
                                         )
                                     }
                                 }
@@ -256,7 +265,8 @@ fun widgetPalette(currentProject: ProjectState?) {
                                     ClickableIcon(
                                         painter = painterResource("drawable/button.xml"),
                                         label = "Button",
-                                        sml = "\tButton { label: \"Click me\" link: \"page:home\" }\n"
+                                        sml = "    Button { label: \"Click me\" link: \"page:home\" }\n",
+                                        state = state
                                     )
                                 }
                             }

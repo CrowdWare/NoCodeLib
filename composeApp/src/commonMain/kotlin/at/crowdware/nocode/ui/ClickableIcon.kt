@@ -39,6 +39,7 @@ import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import at.crowdware.nocode.texteditor.state.TextEditorState
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.uiStates
 import at.crowdware.nocode.viewmodel.GlobalProjectState
@@ -50,7 +51,8 @@ import at.crowdware.nocode.viewmodel.ProjectState
 fun ClickableIcon(
     painter: Painter,
     label: String,
-    sml: String
+    sml: String,
+    state: TextEditorState
 ) {
     val currentState = uiStates.current
     val currentProject: ProjectState = GlobalProjectState.projectState!!
@@ -86,9 +88,7 @@ fun ClickableIcon(
     Box(contentAlignment = Alignment.Center,
         modifier = Modifier
             .clickable {
-               //val cursorPosition = currentProject.editor.caretPosition
-                //currentProject.editor.insert(sml, cursorPosition)
-                //currentProject.editor.caretPosition = cursorPosition + sml.length
+               state.insertStringAtCursor(sml)
             }
             .width(95.dp)
             .border(2.dp, borderColor, shape = RoundedCornerShape(8.dp))
