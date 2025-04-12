@@ -47,6 +47,7 @@ expect fun fileExists(path: String): Boolean
 expect fun deleteFile(path: String)
 expect fun createPage(path: String, title: String)
 expect fun createPart(path: String)
+expect fun createData(path: String)
 expect fun renameFile(pathBefore: String, pathAfter: String)
 expect fun copyAssetFile(path: String, target: String)
 expect fun copyResourceToFile(resourcePath: String, outputPath: String)
@@ -63,6 +64,7 @@ abstract class ProjectState {
         private set
     var isPageDialogVisible by mutableStateOf(false)
     var isPartDialogVisible by mutableStateOf(false)
+    var isDataDialogVisible by mutableStateOf(false)
     var isRenameFileDialogVisible by mutableStateOf(false)
     var isProjectStructureVisible by mutableStateOf(true)
     var isNewProjectDialogVisible by mutableStateOf(false)
@@ -72,6 +74,7 @@ abstract class ProjectState {
     var isImportSoundDialogVisible by mutableStateOf(false)
     var isImportModelDialogVisible by mutableStateOf(false)
     var isImportTextureDialogVisible by mutableStateOf(false)
+    var isImportDataDialogVisible by mutableStateOf(false)
     var isExportDialogVisible by mutableStateOf(false)
     var isAboutDialogOpen by  mutableStateOf(false)
     var isEditorVisible by mutableStateOf(false)
@@ -90,6 +93,7 @@ abstract class ProjectState {
     lateinit var partsNode: TreeNode
     lateinit var modelsNode: TreeNode
     lateinit var texturesNode: TreeNode
+    lateinit var dataNode: TreeNode
     var app: App? by mutableStateOf(null)
     var parsedPage: SmlNode? by mutableStateOf(null)
     var cachedPage: SmlNode? by mutableStateOf(null)
@@ -108,7 +112,6 @@ abstract class ProjectState {
 
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
         folder = path
-        println("loadProject: $folder")
         CoroutineScope(Dispatchers.Main).launch {
             loadProjectFiles(path, uuid, pid)
         }
@@ -248,7 +251,7 @@ abstract class ProjectState {
     }
 
     fun reloadPage() {
-        if(extension == "sml" && fileName != "app.sml" && fileName != "ebook.sml") {
+        if(extension == "sml" && fileName != "app.sml") {
             val (smlNode, error) = parseSML(currentFileContent.text)
             parsedPage = smlNode
             parseError = error
@@ -338,6 +341,16 @@ abstract class ProjectState {
         LoadFile(path)
     }
 
+    fun addData(name: String, currentTreeNode: TreeNode?) {
+        val path = "${currentTreeNode?.path}${File.separator}$name.json"
+        createData(path)
+        val newNode = TreeNode(title = mutableStateOf( "${name}.json"), path = path, type= NodeType.DATA)
+        val updatedChildren = dataNode.children + newNode
+        dataNode.children.clear()
+        dataNode.children.addAll(updatedChildren)
+        LoadFile(path)
+    }
+
     fun deleteItem(treeNode: TreeNode) {
         deleteFile(treeNode.path)
 
@@ -370,8 +383,27 @@ abstract class ProjectState {
                 extension = ""
                 isEditorVisible = false
             }
-        } else {
+        } else if (treeNode.type == NodeType.DATA) {
+            val title = treeNode.title.value
+
+            dataNode.children.remove(treeNode)
+
+            if (title == fileName) {
+                // we have to remove the editor, because file cannot be edited anymore
+                currentFileContent = TextFieldValue("")
+                path = ""
+                fileName = ""
+                extension = ""
+                isEditorVisible = false
+            }
+        } else if (treeNode.type == NodeType.IMAGE) {
             imagesNode.children.remove(treeNode)
+        } else if(treeNode.type == NodeType.MODEL) {
+            modelsNode.children.remove(treeNode)
+        } else if(treeNode.type == NodeType.VIDEO) {
+            videosNode.children.remove(treeNode)
+        } else if(treeNode.type == NodeType.SOUND) {
+            soundsNode.children.remove(treeNode)
         }
     }
 

@@ -97,7 +97,8 @@ class DesktopProjectState : ProjectState() {
                 "parts-es",
                 "parts-pt",
                 "parts-fr",
-                "parts-eo"
+                "parts-eo",
+                "data"
             )
             val nodeType = getNodeType(file)
             val children = if (file.isDirectory) {
@@ -125,8 +126,7 @@ class DesktopProjectState : ProjectState() {
                 type = nodeType,
                 children = statefulChildren
             )
-            if (node.title.value == "pages-en" || node.title.value == "pages-es" || node.title.value == "pages-pt" || node.title.value == "pages-fr" || node.title.value == "pages-eo") {
-                // TODO, pageNode will be overridden all the time
+            if (node.title.value.startsWith("pages")) {
                 pageNode = node
             } else if (node.title.value == "images") {
                 imagesNode = node
@@ -140,6 +140,8 @@ class DesktopProjectState : ProjectState() {
                 modelsNode = node
             } else if (node.title.value == "textures") {
                 texturesNode = node
+            } else if (node.title.value == "data") {
+                dataNode = node
             }
             return node
         }
@@ -166,7 +168,8 @@ class DesktopProjectState : ProjectState() {
                             "parts-es",
                             "parts-pt",
                             "parts-fr",
-                            "parts-eo"
+                            "parts-eo",
+                            "data"
                         )) ||
                         (it.isFile && it.name in listOf("app.sml"))
             }
@@ -245,6 +248,8 @@ class DesktopProjectState : ProjectState() {
         models.mkdirs()
         val textures = File("$path$name/textures")
         textures.mkdirs()
+        val data = File("$path$name/data")
+        data.mkdirs()
         createParts(path, name, langs)
         val app = File("$path$name/app.sml")
         var appContent = """
@@ -267,28 +272,6 @@ class DesktopProjectState : ProjectState() {
         copyResourceToFile("python/server.py", "$path/$name/server.py")
         copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
         copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
-
-
-        /*
-        if (createBook) {
-            val lang = createParts(path, name, langs)
-            val book = File("$path$name/book.sml")
-            val bookContent = """
-                Ebook {
-                    smlVersion: "1.1"
-                    name: "$name"
-                    version: "1.0"
-                    theme: "Epub3"
-                    creator: ""
-                    language: "$lang"
-
-                    Part {
-                        src: "home.md"
-                    }
-                }
-            """.trimIndent()
-            book.writeText(bookContent)
-        }*/
 
         val imageFiles = File("$path$name/images")
         imageFiles.mkdirs()
@@ -449,6 +432,12 @@ actual fun createPart(path: String) {
     val file = File(path)
     file.createNewFile()
     file.writeText("# Header\nLorem ipsum dolor\n")
+}
+
+actual fun createData(path: String) {
+    val file = File(path)
+    file.createNewFile()
+    file.writeText("{\n    \"Property\":\"value\"\n}\n")
 }
 
 actual fun renameFile(pathBefore: String, pathAfter: String) {

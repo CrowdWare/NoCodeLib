@@ -86,7 +86,6 @@ fun projectStructure(currentProject: ProjectState) {
                     treeViewSize = layoutCoordinates.size
                 }
         ) {
-
             TreeView(
                 tree = currentProject.treeData,
                 iconProvider = { node -> fileTreeIconProvider(node) },
@@ -106,7 +105,7 @@ fun projectStructure(currentProject: ProjectState) {
                 onClick = {node ->
                     val pNode = node as? TreeNode
                     if (pNode != null) {
-                        if (pNode.type == NodeType.SML || pNode.type == NodeType.MD)
+                        if (pNode.type == NodeType.SML || pNode.type == NodeType.MD || pNode.type == NodeType.DATA)
                             currentProject.LoadFile(pNode.path)
                     }
                 }
@@ -143,49 +142,6 @@ fun projectStructure(currentProject: ProjectState) {
                             }) {
                                 Text(text = "Rename", fontSize = 12.sp)
                             }
-
-                            /*
-                            if (treeNode.type != NodeType.SML && treeNode.type != NodeType.MD) {
-                                DropdownMenuItem(onClick = {
-                                    expanded = false
-
-                                    val ext = treeNode.title.value.substringAfter(".")
-                                    val type = extensionToNodeType[ext]
-                                    var ins = ""
-                                    if (currentProject.extension == "sml") {
-                                        when (type) {
-                                            NodeType.SOUND -> {
-                                                ins = "Sound { src: \"${treeNode.title.value}\" }\n"
-                                            }
-
-                                            NodeType.IMAGE -> {
-                                                ins = "Image { src: \"${treeNode.title.value}\" }\n"
-                                            }
-
-                                            NodeType.VIDEO -> {
-                                                ins = "Video { src: \"${treeNode.title.value}\" }\n"
-                                            }
-
-                                            else -> {}
-                                        }
-                                    } else if(currentProject.extension == "md") {
-                                        when (type) {
-                                            NodeType.IMAGE -> {
-                                                ins = "![${treeNode.title.value.substringBefore(".")}](${treeNode.path.substringAfterLast(
-                                                    File.separator)})\n"
-                                            }
-                                            else -> {}
-                                        }
-                                    }
-
-                                    //val cursorPosition = currentProject.editor.caretPosition
-                                    //currentProject.editor.insert(ins, cursorPosition)
-                                    //currentProject.editor.caretPosition = cursorPosition + ins.length
-                                }) {
-                                    Text(text = "Insert", fontSize = 12.sp)
-                                }
-                            }*/
-
                             DropdownMenuItem(
                                 onClick = {
                                     expanded = false
@@ -249,6 +205,21 @@ fun projectStructure(currentProject: ProjectState) {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
                             currentProject.isImportTextureDialogVisible = true
+                        }) {
+                            Text(text = "Import", fontSize = 12.sp)
+                        }
+                    } else if (treeNode.title.value.startsWith("data")) {
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            currentProject.currentTreeNode = treeNode
+                            currentProject.isDataDialogVisible = true
+                        }) {
+                            Text(text = "New", fontSize = 12.sp)
+                        }
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            currentProject.currentTreeNode = treeNode
+                            currentProject.isImportDataDialogVisible = true
                         }) {
                             Text(text = "Import", fontSize = 12.sp)
                         }
