@@ -66,6 +66,7 @@ val stringLiteral: Token = regexToken("\"[^\"]*\"")
 val whitespace: Token = regexToken("\\s+")
 val integerLiteral: Token = regexToken("\\d+")
 val floatLiteral = regexToken("\\d+\\.\\d+")
+val booleanLiteral: Token = regexToken("true|false")
 
 val lineComment: Token = regexToken("//.*")
 val blockComment: Token = regexToken(Regex("/\\*[\\s\\S]*?\\*/", RegexOption.DOT_MATCHES_ALL))
@@ -80,8 +81,9 @@ object SmlGrammar : Grammar<List<Any>>() {
     val stringParser = stringLiteral.map { PropertyValue.StringValue(it.text.removeSurrounding("\"")) }
     val integerParser = integerLiteral.map { PropertyValue.IntValue(it.text.toInt()) }
     val floatParser = floatLiteral.map { PropertyValue.FloatValue(it.text.toFloat()) }
+val booleanParser = booleanLiteral.map { PropertyValue.BooleanValue(it.text.toBoolean()) }
 
-    val propertyValue = floatParser or integerParser or stringParser
+    val propertyValue = floatParser or integerParser or booleanParser or stringParser
 
     val property by (ignoredParser and identifier and ignoredParser and colon and ignoredParser and propertyValue).map { (_, id, _, _, _, value) ->
         id.text to value
@@ -89,10 +91,10 @@ object SmlGrammar : Grammar<List<Any>>() {
     val elementContent: Parser<List<Any>> = zeroOrMore(property or parser { element })
     val element: Parser<Any> by ignoredParser and identifier and ignoredParser and lBrace and elementContent and ignoredParser and rBrace
 
-    override val tokens: List<Token> = listOf(
-        identifier, lBrace, rBrace, colon, stringLiteral, floatLiteral, integerLiteral,
+override val tokens: List<Token> = listOf(
+        booleanLiteral, identifier, lBrace, rBrace, colon, stringLiteral, floatLiteral, integerLiteral,
         whitespace, lineComment, blockComment
-    )
+)
     override val rootParser: Parser<List<Any>> = (oneOrMore(element) and ignoredParser).map { (elements, _) -> elements }
 }
 
@@ -106,6 +108,7 @@ sealed class PropertyValue {
     data class StringValue(val value: String) : PropertyValue()
     data class IntValue(val value: Int) : PropertyValue()
     data class FloatValue(val value: Float) : PropertyValue()
+    data class BooleanValue(val value: Boolean) : PropertyValue()
 }
 
 fun getStringValue(node: SmlNode, key: String, default: String): String {
@@ -146,7 +149,19 @@ fun getIntValue(node: SmlNode, key: String, default: Int): Int {
         else -> default
     }
 }
-
+fun getBoolValue(node: SmlNode, key: String, default: Boolean): Boolean {
+    val value = node.properties[key]
+    return when {
+        value is PropertyValue.BooleanValue -> value.value
+        value is PropertyValue -> {
+            val type = value.javaClass.simpleName
+            println("Warning: The value for '$key' is not a BooleanValue (found: $type). Returning default value: $default")
+            default
+        }
+        else -> default
+    }
+}
+ 
 fun getPadding(node: SmlNode): Padding {
     val paddingString = getStringValue(node, "padding", "0")
     val paddingValues = paddingString.split(" ").mapNotNull { it.toIntOrNull() }

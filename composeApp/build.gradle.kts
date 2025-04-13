@@ -70,9 +70,17 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
                 implementation(files("../../../CodeEditor/ComposeTextEditor/build/libs/ComposeTextEditor-desktop-1.0.0.jar"))
                 kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
+
+                implementation("org.jetbrains.kotlin:kotlin-test-common")
             }
         }
 
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+        
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
