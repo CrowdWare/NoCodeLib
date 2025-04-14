@@ -50,10 +50,7 @@ fun CodeEditor(
     val canvasWidth = 2000
     val fontSize = 14.sp
     val fontFamily = FontFamily.Monospace
-    val coroutineScope = rememberCoroutineScope()
-    var isNavigating by remember { mutableStateOf(false) }
-    var lastNavigationTime by remember { mutableStateOf(0L) }
-
+    val lastNavigationTime by remember { mutableStateOf(0L) }
     var isCursorVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
