@@ -124,6 +124,7 @@ class BackspaceCommand(
     private val cursor: CursorPosition
 ) : EditorCommand {
     private var merged = false
+    private var changed = false
     private var originalLine: String = ""
     private var prevLine: String = ""
     private val cursorLine = cursor.line
@@ -136,12 +137,14 @@ class BackspaceCommand(
             editorState.lines[cursor.line] = line.removeRange( cursor.column - 1,  cursor.column)
             cursor.line = cursorLine
             cursor.column -= 1
+            changed = true
             editorState.updateTextFlow()
         } else if (cursor.line > 0) {
             originalLine = editorState.lines.removeAt(cursor.line)
             prevLine = editorState.lines[cursor.line - 1]
             editorState.lines[cursor.line - 1] = prevLine + originalLine
             merged = true
+            changed = true
             cursor.line -= 1
             cursor.column = prevLine.length
             editorState.updateTextFlow()
@@ -149,6 +152,8 @@ class BackspaceCommand(
     }
 
     override fun undo() {
+        if (!changed)
+            return
         if (merged) {
             editorState.lines[cursorLine-1] = prevLine
             editorState.lines.add(cursorLine, originalLine)
