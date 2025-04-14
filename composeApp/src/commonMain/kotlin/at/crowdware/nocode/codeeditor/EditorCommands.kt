@@ -6,13 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class CursorDirection {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN
-}
-
 interface EditorCommand {
     fun execute()
     fun undo()
