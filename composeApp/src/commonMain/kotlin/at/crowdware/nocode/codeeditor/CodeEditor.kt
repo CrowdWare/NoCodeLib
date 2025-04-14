@@ -21,6 +21,11 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import java.io.File
 
+// Was fehlt noch?
+// Markieren copy, paste, del
+// safe
+// Syntax Color
+
 
 @Composable
 fun CodeEditor(
