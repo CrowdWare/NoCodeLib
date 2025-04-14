@@ -18,10 +18,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -36,7 +33,7 @@ fun CodeEditor(
         val initialLines = if (file.exists()) file.readLines().toMutableStateList() else mutableStateListOf("")
         EditorState(initialLines)
     }
-    val cursorPosition = remember { CursorPosition(0, 0) }
+    var cursorPosition by remember { mutableStateOf(CursorPosition(0, 0)) }
     val commandManager = remember { CommandManager(cursorPosition) }
 
     val verticalScroll = rememberScrollState()
@@ -53,33 +50,22 @@ fun CodeEditor(
     val canvasWidth = 2000
     val fontSize = 14.sp
     val fontFamily = FontFamily.Monospace
+    val coroutineScope = rememberCoroutineScope()
+    var isNavigating by remember { mutableStateOf(false) }
+    var lastNavigationTime by remember { mutableStateOf(0L) }
 
     var isCursorVisible by remember { mutableStateOf(true) }
-    /*var blinkJob by remember { mutableStateOf<Job?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
-    fun restartCursorBlink(scope: CoroutineScope) {
-        isCursorVisible = true
-        blinkJob?.cancel()
-        blinkJob = scope.launch {
-            delay(1000)
-            while (true) {
-                isCursorVisible = false
-                delay(300)
+    LaunchedEffect(Unit) {
+        while (true) {
+            val elapsed = System.currentTimeMillis() - lastNavigationTime
+            if (elapsed < 300) {
                 isCursorVisible = true
+                delay(50)
+            } else {
+                isCursorVisible = !isCursorVisible
                 delay(300)
             }
-        }
-    }
-    LaunchedEffect(Unit) {
-        restartCursorBlink(coroutineScope)
-    }*/
-
-
-    LaunchedEffect(cursorPosition) {
-        while (true) {
-            isCursorVisible = !isCursorVisible
-            delay(300)
         }
     }
 
@@ -131,42 +117,27 @@ fun CodeEditor(
                             true
                         }
                         event.key == Key.DirectionLeft -> {
-                            if (cursorPosition.column > 0) {
-                                cursorPosition.column--
-                            } else if (cursorPosition.line > 0) {
-                                cursorPosition.line--
-                                cursorPosition.column = editorState.lines.getOrNull(cursorPosition.line)?.length ?: 0
-                            }
-                            //restartCursorBlink(coroutineScope)
+                            isCursorVisible = true
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionLeft)
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionRight -> {
-                            val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
-                            if (cursorPosition.column < line.length) {
-                                cursorPosition.column++
-                            } else if (cursorPosition.line < editorState.lines.lastIndex) {
-                                cursorPosition.line++
-                                cursorPosition.column = 0
-                            }
-                            //restartCursorBlink(coroutineScope)
+                            isCursorVisible = true
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionRight)
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionUp -> {
-                            if (cursorPosition.line > 0) {
-                                cursorPosition.line--
-                                val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
-                                cursorPosition.column = minOf(cursorPosition.column, line.length)
-                            }
-                            //restartCursorBlink(coroutineScope)
+                            isCursorVisible = true
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionUp)
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionDown -> {
-                            if (cursorPosition.line < editorState.lines.lastIndex) {
-                                cursorPosition.line++
-                                val line = editorState.lines.getOrNull(cursorPosition.line) ?: ""
-                                cursorPosition.column = minOf(cursorPosition.column, line.length)
-                            }
-                            //restartCursorBlink(coroutineScope)
+                            isCursorVisible = true
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionDown)
+                            commandManager.executeCommand(cmd)
                             true
                         }
                         event.key.nativeKeyCode in 32..126 -> {
