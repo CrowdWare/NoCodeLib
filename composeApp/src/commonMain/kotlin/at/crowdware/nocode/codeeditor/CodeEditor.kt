@@ -115,25 +115,25 @@ fun CodeEditor(
                         }
                         event.key == Key.DirectionLeft -> {
                             isCursorVisible = true
-                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionLeft)
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionLeft, commandManager)
                             commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionRight -> {
                             isCursorVisible = true
-                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionRight)
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionRight, commandManager)
                             commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionUp -> {
                             isCursorVisible = true
-                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionUp)
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionUp, commandManager)
                             commandManager.executeCommand(cmd)
                             true
                         }
                         event.key == Key.DirectionDown -> {
                             isCursorVisible = true
-                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionDown)
+                            val cmd = MoveCursorCommand(editorState, cursorPosition, Key.DirectionDown, commandManager)
                             commandManager.executeCommand(cmd)
                             true
                         }

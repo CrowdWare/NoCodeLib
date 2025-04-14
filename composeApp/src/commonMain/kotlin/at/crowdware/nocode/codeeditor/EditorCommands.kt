@@ -2,6 +2,7 @@ package at.crowdware.nocode.codeeditor
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.input.key.Key
+import io.ktor.util.reflect.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +18,18 @@ class MoveCursorCommand(
     private val editorState: EditorState,
     private val cursor: CursorPosition,
     private val direction: Key,
+    private val commandManager: CommandManager,
 ) : EditorCommand {
-    private val cursorLine = cursor.line
-    private val cursorColumn = cursor.column
+    private var cursorLine = cursor.line
+    private var cursorColumn = cursor.column
 
     override fun execute() {
+        val lastCmd = commandManager.undoStack.lastOrNull()
+        if (lastCmd is MoveCursorCommand) {
+            cursorLine = lastCmd.cursorLine
+            cursorColumn = lastCmd.cursorColumn
+            commandManager.undoStack.removeLastOrNull()
+        }
         when(direction) {
             Key.DirectionRight -> {
                 val line = editorState.lines.getOrNull(cursor.line) ?: ""
@@ -160,8 +168,8 @@ class BackspaceCommand(
 }
 
 class CommandManager(private val cursor: CursorPosition) {
-    private val undoStack = mutableListOf<EditorCommand>()
-    private val redoStack = mutableListOf<EditorCommand>()
+    val undoStack = mutableListOf<EditorCommand>()
+    val redoStack = mutableListOf<EditorCommand>()
 
     fun executeCommand(cmd: EditorCommand) {
         cmd.execute()
