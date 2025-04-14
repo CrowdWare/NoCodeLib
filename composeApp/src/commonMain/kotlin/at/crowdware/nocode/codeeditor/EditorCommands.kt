@@ -1,8 +1,8 @@
 package at.crowdware.nocode.codeeditor
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
-import io.ktor.util.reflect.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,14 +14,16 @@ interface EditorCommand {
 
 data class CursorPosition(var line: Int, var column: Int)
 
-class MoveCursorCommand(
-    private val editorState: EditorState,
+class SetCursorPosCommand(
     private val cursor: CursorPosition,
-    private val direction: Key,
+    line: Int,
+    column: Int,
     private val commandManager: CommandManager,
-) : EditorCommand {
-    private var cursorLine = cursor.line
-    private var cursorColumn = cursor.column
+) : EditorCommand{
+    var cursorLine = cursor.line
+    var cursorColumn = cursor.column
+    var newLine = line
+    var newColumn = column
 
     override fun execute() {
         val lastCmd = commandManager.undoStack.lastOrNull()
@@ -29,8 +31,42 @@ class MoveCursorCommand(
             cursorLine = lastCmd.cursorLine
             cursorColumn = lastCmd.cursorColumn
             commandManager.undoStack.removeLastOrNull()
+        } else if (lastCmd is SetCursorPosCommand) {
+            cursorLine = lastCmd.cursorLine
+            cursorColumn = lastCmd.cursorColumn
+            commandManager.undoStack.removeLastOrNull()
         }
-        when(direction) {
+        cursor.line = newLine
+        cursor.column = newColumn
+    }
+
+    override fun undo() {
+        cursor.line = cursorLine
+        cursor.column = cursorColumn
+    }
+}
+
+class MoveCursorCommand(
+    private val editorState: EditorState,
+    private val cursor: CursorPosition,
+    private val direction: Key,
+    private val commandManager: CommandManager,
+) : EditorCommand {
+    var cursorLine = cursor.line
+    var cursorColumn = cursor.column
+
+    override fun execute() {
+        val lastCmd = commandManager.undoStack.lastOrNull()
+        if (lastCmd is MoveCursorCommand) {
+            cursorLine = lastCmd.cursorLine
+            cursorColumn = lastCmd.cursorColumn
+            commandManager.undoStack.removeLastOrNull()
+        } else if (lastCmd is SetCursorPosCommand) {
+            cursorLine = lastCmd.cursorLine
+            cursorColumn = lastCmd.cursorColumn
+            commandManager.undoStack.removeLastOrNull()
+        }
+        when (direction) {
             Key.DirectionRight -> {
                 val line = editorState.lines.getOrNull(cursor.line) ?: ""
                 if (cursor.column < line.length) {
@@ -40,6 +76,7 @@ class MoveCursorCommand(
                     cursor.column = 0
                 }
             }
+
             Key.DirectionLeft -> {
                 if (cursor.column > 0) {
                     cursor.column--
@@ -48,6 +85,7 @@ class MoveCursorCommand(
                     cursor.column = editorState.lines.getOrNull(cursor.line)?.length ?: 0
                 }
             }
+
             Key.DirectionDown -> {
                 if (cursor.line < editorState.lines.lastIndex) {
                     cursor.line++
@@ -55,6 +93,7 @@ class MoveCursorCommand(
                     cursor.column = minOf(cursor.column, line.length)
                 }
             }
+
             Key.DirectionUp -> {
                 if (cursor.line > 0) {
                     cursor.line--

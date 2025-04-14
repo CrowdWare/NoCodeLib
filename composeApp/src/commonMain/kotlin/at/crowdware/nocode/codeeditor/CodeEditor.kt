@@ -33,7 +33,7 @@ fun CodeEditor(
         val initialLines = if (file.exists()) file.readLines().toMutableStateList() else mutableStateListOf("")
         EditorState(initialLines)
     }
-    var cursorPosition by remember { mutableStateOf(CursorPosition(0, 0)) }
+    val cursorPosition by remember { mutableStateOf(CursorPosition(0, 0)) }
     val commandManager = remember { CommandManager(cursorPosition) }
 
     val verticalScroll = rememberScrollState()
@@ -162,19 +162,23 @@ fun CodeEditor(
                         .size(canvasWidth.dp, canvasHeight.dp)
                         .pointerInput(Unit) {
                             detectTapGestures { offset ->
-                                cursorPosition.line = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
-                                val lineText = editorState.lines.getOrNull(cursorPosition.line) ?: ""
+                                val line = ((offset.y + verticalScroll.value - yOffsetStart) / lineHeight).toInt()
+                                var column = -1
+                                val lineText = editorState.lines.getOrNull(line) ?: ""
                                 val position = (offset.x + horizontalScroll.value - 60f).toInt()
                                 var found = false
                                 for (i in 1..lineText.length) {
                                     if (measureTextWidth(lineText, i) > position) {
-                                        cursorPosition.column = i - 1
+                                        column = i - 1
                                         found = true
                                         break
                                     }
                                 }
                                 if (!found)
-                                    cursorPosition.column = lineText.length
+                                    column = lineText.length
+
+                                val cmd = SetCursorPosCommand(cursorPosition, line, column, commandManager)
+                                commandManager.executeCommand(cmd)
                             }
                         }
                 ) {
