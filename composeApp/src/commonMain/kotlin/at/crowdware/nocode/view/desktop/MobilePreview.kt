@@ -60,7 +60,9 @@ import at.crowdware.nocode.viewmodel.ProjectState
 import java.io.File
 
 @Composable
-fun mobilePreview(currentProject: ProjectState?) {
+fun mobilePreview(
+    currentProject: ProjectState?
+) {
     var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
     val scrollState = rememberScrollState()
     val lang = currentProject?.lang
@@ -150,7 +152,7 @@ fun mobilePreview(currentProject: ProjectState?) {
                                         .fillMaxSize()
                                         .background(color = pageBackgroundColor)
                                 ) {
-                                    RenderPage(node, lang!!)
+                                    RenderPage(node, lang!!, "", currentProject)
                                 }
                             }
                         } else if (currentProject != null && currentProject.extension == "md") {
@@ -365,7 +367,13 @@ fun renderButton(modifier: Modifier, node: SmlNode) {
 }
 
 @Composable
-fun renderColumn(modifier: Modifier, node: SmlNode, lang: String) {
+fun renderColumn(
+    modifier: Modifier,
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val padding = getPadding(node)
     val background = getStringValue(node, "background", "background")
 
@@ -377,13 +385,18 @@ fun renderColumn(modifier: Modifier, node: SmlNode, lang: String) {
         end = padding.right.dp
     )) {
         for (childElement in node.children) {
-            RenderUIElement(childElement, lang)
+            RenderUIElement(childElement, lang, datasourceId, currentProject)
         }
     }
 }
 
 @Composable
-fun renderRow(node: SmlNode, lang: String) {
+fun renderRow(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
     val width = getIntValue(node, "width", 0)
@@ -403,13 +416,18 @@ fun renderRow(node: SmlNode, lang: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         for (childElement in node.children) {
-            RenderUIElement(childElement, lang)
+            RenderUIElement(childElement, lang, datasourceId, currentProject)
         }
     }
 }
 
 @Composable
-fun renderBox(node: SmlNode, lang: String) {
+fun renderBox(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
     val width = getIntValue(node, "width", 0)
@@ -424,43 +442,112 @@ fun renderBox(node: SmlNode, lang: String) {
         .then(if(height > 0) Modifier.height(height.dp) else Modifier.fillMaxHeight())
         .then(if(width > 0) Modifier.width(width.dp) else Modifier.fillMaxWidth())){
         for (child in node.children) {
-            RenderUIElement(child, lang)
+            RenderUIElement(child, lang, datasourceId = datasourceId, currentProject = currentProject)
         }
     }
 }
 
 @Composable
-fun renderLazyColumn(modifier: Modifier, node: SmlNode, lang: String) {
+fun renderLazyColumn(
+    modifier: Modifier,
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
+    val EmptyDataItem = object {}
+    val rawData = currentProject.data[getStringValue(node, "datasource", "")]
+    println("render: $rawData")
+
+    if (rawData == null) {
+        CircularProgressIndicator(modifier = modifier)
+        return
+    }
+
+    val filteredData = applyFilter(rawData, getStringValue(node, "filter", ""), currentProject)
+    val sortedData = applyOrder(filteredData, getStringValue(node, "order", ""))
+    val finalData = applyLimit(sortedData, getIntValue(node, "limit", 0))
+
+    println("render: $finalData")
     Column(modifier = modifier) {
         for (child in node.children) {
-            RenderUIElement(child, lang)
+            RenderUIElement(child, lang, datasourceId, currentProject)
         }
     }
 }
 
+fun applyFilter(
+    data: List<Any>,
+    filter: String?,
+    currentProject: ProjectState
+): List<Any> {
+    if (filter == null) return data
+    val regex = Regex("""(inList|notInList):(\w+)\[(\w+)]""")
+    val match = regex.find(filter) ?: return data
+
+    val (mode, listName, paramName) = match.destructured
+    val prefs = DesktopPreferences(currentProject.prefsFile)
+    val values = prefs.getStringSet(listName, emptySet())
+
+    return when (mode) {
+        "inList" -> data.filter {
+            (it as? Map<*, *>)?.get(paramName).toString() in values
+        }
+        "notInList" -> data.filter {
+            (it as? Map<*, *>)?.get(paramName).toString() !in values
+        }
+        else -> data
+    }
+}
+
+fun applyOrder(data: List<Any>, order: String?): List<Any> {
+    if (order == null) return data
+    val (field, dir) = order.split(" ").let { it[0] to (it.getOrNull(1) ?: "asc") }
+
+    val sorted = data.sortedBy {
+        (it as? Map<*, *>)?.get(field) as? Comparable<Any>
+    }
+    return if (dir == "desc") sorted.reversed() else sorted
+}
+
+fun applyLimit(data: List<Any>, limit: Int?): List<Any> {
+    return if (limit != null && limit > 0) data.take(limit) else data
+}
+
 @Composable
-fun renderLazyRow(node: SmlNode, lang: String) {
+fun renderLazyRow(
+    modifier: Modifier,
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val height = getIntValue(node, "height", 0)
-    Row (modifier = if(height > 0) Modifier.height(height.dp) else Modifier) {
+    Row (modifier = modifier.then( if(height > 0) Modifier.height(height.dp) else Modifier)) {
         for (child in node.children) {
-            RenderUIElement(child, lang)
+            RenderUIElement(child, lang, datasourceId, currentProject)
         }
     }
 }
 
 @Composable
-fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
+fun RowScope.RenderUIElement(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val weight = getIntValue(node, "weight", 0)
 
     when (node.name) {
         "Column" -> {
-            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
+            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
         }
         "Row" -> {
-            renderRow(node, lang)
+            renderRow(node, lang, datasourceId, currentProject = currentProject)
         }
         "Box" -> {
-            renderBox(node, lang)
+            renderBox(node, lang, datasourceId, currentProject = currentProject)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -485,10 +572,22 @@ fun RowScope.RenderUIElement(node: SmlNode, lang: String) {
             dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
         }
         "LazyColumn" -> {
-            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
+            renderLazyColumn(
+                modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier,
+                node = node,
+                lang = lang,
+                datasourceId = datasourceId,
+                currentProject
+            )
         }
         "LazyRow" -> {
-            renderLazyRow(node, lang)
+            renderLazyRow(
+                modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier,
+                node = node,
+                lang = lang,
+                datasourceId = datasourceId,
+                currentProject
+            )
         }
         "AsyncImage" -> {
             val width = getIntValue(node, "width", 0)
@@ -564,7 +663,12 @@ fun String.toAlignment(): Alignment {
 }
 
 @Composable
-fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
+fun BoxScope.RenderUIElement(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     when (node.name) {
         "Text" -> {
            renderText(node)
@@ -576,13 +680,13 @@ fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
             renderButton(modifier = Modifier, node)
         }
         "Column" -> {
-            renderColumn(modifier = Modifier, node, lang)
+            renderColumn(modifier = Modifier, node, lang, datasourceId = datasourceId, currentProject = currentProject)
         }
         "Row" -> {
-            renderRow(node, lang)
+            renderRow(node, lang, datasourceId = datasourceId, currentProject = currentProject)
         }
         "Box" -> {
-            renderBox(node, lang)
+            renderBox(node, lang, datasourceId, currentProject = currentProject)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -597,10 +701,10 @@ fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
             dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node)
         }
         "LazyColumn" -> {
-            renderLazyColumn(modifier = Modifier, node = node, lang = lang)
+            renderLazyColumn(modifier = Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject)
         }
         "LazyRow" -> {
-            renderLazyRow(node, lang)
+            renderLazyRow(modifier = Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject)
         }
         "AsyncImage" -> {
             val width = getIntValue(node, "width", 0)
@@ -636,14 +740,25 @@ fun BoxScope.RenderUIElement(node: SmlNode, lang: String) {
 }
 
 @Composable
-fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
+fun ColumnScope.RenderUIElement(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val weight = getIntValue(node, "weight", 0)
     when (node.name) {
         "Column" -> {
-            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
+            renderColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
         }
         "Row" -> {
-            renderRow(node, lang)
+            renderRow(node, lang, datasourceId, currentProject)
+        }
+        "LazyColumn" -> {
+            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId= datasourceId, currentProject = currentProject)
+        }
+        "LazyRow" -> {
+            renderLazyRow(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -665,16 +780,10 @@ fun ColumnScope.RenderUIElement(node: SmlNode, lang: String) {
             renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node)
         }
         "Box" -> {
-            renderBox(node, lang)
+            renderBox(node, lang, datasourceId, currentProject = currentProject)
         }
         "Image" -> {
             dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
-        }
-        "LazyColumn" -> {
-            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang)
-        }
-        "LazyRow" -> {
-            renderLazyRow(node, lang)
         }
         "AsyncImage" -> {
             val width = getIntValue(node, "width", 0)
@@ -902,9 +1011,14 @@ fun hexToColor(hex: String, default: String = "#000000"): Color {
 }
 
 @Composable
-fun ColumnScope.RenderPage(node: SmlNode, lang: String) {
+fun ColumnScope.RenderPage(
+    node: SmlNode,
+    lang: String,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     for (child in node.children) {
-        RenderUIElement(child, lang)
+        RenderUIElement(child, lang, datasourceId, currentProject)
     }
 }
 

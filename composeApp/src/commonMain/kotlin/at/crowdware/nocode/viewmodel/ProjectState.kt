@@ -19,10 +19,7 @@
 
 package at.crowdware.nocode.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import at.crowdware.nocode.model.NodeType
@@ -33,10 +30,10 @@ import com.darkrockstudios.libraries.mpfilepicker.MPFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.reflect.KClass
 
 
 expect fun getNodeType(path: String): NodeType
@@ -76,7 +73,7 @@ abstract class ProjectState {
     var isImportTextureDialogVisible by mutableStateOf(false)
     var isImportDataDialogVisible by mutableStateOf(false)
     var isExportDialogVisible by mutableStateOf(false)
-    var isAboutDialogOpen by  mutableStateOf(false)
+    var isAboutDialogOpen by mutableStateOf(false)
     var isEditorVisible by mutableStateOf(false)
     var currentTreeNode by mutableStateOf(null as TreeNode?)
     var isPageLoaded by mutableStateOf(false)
@@ -85,7 +82,8 @@ abstract class ProjectState {
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")
     var exportPlugin: SmlExportPlugin? by mutableStateOf(null)
-
+    val prefsFile = File(System.getProperty("user.home"), ".nocode_lists.properties")
+    var data by mutableStateOf<Map<String, List<Any>>>(emptyMap())
     lateinit var pageNode: TreeNode
     lateinit var imagesNode: TreeNode
     lateinit var videosNode: TreeNode
@@ -132,9 +130,12 @@ abstract class ProjectState {
             } else {
                 target
             }
-            val node = TreeNode(title = mutableStateOf(pngTarget.substringAfterLast(File.separator)), path = pngTarget, type = getNodeType(
-                pngTarget
-            )
+            val node = TreeNode(
+                title = mutableStateOf(pngTarget.substringAfterLast(File.separator)),
+                path = pngTarget,
+                type = getNodeType(
+                    pngTarget
+                )
             )
             imagesNode.children.add(node)
         }
@@ -145,9 +146,10 @@ abstract class ProjectState {
             val filename = file.path.substringAfterLast(File.separator)
             val target = "$folder${File.separator}videos${File.separator}$filename"
             at.crowdware.nocode.viewmodel.copyAssetFile(file.path, target)
-            val node = TreeNode(title = mutableStateOf(filename), path = file.path, type = getNodeType(
-                file.path
-            )
+            val node = TreeNode(
+                title = mutableStateOf(filename), path = file.path, type = getNodeType(
+                    file.path
+                )
             )
             videosNode.children.add(node)
         }
@@ -158,9 +160,10 @@ abstract class ProjectState {
             val filename = file.path.substringAfterLast(File.separator)
             val target = "$folder${File.separator}sounds${File.separator}$filename"
             at.crowdware.nocode.viewmodel.copyAssetFile(file.path, target)
-            val node = TreeNode(title = mutableStateOf(filename), path = file.path, type = getNodeType(
-                file.path
-            )
+            val node = TreeNode(
+                title = mutableStateOf(filename), path = file.path, type = getNodeType(
+                    file.path
+                )
             )
             soundsNode.children.add(node)
         }
@@ -168,22 +171,24 @@ abstract class ProjectState {
 
     fun ImportModelFile(path: String) {
         val filename = path.substringAfterLast(File.separator)
-        val target  = "$folder${File.separator}models${File.separator}$filename"
+        val target = "$folder${File.separator}models${File.separator}$filename"
         at.crowdware.nocode.viewmodel.copyAssetFile(path, target)
-        val node = TreeNode(title = mutableStateOf(filename), path = path, type = getNodeType(
-            path
-        )
+        val node = TreeNode(
+            title = mutableStateOf(filename), path = path, type = getNodeType(
+                path
+            )
         )
         modelsNode.children.add(node)
     }
 
     fun ImportTextureFile(path: String) {
         val filename = path.substringAfterLast(File.separator)
-        val target  = "$folder${File.separator}textures${File.separator}$filename"
+        val target = "$folder${File.separator}textures${File.separator}$filename"
         at.crowdware.nocode.viewmodel.copyAssetFile(path, target)
-        val node = TreeNode(title = mutableStateOf(filename), path = path, type = getNodeType(
-            path
-        )
+        val node = TreeNode(
+            title = mutableStateOf(filename), path = path, type = getNodeType(
+                path
+            )
         )
         texturesNode.children.add(node)
     }
@@ -251,7 +256,7 @@ abstract class ProjectState {
     }
 
     fun reloadPage() {
-        if(extension == "sml" && fileName != "app.sml") {
+        if (extension == "sml" && fileName != "app.sml") {
             val (smlNode, error) = parseSML(currentFileContent.text)
             parsedPage = smlNode
             parseError = error
@@ -263,15 +268,53 @@ abstract class ProjectState {
         }
     }
 
+    fun loadDatasources() {
+        val map = data.toMutableMap()
+        val sml = File(folder, "app.sml").readText()
+        val (parsedApp, error) = parseSML(sml)
+        if (parsedApp != null) {
+            println("parsed")
+            for (node in parsedApp.children) {
+                if (node.name == "DataSource") {
+                    println("DS found")
+                    val datasourceId = getStringValue(node, "id", "")
+                    val mock = getStringValue(node, "mock", "")
+                    val mockFile = File(folder, "data/$mock")
+                    if (mockFile.exists()) {
+                        val jsonData = mockFile.readText()
+                        println("jsonData: $jsonData")
+                        val jsonArray = JSONArray(jsonData)
+                        val dataList = mutableListOf<Any>()
+
+                        for (i in 0 until jsonArray.length()) {
+                            val jsonObject = jsonArray.getJSONObject(i)
+                            val dataMap = mutableMapOf<String, Any>()
+                            jsonObject.keys().forEach { key ->
+                                dataMap[key] = jsonObject.get(key)
+                            }
+                            dataList.add(dataMap)
+                        }
+
+                        map[datasourceId] = dataList
+                        data = map
+                    }
+                }
+            }
+        }
+    }
+
     private fun loadElementData(node: SmlNode?) {
         actualElement = node?.name!!
         when (node.name) {
             "Page" -> {
                 elementData = listOf(mapPageToTreeNodes(node))
             }
+
             "App" -> {
                 elementData = listOf(mapAppToTreeNode(node))
-            } else ->{
+            }
+
+            else -> {
                 println("loadElementData: ${node.name} not implemented")
             }
         }
@@ -323,7 +366,7 @@ abstract class ProjectState {
         val path = "${currentTreeNode?.path}${File.separator}$name.sml"
         createPage(path, name)
 
-        val newNode = TreeNode(title = mutableStateOf( "${name}.sml"), path = path, type= NodeType.SML)
+        val newNode = TreeNode(title = mutableStateOf("${name}.sml"), path = path, type = NodeType.SML)
         val updatedChildren = pageNode.children + newNode
         pageNode.children.clear()
         pageNode.children.addAll(updatedChildren)
@@ -334,7 +377,7 @@ abstract class ProjectState {
         val path = "${currentTreeNode?.path}${File.separator}$name.md"
         createPart(path)
 
-        val newNode = TreeNode(title = mutableStateOf( "${name}.md"), path = path, type= NodeType.MD)
+        val newNode = TreeNode(title = mutableStateOf("${name}.md"), path = path, type = NodeType.MD)
         val updatedChildren = partsNode.children + newNode
         partsNode.children.clear()
         partsNode.children.addAll(updatedChildren)
@@ -344,7 +387,7 @@ abstract class ProjectState {
     fun addData(name: String, currentTreeNode: TreeNode?) {
         val path = "${currentTreeNode?.path}${File.separator}$name.json"
         createData(path)
-        val newNode = TreeNode(title = mutableStateOf( "${name}.json"), path = path, type= NodeType.DATA)
+        val newNode = TreeNode(title = mutableStateOf("${name}.json"), path = path, type = NodeType.DATA)
         val updatedChildren = dataNode.children + newNode
         dataNode.children.clear()
         dataNode.children.addAll(updatedChildren)
@@ -398,11 +441,11 @@ abstract class ProjectState {
             }
         } else if (treeNode.type == NodeType.IMAGE) {
             imagesNode.children.remove(treeNode)
-        } else if(treeNode.type == NodeType.MODEL) {
+        } else if (treeNode.type == NodeType.MODEL) {
             modelsNode.children.remove(treeNode)
-        } else if(treeNode.type == NodeType.VIDEO) {
+        } else if (treeNode.type == NodeType.VIDEO) {
             videosNode.children.remove(treeNode)
-        } else if(treeNode.type == NodeType.SOUND) {
+        } else if (treeNode.type == NodeType.SOUND) {
             soundsNode.children.remove(treeNode)
         }
     }

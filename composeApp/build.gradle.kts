@@ -70,7 +70,7 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
                 implementation(files("../../../CodeEditor/ComposeTextEditor/build/libs/ComposeTextEditor-desktop-1.0.0.jar"))
                 kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
-
+                implementation("org.json:json:20240303")
                 implementation("org.jetbrains.kotlin:kotlin-test-common")
             }
         }

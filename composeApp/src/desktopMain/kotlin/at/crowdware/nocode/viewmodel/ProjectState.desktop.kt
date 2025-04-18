@@ -217,6 +217,8 @@ class DesktopProjectState : ProjectState() {
             val uiSml = appFile.readText()
             val (parsedApp, error) = parseSML(uiSml)
             app = parsedApp?.let { fillAppFromSmlNode(it) }
+
+            loadDatasources()
         } catch (e: Exception) {
             println("Error parsing app.sml: ${e.message}")
         }

@@ -72,16 +72,13 @@ val lineComment: Token = regexToken("//.*")
 val blockComment: Token = regexToken(Regex("/\\*[\\s\\S]*?\\*/", RegexOption.DOT_MATCHES_ALL))
 
 object SmlGrammar : Grammar<List<Any>>() {
-    val whitespaceParser = zeroOrMore(whitespace)
-
+    //val whitespaceParser = zeroOrMore(whitespace)
     val commentParser = lineComment or blockComment
-
     val ignoredParser = zeroOrMore(whitespace or commentParser)
-
     val stringParser = stringLiteral.map { PropertyValue.StringValue(it.text.removeSurrounding("\"")) }
     val integerParser = integerLiteral.map { PropertyValue.IntValue(it.text.toInt()) }
     val floatParser = floatLiteral.map { PropertyValue.FloatValue(it.text.toFloat()) }
-val booleanParser = booleanLiteral.map { PropertyValue.BooleanValue(it.text.toBoolean()) }
+    val booleanParser = booleanLiteral.map { PropertyValue.BooleanValue(it.text.toBoolean()) }
 
     val propertyValue = floatParser or integerParser or booleanParser or stringParser
 
