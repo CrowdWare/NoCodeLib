@@ -20,16 +20,16 @@
 package at.crowdware.nocode.view.desktop
 
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +66,7 @@ fun mobilePreview(
     var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
     val scrollState = rememberScrollState()
     val lang = currentProject?.lang
+    val clickCount = remember { mutableStateOf(0) }
 
     if (node == null && currentProject != null) {
         // in case of syntax error we keep showing the last page
@@ -152,7 +153,7 @@ fun mobilePreview(
                                         .fillMaxSize()
                                         .background(color = pageBackgroundColor)
                                 ) {
-                                    RenderPage(node, lang!!, "", currentProject)
+                                    RenderPage(node, lang!!, "", currentProject, clickCount)
                                 }
                             }
                         } else if (currentProject != null && currentProject.extension == "md") {
@@ -372,7 +373,8 @@ fun renderColumn(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val padding = getPadding(node)
     val background = getStringValue(node, "background", "background")
@@ -385,7 +387,7 @@ fun renderColumn(
         end = padding.right.dp
     )) {
         for (childElement in node.children) {
-            RenderUIElement(childElement, lang, datasourceId, currentProject)
+            RenderUIElement(childElement, lang, datasourceId, currentProject, clickCount)
         }
     }
 }
@@ -395,7 +397,8 @@ fun renderRow(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
@@ -416,7 +419,7 @@ fun renderRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         for (childElement in node.children) {
-            RenderUIElement(childElement, lang, datasourceId, currentProject)
+            RenderUIElement(childElement, lang, datasourceId, currentProject, clickCount)
         }
     }
 }
@@ -426,7 +429,8 @@ fun renderBox(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val padding = getPadding(node)
     val height = getIntValue(node, "height", 0)
@@ -442,23 +446,23 @@ fun renderBox(
         .then(if(height > 0) Modifier.height(height.dp) else Modifier.fillMaxHeight())
         .then(if(width > 0) Modifier.width(width.dp) else Modifier.fillMaxWidth())){
         for (child in node.children) {
-            RenderUIElement(child, lang, datasourceId = datasourceId, currentProject = currentProject)
+            RenderUIElement(child, lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun renderLazyColumn(
     modifier: Modifier,
     node: SmlNode,
     lang: String,
-    datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
-    val EmptyDataItem = object {}
-    val rawData = currentProject.data[getStringValue(node, "datasource", "")]
-    println("render: $rawData")
-
+    //val EmptyDataItem = object {}
+    val datasource = getStringValue(node, "datasource", "")
+    val rawData = currentProject.data[datasource]
     if (rawData == null) {
         CircularProgressIndicator(modifier = modifier)
         return
@@ -468,10 +472,50 @@ fun renderLazyColumn(
     val sortedData = applyOrder(filteredData, getStringValue(node, "order", ""))
     val finalData = applyLimit(sortedData, getIntValue(node, "limit", 0))
 
-    println("render: $finalData")
-    Column(modifier = modifier) {
-        for (child in node.children) {
-            RenderUIElement(child, lang, datasourceId, currentProject)
+    val padding = getPadding(node)
+
+    AnimatedContent(
+        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp, padding.bottom.dp),
+        targetState = clickCount.value to finalData,
+        transitionSpec = {
+            fadeIn(tween(300)) with fadeOut(tween(300))
+        },
+        label = "AnimatedLazyColumn"
+    ) { (_, animatedList) ->
+        if (animatedList.isEmpty()) {
+            for (child in node.children) {
+                if (child.name == "LazyNoContent") {
+                    Box(modifier = Modifier) {
+                        RenderUIElement(
+                            node = child,
+                            lang = lang,
+                            datasourceId = datasource,
+                            currentProject = currentProject,
+                            clickCount = clickCount
+                        )
+                    }
+                }
+            }
+        } else {
+            for (child in node.children) {
+                if (child.name == "LazyContent") {
+                    LazyColumn() {
+                        items(animatedList, key = { it.hashCode() }) { dataItem ->
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                for (subChild in child.children) {
+                                    RenderUIElement(
+                                        node = subChild,
+                                        lang = lang,
+                                        datasourceId = datasource,
+                                        currentProject = currentProject,
+                                        clickCount = clickCount
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -520,12 +564,13 @@ fun renderLazyRow(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val height = getIntValue(node, "height", 0)
     Row (modifier = modifier.then( if(height > 0) Modifier.height(height.dp) else Modifier)) {
         for (child in node.children) {
-            RenderUIElement(child, lang, datasourceId, currentProject)
+            RenderUIElement(child, lang, datasourceId, currentProject, clickCount)
         }
     }
 }
@@ -535,19 +580,20 @@ fun RowScope.RenderUIElement(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val weight = getIntValue(node, "weight", 0)
 
     when (node.name) {
         "Column" -> {
-            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
+            renderColumn(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Row" -> {
-            renderRow(node, lang, datasourceId, currentProject = currentProject)
+            renderRow(node, lang, datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Box" -> {
-            renderBox(node, lang, datasourceId, currentProject = currentProject)
+            renderBox(node, lang, datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -576,8 +622,8 @@ fun RowScope.RenderUIElement(
                 modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier,
                 node = node,
                 lang = lang,
-                datasourceId = datasourceId,
-                currentProject
+                currentProject,
+                clickCount
             )
         }
         "LazyRow" -> {
@@ -586,7 +632,8 @@ fun RowScope.RenderUIElement(
                 node = node,
                 lang = lang,
                 datasourceId = datasourceId,
-                currentProject
+                currentProject,
+                clickCount
             )
         }
         "AsyncImage" -> {
@@ -667,7 +714,8 @@ fun BoxScope.RenderUIElement(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     when (node.name) {
         "Text" -> {
@@ -680,13 +728,13 @@ fun BoxScope.RenderUIElement(
             renderButton(modifier = Modifier, node)
         }
         "Column" -> {
-            renderColumn(modifier = Modifier, node, lang, datasourceId = datasourceId, currentProject = currentProject)
+            renderColumn(modifier = Modifier, node, lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Row" -> {
-            renderRow(node, lang, datasourceId = datasourceId, currentProject = currentProject)
+            renderRow(node, lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Box" -> {
-            renderBox(node, lang, datasourceId, currentProject = currentProject)
+            renderBox(node, lang, datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -701,10 +749,10 @@ fun BoxScope.RenderUIElement(
             dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node)
         }
         "LazyColumn" -> {
-            renderLazyColumn(modifier = Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject)
+            renderLazyColumn(modifier = Modifier, node = node, lang = lang, currentProject, clickCount)
         }
         "LazyRow" -> {
-            renderLazyRow(modifier = Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject)
+            renderLazyRow(modifier = Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject, clickCount)
         }
         "AsyncImage" -> {
             val width = getIntValue(node, "width", 0)
@@ -744,21 +792,22 @@ fun ColumnScope.RenderUIElement(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     val weight = getIntValue(node, "weight", 0)
     when (node.name) {
         "Column" -> {
-            renderColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
+            renderColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Row" -> {
-            renderRow(node, lang, datasourceId, currentProject)
+            renderRow(node, lang, datasourceId, currentProject, clickCount)
         }
         "LazyColumn" -> {
-            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId= datasourceId, currentProject = currentProject)
+            renderLazyColumn(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, currentProject = currentProject, clickCount = clickCount)
         }
         "LazyRow" -> {
-            renderLazyRow(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject)
+            renderLazyRow(modifier = if(weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node = node, lang = lang, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Spacer" -> {
             var mod = Modifier as Modifier
@@ -780,7 +829,7 @@ fun ColumnScope.RenderUIElement(
             renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node)
         }
         "Box" -> {
-            renderBox(node, lang, datasourceId, currentProject = currentProject)
+            renderBox(node, lang, datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Image" -> {
             dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
@@ -1015,10 +1064,11 @@ fun ColumnScope.RenderPage(
     node: SmlNode,
     lang: String,
     datasourceId: String,
-    currentProject: ProjectState
+    currentProject: ProjectState,
+    clickCount: MutableState<Int>
 ) {
     for (child in node.children) {
-        RenderUIElement(child, lang, datasourceId, currentProject)
+        RenderUIElement(child, lang, datasourceId, currentProject, clickCount)
     }
 }
 

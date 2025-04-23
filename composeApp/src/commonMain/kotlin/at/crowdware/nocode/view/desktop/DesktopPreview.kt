@@ -30,6 +30,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +56,7 @@ fun desktopPreview(currentProject: ProjectState?) {
     var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
     val scrollState = rememberScrollState()
     val lang = currentProject?.lang
+    val clickCount = remember { mutableStateOf(0) }
 
     if (node == null && currentProject != null) {
         // in case of syntax error we keep showing the last page
@@ -140,7 +143,7 @@ fun desktopPreview(currentProject: ProjectState?) {
                                         .fillMaxSize()
                                         .background(color = pageBackgroundColor)
                                 ) {
-                                    RenderPage(node, lang!!,"", currentProject)
+                                    RenderPage(node, lang!!, "", currentProject, clickCount)
                                 }
                             }
                         } else if (currentProject != null && currentProject.extension == "md") {

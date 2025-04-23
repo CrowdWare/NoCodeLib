@@ -303,16 +303,13 @@ abstract class ProjectState {
         val sml = File(folder, "app.sml").readText()
         val (parsedApp, error) = parseSML(sml)
         if (parsedApp != null) {
-            println("parsed")
             for (node in parsedApp.children) {
                 if (node.name == "DataSource") {
-                    println("DS found")
                     val datasourceId = getStringValue(node, "id", "")
                     val mock = getStringValue(node, "mock", "")
                     val mockFile = File(folder, "data/$mock")
                     if (mockFile.exists()) {
                         val jsonData = mockFile.readText()
-                        println("jsonData: $jsonData")
                         val jsonArray = JSONArray(jsonData)
                         val dataList = mutableListOf<Any>()
 
