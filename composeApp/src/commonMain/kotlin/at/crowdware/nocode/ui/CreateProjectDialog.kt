@@ -56,73 +56,37 @@ fun createProjectDialog(
     var folderManuallyChanged by remember { mutableStateOf(false) }
     var internalSelectedType by remember { mutableStateOf(selectedType) }
 
-    /*
-    fun updateFolderForType(type: String) {
-        if (!folderManuallyChanged) {
-            val defaultSubfolder = when (type) {
-                "Book" -> "Ebooks"
-                "App" -> "Apps"
-                "Website" -> "Websites"
-                else -> ""
-            }
-            val fullPath = if (defaultSubfolder.isNotEmpty()) {
-                "$userFolder/$defaultSubfolder"
-            } else userFolder
-            projectFolder = TextFieldValue(fullPath)
-        }
-    }
-*/
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(text = "Create Project") },
         text = {
             Column(modifier = Modifier.padding(16.dp)) {
-
-                /*
-                // Type Auswahl
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Type:",
-                        color = MaterialTheme.colors.onPrimary,
+                        "Name:", color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
                     )
-                    listOf(/*"Book",*/ "App", /*"Website"*/).forEach { type ->
-                        RadioButtonItem(
-                            modifier = Modifier.weight(1f),
-                            label = type,
-                            selected = internalSelectedType == type,
-                            color = MaterialTheme.colors.onPrimary,
-                            onClick = {
-                                internalSelectedType = type
-                                onTypeSelected(type)
-                                updateFolderForType(type)
-                            }
-                        )
-                    }
-                }*/
-
-                //Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text("Name:", color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
                     Spacer(modifier = Modifier.width(16.dp))
                     TextInput(name, onNameChange, modifier = Modifier.weight(3f))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                //if (internalSelectedType == "App") {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text("AppId:", color = MaterialTheme.colors.onPrimary,
-                            modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
-                        Spacer(modifier = Modifier.width(16.dp))
-                        TextInput(id, onIdChange, modifier = Modifier.weight(3f))
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                //}
 
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Text("Folder:", color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
+                    Text(
+                        "AppId:", color = MaterialTheme.colors.onPrimary,
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    TextInput(id, onIdChange, modifier = Modifier.weight(3f))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Folder:", color = MaterialTheme.colors.onPrimary,
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
                     TextInput(
                         projectFolder,
@@ -135,28 +99,30 @@ fun createProjectDialog(
                     )
                 }
 
-                // Theme, Languages etc. wie gehabt ...
-                if (internalSelectedType == "App" || internalSelectedType == "Website") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text("Theme:", color = MaterialTheme.colors.onPrimary,
-                            modifier = Modifier.align(Alignment.CenterVertically).weight(1f))
-                        RadioButtonItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Light",
-                            selected = theme == "Light",
-                            color = MaterialTheme.colors.onPrimary,
-                            onClick = { onThemeChanged("Light") }
-                        )
-                        RadioButtonItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Dark",
-                            selected = theme == "Dark",
-                            color = MaterialTheme.colors.onPrimary,
-                            onClick = { onThemeChanged("Dark") }
-                        )
-                    }
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Theme:", color = MaterialTheme.colors.onPrimary,
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(1f)
+                    )
+                    RadioButtonItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Light",
+                        selected = theme == "Light",
+                        color = MaterialTheme.colors.onPrimary,
+                        onClick = { onThemeChanged("Light") }
+                    )
+                    RadioButtonItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Dark",
+                        selected = theme == "Dark",
+                        color = MaterialTheme.colors.onPrimary,
+                        onClick = { onThemeChanged("Dark") }
+                    )
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Languages")
@@ -182,10 +148,8 @@ fun createProjectDialog(
                 Text("Cancel")
             }
             Button(
-                enabled = /*internalSelectedType.isNotEmpty() &&*/
-                        name.text.isNotEmpty() &&
-                        projectFolder.text.isNotEmpty() &&
-                        (internalSelectedType != "App" || id.text.isNotEmpty()),
+                enabled = name.text.isNotEmpty() && projectFolder.text.isNotEmpty() && id.text.isNotEmpty() && checkedStates.filterValues { it }.keys.toList()
+                    .isNotEmpty(),
                 onClick = {
                     val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
                     onCreateRequest(selectedLanguages, projectFolder.text)

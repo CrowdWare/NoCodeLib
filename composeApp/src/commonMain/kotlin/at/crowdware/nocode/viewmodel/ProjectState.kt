@@ -114,13 +114,12 @@ abstract class ProjectState {
             loadProjectFiles(path, uuid, pid)
         }
     }
-
+    /*
     fun ImportImageFile(list: List<MPFile<Any>>) {
         for (file in list) {
             val filename = file.path.substringAfterLast(File.separator)
-            val target = "${folder}/images/$filename"
-            at.crowdware.nocode.viewmodel.copyAssetFile(file.path, target)
-            println("copy: ${file.path} - $target")
+            val target = "${folder}images/$filename"
+            copyAssetFile(file.path, target)
             val pngTarget = if (!target.endsWith(".png")) {
                 val pngPath = target.substringBeforeLast(".") + ".png"
                 val tar = File(target)
@@ -138,6 +137,37 @@ abstract class ProjectState {
                 )
             )
             imagesNode.children.add(node)
+        }
+    }*/
+
+    fun ImportImageFile(list: List<MPFile<Any>>) {
+        for (file in list) {
+            val filename = file.path.substringAfterLast(File.separator)
+            val target = "${folder}images/$filename"
+
+            // Prüfen, ob das Bild bereits vorhanden ist
+            val alreadyImported = imagesNode.children.any { it.path.endsWith(filename.substringBeforeLast(".") + ".png") }
+
+            if (!alreadyImported) { // ← Änderung hier
+                copyAssetFile(file.path, target)
+
+                val pngTarget = if (!target.endsWith(".png")) {
+                    val pngPath = target.substringBeforeLast(".") + ".png"
+                    val tar = File(target)
+                    convertToPng(File(target), File(pngPath))
+                    tar.delete()
+                    pngPath
+                } else {
+                    target
+                }
+
+                val node = TreeNode(
+                    title = mutableStateOf(pngTarget.substringAfterLast(File.separator)),
+                    path = pngTarget,
+                    type = getNodeType(pngTarget)
+                )
+                imagesNode.children.add(node)
+            }
         }
     }
 
@@ -454,14 +484,18 @@ abstract class ProjectState {
         val folder = currentTreeNode?.path?.substringBeforeLast(File.separator)
         val ext = currentTreeNode?.path?.substringAfterLast(".")
         val newPath = "$folder${File.separator}$name.$ext"
-        at.crowdware.nocode.viewmodel.renameFile(currentTreeNode?.path!!, newPath)
+        renameFile(currentTreeNode?.path!!, newPath)
         currentTreeNode!!.title.value = "$name.$ext"
         currentTreeNode!!.path = newPath
     }
 
     fun convertToPng(inputFile: File, outputFile: File) {
-        val image: BufferedImage = ImageIO.read(inputFile)
-        ImageIO.write(image, "png", outputFile)
+        try {
+            val image: BufferedImage = ImageIO.read(inputFile)
+            ImageIO.write(image, "png", outputFile)
+        } catch(e: Exception) {
+            println("An exception occured converting to PNG: ${e.message}")
+        }
     }
 }
 
