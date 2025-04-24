@@ -20,13 +20,12 @@
 package at.crowdware.nocode.view.desktop
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -37,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import at.crowdware.nocode.utils.SmlNode
 //import at.crowdware.nocode.utils.UIElement
 import at.crowdware.nocode.utils.getIntValue
+import at.crowdware.nocode.utils.getPadding
 import at.crowdware.nocode.utils.getStringValue
 import at.crowdware.nocode.viewmodel.GlobalProjectState
+import coil3.compose.AsyncImage
 import org.jcodec.api.FrameGrab
 import org.jcodec.common.model.Picture
 import org.jcodec.scale.AWTUtil
@@ -49,19 +50,37 @@ import java.net.URI
 
 
 @Composable
-actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode) {
+actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: Any) {
     val src = getStringValue(node, "src", "")
     val scale = getStringValue(node, "scale", "")
     val link = getStringValue(node, "link", "")
     val width = getIntValue(node, "width", 0)
     val height = getIntValue(node, "height", 0)
-    dynamicImageFromAssets(modifier, src, scale, link, width, height)
+    dynamicImageFromAssets(modifier, src, scale, link, width, height, dataItem)
 }
 
 @Composable
-actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String, link: String, width: Int, height: Int) {
+actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String, link: String, width: Int, height: Int, dataItem: Any) {
+    var fileName = src
+    var isExternal  = false
+    var _link = link
+    if (src.startsWith("<") && src.endsWith(">")) {
+        val fieldName = src.substring(1, src.length - 1)
+        if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+            val url = dataItem[fieldName] as? String
+            fileName = "$url"
+            isExternal = true
+        }
+    }
+    if(link.startsWith("<") && link.endsWith(">")) {
+        val fieldName = link.substring(1, link.length - 1)
+        if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+            val value = dataItem[fieldName] as? String
+            _link = "$value"
+        }
+    }
     val ps = GlobalProjectState.projectState
-    val path = "${ps?.folder}/images/${src}"
+    val path = "${ps?.folder}/images/${fileName}"
 
     val imageFile = File(path)
     var bitmap: ImageBitmap = ImageBitmap(1, 1)
@@ -89,17 +108,52 @@ actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String
                 .then(if (height == 0) Modifier.wrapContentHeight() else Modifier.fillMaxHeight(height / 100f))
         )
     } else {
-        Text(text = "Image not found: ${src}", style = TextStyle(color = MaterialTheme.colors.onPrimary))
+        Text(text = "Image not found: ${fileName}", style = TextStyle(color = MaterialTheme.colors.onPrimary))
     }
 }
 
 @Composable
-actual fun asyncImage(modifier: Modifier, src: String, scale: String, link: String, width: Int, height: Int) {
-    Image(
-        painter = painterResource("images/asyncimage.png"),
-        contentDescription = "Description of the image",
-        modifier = if(width > 0 && height > 0) modifier.width(width.dp).height(height.dp) else modifier.fillMaxWidth(),
-        contentScale = ContentScale.FillBounds
+actual fun asyncImage(
+    modifier: Modifier,
+    node: SmlNode,
+    dataItem: Any
+) {
+    val width = getIntValue(node, "width", 0)
+    val height = getIntValue(node, "height", 0)
+    val scale = getStringValue(node, "scale", "")
+    var src = getStringValue( node,"src", "")
+    var link = getStringValue(node, "link", "")
+    val padding = getPadding(node)
+    if (src.startsWith("<") && src.endsWith(">")) {
+        val fieldName = src.substring(1, src.length - 1)
+        if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+            val url = dataItem[fieldName] as? String
+            src = "$url"
+        }
+    }
+    if (link.startsWith("<") && link.endsWith(">")) {
+        val fieldName = link.substring(1, link.length - 1)
+        if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+            val value = dataItem[fieldName] as? String
+            link = "$value"
+        }
+    }
+
+    println("asyncImage: $src")
+    AsyncImage(
+        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp),
+        model = src,
+        contentScale = when(scale.lowercase()) {
+            "crop" -> ContentScale.Crop
+            "fit" -> ContentScale.Fit
+            "inside" -> ContentScale.Inside
+            "fillwidth" -> ContentScale.FillWidth
+            "fillbounds" -> ContentScale.FillBounds
+            "fillheight" -> ContentScale.FillHeight
+            "none" -> ContentScale.None
+            else -> ContentScale.Fit
+        },
+        contentDescription = null
     )
 }
 

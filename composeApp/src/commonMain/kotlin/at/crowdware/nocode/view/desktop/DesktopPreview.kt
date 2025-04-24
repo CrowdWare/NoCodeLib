@@ -199,7 +199,7 @@ fun desktopPreview(currentProject: ProjectState?) {
                                             "fit",
                                             "",
                                             0,
-                                            0
+                                            0, emptyMap<String, Any>()
                                         )
 
                                         currentIndex = endIndex + 1

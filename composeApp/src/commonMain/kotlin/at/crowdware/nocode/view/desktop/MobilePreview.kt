@@ -209,7 +209,7 @@ fun mobilePreview(
                                             "fit",
                                             "",
                                             0,
-                                            0
+                                            0,emptyMap<String, Any>()
                                         )
 
                                         currentIndex = endIndex + 1
@@ -244,11 +244,11 @@ fun renderText(node: SmlNode) {
 }
 
 @Composable
-fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
+fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     val part = getStringValue(node, "part", "")
-    val text = getStringValue(node, "text", "")
+    var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
@@ -264,6 +264,14 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) 
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
+        text = text.trim()
+        if (text.startsWith("<") && text.endsWith(">")) {
+            val fieldName = text.substring(1, text.length - 1)
+            if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+                val des = dataItem[fieldName] as? String
+                text = "$des"
+            }
+        }
         txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
@@ -277,11 +285,11 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) 
 }
 
 @Composable
-fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
+fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     val part = getStringValue(node, "part", "")
-    val text = getStringValue(node, "text", "")
+    var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
@@ -296,6 +304,14 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
+        text = text.trim()
+        if (text.startsWith("<") && text.endsWith(">")) {
+            val fieldName = text.substring(1, text.length - 1)
+            if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+                val des = dataItem[fieldName] as? String
+                text = "$des"
+            }
+        }
         txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
@@ -309,11 +325,11 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String) {
 }
 
 @Composable
-fun renderMarkdown(node: SmlNode, lang: String) {
+fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
     val part = getStringValue(node, "part", "")
-    val text = getStringValue(node, "text", "")
+    var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
@@ -328,6 +344,14 @@ fun renderMarkdown(node: SmlNode, lang: String) {
             println("An error occurred in RenderMarkdown: ${e.message}")
         }
     } else {
+        text = text.trim()
+        if (text.startsWith("<") && text.endsWith(">")) {
+            val fieldName = text.substring(1, text.length - 1)
+            if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
+                val des = dataItem[fieldName] as? String
+                text = "$des"
+            }
+        }
         txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
@@ -503,12 +527,10 @@ fun renderLazyColumn(
         } else {
             for (child in node.children) {
                 if (child.name == "LazyContent") {
-                    println("rendering LazyColumn")
                     LazyColumn(modifier = modifier) {
                         items(animatedList, key = { it.hashCode() }) { dataItem ->
-                            Box(/*modifier = Modifier.animateItemPlacement()*/) {
+                            Box(modifier = Modifier.animateItemPlacement()) {
                                 for (subChild in child.children) {
-                                    println("rendering child: ${subChild.name}")
                                     RenderUIElement(
                                         node = subChild,
                                         lang = lang,
@@ -619,13 +641,13 @@ fun RowScope.RenderUIElement(
             renderText(node)
         }
         "Markdown" -> {
-            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang = lang)
+            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang = lang, dataItem = dataItem)
         }
         "Button" -> {
             renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node)
         }
         "Image" -> {
-            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
+            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
         }
         "LazyColumn" -> {
             renderLazyColumn(
@@ -648,12 +670,7 @@ fun RowScope.RenderUIElement(
             )
         }
         "AsyncImage" -> {
-            val width = getIntValue(node, "width", 0)
-            val height = getIntValue(node, "height", 0)
-            val scale = getStringValue(node, "scale", "")
-            asyncImage(
-                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,"", scale, "", width, height
-            )
+            asyncImage(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
         }
         "Sound" -> {
             val src = getStringValue(node, "src", "")
@@ -734,7 +751,7 @@ fun BoxScope.RenderUIElement(
            renderText(node)
         }
         "Markdown" -> {
-            renderMarkdown(node, lang)
+            renderMarkdown(node, lang, dataItem)
         }
         "Button" -> {
             renderButton(modifier = Modifier, node)
@@ -758,7 +775,7 @@ fun BoxScope.RenderUIElement(
         "Image" -> {
             val align = getStringValue(node, "align", "")
             val alignment = if (align.isNotEmpty()) align.toAlignment() else Alignment.TopStart
-            dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node)
+            dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node, dataItem = dataItem)
         }
         "LazyColumn" -> {
             renderLazyColumn(modifier = Modifier, node = node, lang = lang, currentProject, clickCount)
@@ -767,10 +784,7 @@ fun BoxScope.RenderUIElement(
             renderLazyRow(modifier = Modifier, node = node, lang = lang, dataItem = dataItem, datasourceId = datasourceId, currentProject, clickCount)
         }
         "AsyncImage" -> {
-            val width = getIntValue(node, "width", 0)
-            val height = getIntValue(node, "height", 0)
-            val scale = getStringValue(node, "scale", "")
-            asyncImage(modifier = Modifier, "", scale, "", width, height)
+            asyncImage(modifier = Modifier, node, dataItem)
         }
         "SoundElement" -> {
             val src = getStringValue(node, "src", "")
@@ -840,7 +854,7 @@ fun ColumnScope.RenderUIElement(
             Spacer(modifier = mod)
         }
         "Markdown" -> {
-            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang)
+            renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang, dataItem)
         }
         "Text" -> {
             renderText(node)
@@ -852,15 +866,10 @@ fun ColumnScope.RenderUIElement(
             renderBox(node, lang, dataItem = dataItem, datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Image" -> {
-            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node)
+            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
         }
         "AsyncImage" -> {
-            val width = getIntValue(node, "width", 0)
-            val height = getIntValue(node, "height", 0)
-            val scale = getStringValue(node, "scale", "")
-            asyncImage(
-                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,"", scale, "", width, height
-            )
+            asyncImage(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
         }
         "Sound" -> {
             val src = getStringValue(node, "src", "")
@@ -1281,11 +1290,15 @@ fun parseMarkdown(markdown: String): AnnotatedString {
 }
 
 @Composable
-expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
+expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int, dataItem: Any)
 @Composable
-expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, node: SmlNode)
+expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, node: SmlNode, dataItem: Any)
 @Composable
-expect fun asyncImage(modifier: Modifier = Modifier, src: String, scale: String, link: String, width: Int, height: Int)
+expect fun asyncImage(
+    modifier: Modifier = Modifier,
+    node: SmlNode,
+    dataItem: Any
+)
 @Composable
 expect fun dynamicSoundfromAssets(filename: String)
 @Composable
