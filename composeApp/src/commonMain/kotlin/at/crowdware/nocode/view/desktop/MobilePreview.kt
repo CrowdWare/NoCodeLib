@@ -25,6 +25,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -588,6 +589,7 @@ fun applyLimit(data: List<Any>, limit: Int?): List<Any> {
     return if (limit != null && limit > 0) data.take(limit) else data
 }
 
+@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun renderLazyRow(
     modifier: Modifier,
@@ -598,10 +600,71 @@ fun renderLazyRow(
     currentProject: ProjectState,
     clickCount: MutableState<Int>
 ) {
-    val height = getIntValue(node, "height", 0)
+    val EmptyDataItem = object {}
+    val datasource = getStringValue(node, "datasource", "")
+    val rawData = currentProject.data[datasource]
+    if (rawData == null) {
+        CircularProgressIndicator(modifier = modifier)
+        return
+    }
+
+    val filteredData = applyFilter(rawData, getStringValue(node, "filter", ""), currentProject)
+    val sortedData = applyOrder(filteredData, getStringValue(node, "order", ""))
+    val finalData = applyLimit(sortedData, getIntValue(node, "limit", 0))
+
+    val padding = getPadding(node)
+
+    /*val height = getIntValue(node, "height", 0)
     Row (modifier = modifier.then( if(height > 0) Modifier.height(height.dp) else Modifier)) {
         for (child in node.children) {
             RenderUIElement(child, lang, dataItem = dataItem, datasourceId, currentProject, clickCount)
+        }
+    }*/
+
+    AnimatedContent(
+        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp, padding.bottom.dp),
+        targetState = clickCount.value to finalData,
+        transitionSpec = {
+            fadeIn(tween(300)) with fadeOut(tween(300))
+        },
+        label = "AnimatedLazyColumn"
+    ) { (_, animatedList) ->
+        if (animatedList.isEmpty()) {
+            for (child in node.children) {
+                if (child.name == "LazyNoContent") {
+                    Box(modifier = Modifier) {
+                        RenderUIElement(
+                            node = child,
+                            lang = lang,
+                            dataItem = EmptyDataItem,
+                            datasourceId = datasource,
+                            currentProject = currentProject,
+                            clickCount = clickCount
+                        )
+                    }
+                }
+            }
+        } else {
+            for (child in node.children) {
+                if (child.name == "LazyContent") {
+                    LazyRow(modifier = modifier) {
+                        items(animatedList, key = { it.hashCode() }) { dataItem ->
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                for (subChild in child.children) {
+                                    RenderUIElement(
+                                        node = subChild,
+                                        lang = lang,
+                                        dataItem = dataItem,
+                                        datasourceId = datasource,
+                                        currentProject = currentProject,
+                                        clickCount = clickCount
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -139,7 +139,6 @@ actual fun asyncImage(
         }
     }
 
-    println("asyncImage: $src")
     AsyncImage(
         modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp),
         model = src,
