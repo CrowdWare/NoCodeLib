@@ -564,6 +564,7 @@ fun renderLazyRow(
     currentProject: ProjectState,
     clickCount: MutableState<Int>
 ) {
+    val height = getIntValue(node, "height", 0)
     val EmptyDataItem = object {}
     val datasource = getStringValue(node, "datasource", "")
     val rawData = currentProject.data[datasource]
@@ -578,15 +579,9 @@ fun renderLazyRow(
 
     val padding = getPadding(node)
 
-    /*val height = getIntValue(node, "height", 0)
-    Row (modifier = modifier.then( if(height > 0) Modifier.height(height.dp) else Modifier)) {
-        for (child in node.children) {
-            RenderUIElement(child, lang, dataItem = dataItem, datasourceId, currentProject, clickCount)
-        }
-    }*/
-
     AnimatedContent(
-        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp, padding.bottom.dp),
+        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp, padding.bottom.dp)
+            .then(if(height > 0) Modifier.height(height.dp) else Modifier),
         targetState = clickCount.value to finalData,
         transitionSpec = {
             fadeIn(tween(300)) with fadeOut(tween(300))
