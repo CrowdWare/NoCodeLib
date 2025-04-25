@@ -56,27 +56,24 @@ actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: A
     val link = getStringValue(node, "link", "")
     val width = getIntValue(node, "width", 0)
     val height = getIntValue(node, "height", 0)
-    dynamicImageFromAssets(modifier, src, scale, link, width, height, dataItem)
-}
-
-@Composable
-actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String, link: String, width: Int, height: Int, dataItem: Any) {
+    val padding = getPadding(node)
     var fileName = src
-    var isExternal  = false
-    var _link = link
+    //var isExternal  = false
+    //var _link = link
+
     if (src.startsWith("<") && src.endsWith(">")) {
         val fieldName = src.substring(1, src.length - 1)
         if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
             val url = dataItem[fieldName] as? String
             fileName = "$url"
-            isExternal = true
+            //isExternal = true
         }
     }
     if(link.startsWith("<") && link.endsWith(">")) {
         val fieldName = link.substring(1, link.length - 1)
         if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
             val value = dataItem[fieldName] as? String
-            _link = "$value"
+            //_link = "$value"
         }
     }
     val ps = GlobalProjectState.projectState
@@ -103,9 +100,10 @@ actual fun dynamicImageFromAssets(modifier: Modifier, src: String, scale: String
                 "none" -> ContentScale.None
                 else -> ContentScale.Fit
             },
-            modifier = modifier
-                .then(if (width == 0) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(width / 100f))
-                .then(if (height == 0) Modifier.wrapContentHeight() else Modifier.fillMaxHeight(height / 100f))
+            modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp)
+                .then(if(height > 0) Modifier.height(height.dp) else Modifier)
+                .then(if(width > 0) Modifier.width(width.dp) else Modifier),
+
         )
     } else {
         Text(text = "Image not found: ${fileName}", style = TextStyle(color = MaterialTheme.colors.onPrimary))
@@ -140,7 +138,9 @@ actual fun asyncImage(
     }
 
     AsyncImage(
-        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp),
+        modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp)
+            .then(if(height > 0) Modifier.height(height.dp) else Modifier)
+            .then(if(width > 0) Modifier.width(width.dp) else Modifier),
         model = src,
         contentScale = when(scale.lowercase()) {
             "crop" -> ContentScale.Crop

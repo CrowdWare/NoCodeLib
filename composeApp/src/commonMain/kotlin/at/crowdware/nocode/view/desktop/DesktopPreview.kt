@@ -169,44 +169,8 @@ fun desktopPreview(currentProject: ProjectState?) {
                                         .verticalScroll(scrollState)
                                         .background(color = hexToColor("#F6F6F6"))
                                 ) {
-                                    // we have to split the text to find out, where the images shall be rendered
-                                    val imagePattern = Regex("!\\[([^\\]]*)\\]\\s*\\(\\s*([^\\s)]+)\\s*\"?([^\"\\)]*)\"?\\)")
-                                    var currentIndex = 0
-                                    val matches = imagePattern.findAll(md.text).toList()
-                                    matches.forEach { match ->
-                                        val startIndex = match.range.first
-                                        val endIndex = match.range.last
-                                        if (currentIndex < startIndex) {
-                                            val textBeforeImage = md.text.substring(currentIndex, startIndex)
-                                            Text(
-                                                text = parseMarkdown(textBeforeImage),
-                                                style = TextStyle(
-                                                    color = hexToColor(
-                                                        md.color,
-                                                        colorNameToHex("onBackground")
-                                                    )
-                                                ),
-                                                fontSize = md.fontSize,
-                                                fontWeight = md.fontWeight,
-                                                textAlign = md.textAlign
-                                            )
-                                        }
-                                        val altText = match.groupValues[1]
-                                        val imageUrl = match.groupValues[2].trim()
-                                        dynamicImageFromAssets(
-                                            modifier = Modifier,
-                                            imageUrl,
-                                            "fit",
-                                            "",
-                                            0,
-                                            0, emptyMap<String, Any>()
-                                        )
-
-                                        currentIndex = endIndex + 1
-                                    }
-                                    val remainingText = md.text.substring(currentIndex)
                                     Text(
-                                        text = parseMarkdown(remainingText),
+                                        text = parseMarkdown(md.text),
                                         style = TextStyle(color = hexToColor(md.color, colorNameToHex("onBackground"))),
                                         fontSize = md.fontSize,
                                         fontWeight = md.fontWeight,
