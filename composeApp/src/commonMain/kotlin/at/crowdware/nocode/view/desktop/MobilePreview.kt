@@ -55,10 +55,10 @@ import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.ui.HoverableIcon
 import at.crowdware.nocode.ui.TooltipPosition
 import at.crowdware.nocode.utils.*
-//import at.crowdware.nocode.utils.UIElement.*
 import at.crowdware.nocode.viewmodel.GlobalProjectState
 import at.crowdware.nocode.viewmodel.ProjectState
 import java.io.File
+import java.util.prefs.Preferences
 
 @Composable
 fun mobilePreview(
@@ -330,7 +330,7 @@ fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
 }
 
 @Composable
-fun renderButton(modifier: Modifier, node: SmlNode) {
+fun renderButton(modifier: Modifier, node: SmlNode, dataItem: Any, clickCount: MutableState<Int>, datasourceId: String, currentProject: ProjectState) {
     var colors: ButtonColors
     val width = getIntValue(node, "width", 0)
     val height = getIntValue(node, "height", 0)
@@ -350,7 +350,11 @@ fun renderButton(modifier: Modifier, node: SmlNode) {
             .then(if (width > 0) Modifier.width(width.dp) else Modifier.fillMaxWidth())
             .then(if (height > 0) Modifier.height(height.dp) else Modifier) ,
         colors = colors,
-        onClick =  { handleButtonClick(getStringValue(node,"link", "")) }
+        onClick =  { handleButtonClick(getStringValue(node,"link", ""),
+            dataItem = dataItem,
+            clickCount = clickCount,
+            datasourceId = datasourceId,
+            currentProject = currentProject) }
     ) {
         Text(text = getStringValue(node, "label", ""))
     }
@@ -666,10 +670,17 @@ fun RowScope.RenderUIElement(
             renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang = lang, dataItem = dataItem)
         }
         "Button" -> {
-            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node)
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node, dataItem, clickCount, datasourceId, currentProject)
         }
         "Image" -> {
-            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
+            dynamicImageFromAssets(
+                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,
+                node,
+                dataItem,
+                clickCount,
+                datasourceId,
+                currentProject
+            )
         }
         "LazyColumn" -> {
             renderLazyColumn(
@@ -692,7 +703,14 @@ fun RowScope.RenderUIElement(
             )
         }
         "AsyncImage" -> {
-            asyncImage(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
+            asyncImage(
+                modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier,
+                node,
+                dataItem,
+                clickCount,
+                datasourceId,
+                currentProject
+            )
         }
         "Sound" -> {
             val src = getStringValue(node, "src", "")
@@ -776,7 +794,7 @@ fun BoxScope.RenderUIElement(
             renderMarkdown(node, lang, dataItem)
         }
         "Button" -> {
-            renderButton(modifier = Modifier, node)
+            renderButton(modifier = Modifier, node, dataItem, clickCount, datasourceId, currentProject)
         }
         "Column" -> {
             renderColumn(modifier = Modifier, node, lang, dataItem = dataItem, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
@@ -797,7 +815,14 @@ fun BoxScope.RenderUIElement(
         "Image" -> {
             val align = getStringValue(node, "align", "")
             val alignment = if (align.isNotEmpty()) align.toAlignment() else Alignment.TopStart
-            dynamicImageFromAssets(modifier = Modifier.align(alignment), node = node, dataItem = dataItem)
+            dynamicImageFromAssets(
+                modifier = Modifier.align(alignment),
+                node = node,
+                dataItem = dataItem,
+                clickCount = clickCount,
+                datasourceId = datasourceId,
+                currentProject = currentProject
+            )
         }
         "LazyColumn" -> {
             renderLazyColumn(modifier = Modifier, node = node, lang = lang, currentProject, clickCount)
@@ -806,7 +831,7 @@ fun BoxScope.RenderUIElement(
             renderLazyRow(modifier = Modifier, node = node, lang = lang, dataItem = dataItem, datasourceId = datasourceId, currentProject, clickCount)
         }
         "AsyncImage" -> {
-            asyncImage(modifier = Modifier, node, dataItem)
+            asyncImage(modifier = Modifier, node, dataItem, clickCount, datasourceId, currentProject)
         }
         "SoundElement" -> {
             val src = getStringValue(node, "src", "")
@@ -882,16 +907,16 @@ fun ColumnScope.RenderUIElement(
             renderText(node)
         }
         "Button" -> {
-            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node)
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, dataItem, clickCount, datasourceId, currentProject)
         }
         "Box" -> {
-            renderBox(node, lang, dataItem = dataItem, datasourceId, currentProject = currentProject, clickCount = clickCount)
+            renderBox(node, lang, dataItem = dataItem, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
         }
         "Image" -> {
-            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
+            dynamicImageFromAssets(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem, clickCount, datasourceId, currentProject)
         }
         "AsyncImage" -> {
-            asyncImage(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem)
+            asyncImage(modifier = if (weight > 0) Modifier.weight(weight.toFloat()) else Modifier, node, dataItem, clickCount, datasourceId, currentProject)
         }
         "Sound" -> {
             val src = getStringValue(node, "src", "")
@@ -1312,12 +1337,22 @@ fun parseMarkdown(markdown: String): AnnotatedString {
 }
 
 @Composable
-expect fun dynamicImageFromAssets(modifier: Modifier = Modifier, node: SmlNode, dataItem: Any)
+expect fun dynamicImageFromAssets(
+    modifier: Modifier = Modifier,
+    node: SmlNode,
+    dataItem: Any,
+    clickCount: MutableState<Int>,
+    datasourceId: String,
+    currentProject: ProjectState
+)
 @Composable
 expect fun asyncImage(
     modifier: Modifier = Modifier,
     node: SmlNode,
-    dataItem: Any
+    dataItem: Any,
+    clickCount: MutableState<Int>,
+    datasourceId: String,
+    currentProject: ProjectState
 )
 @Composable
 expect fun dynamicSoundfromAssets(filename: String)
@@ -1330,20 +1365,74 @@ expect fun dynamicYoutube(modifier: Modifier = Modifier)
 @Composable
 expect fun dynamicScene(modifier: Modifier = Modifier, width: Int, height: Int)
 
-fun handleButtonClick(link: String) {
+fun handleButtonClick(link: String,
+                      dataItem: Any,
+                      clickCount: MutableState<Int>,
+                      datasourceId: String,
+                      currentProject: ProjectState) {
+    val prefs = DesktopPreferences(currentProject.prefsFile)
+
     when {
         link.startsWith("page:") -> {
             val pageId = link.removePrefix("page:")
-            at.crowdware.nocode.view.desktop.loadPage("$pageId.sml")
+            loadPage("$pageId.sml")
         }
+
         link.startsWith("web:") -> {
             val url = link.removePrefix("web:")
-            at.crowdware.nocode.view.desktop.openWebPage(url)
+            openWebPage(url)
+        }
+        link.startsWith("add:") -> {
+            val (listName, uuid) = extractListAndUUID(link.removePrefix("add:"), dataItem)
+
+            val set = prefs.getStringSet(listName).toMutableSet()
+            set.add(uuid)
+            prefs.putStringSet(listName, set)
+
+            clickCount.value++ // trigger reload
+
+            val current = currentProject.data[datasourceId] ?: emptyList()
+            val newList = current.toList()
+            currentProject.data = currentProject.data.toMutableMap().apply {
+                put(datasourceId, newList)
+            }
+        }
+        link.startsWith("remove:") -> {
+
+            val (listName, uuid) = extractListAndUUID(link.removePrefix("remove:"), dataItem)
+
+            val set = prefs.getStringSet(listName).toMutableSet()
+            set.remove(uuid)
+            prefs.putStringSet(listName, set)
+
+            clickCount.value++ // trigger reload
+
+            val current = currentProject.data[datasourceId] ?: emptyList()
+            val newList = current.toList()
+            currentProject.data = currentProject.data.toMutableMap().apply {
+                put(datasourceId, newList)
+            }
         }
         else -> {
             println("Unknown link type: $link")
         }
     }
+}
+
+fun extractListAndUUID(linkPart: String, dataItem: Any): Pair<String, String> {
+    val regex = Regex("""(.*?)\[(.*?)]""")
+    val match = regex.find(linkPart)
+    val listName = match?.groupValues?.get(1) ?: "default"
+    var uuid = match?.groupValues?.get(2) ?: ""
+
+    if (uuid.startsWith("<") && uuid.endsWith(">")) {
+        val fieldName = uuid.substring(1, uuid.length - 1)
+        if (dataItem is Map<*, *>) {
+            uuid = dataItem[fieldName] as? String ?: ""
+        }
+    }
+
+    return listName to uuid
 }
 
 @Composable

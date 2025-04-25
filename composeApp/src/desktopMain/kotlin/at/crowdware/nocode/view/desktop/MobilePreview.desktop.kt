@@ -39,6 +39,7 @@ import at.crowdware.nocode.utils.getIntValue
 import at.crowdware.nocode.utils.getPadding
 import at.crowdware.nocode.utils.getStringValue
 import at.crowdware.nocode.viewmodel.GlobalProjectState
+import at.crowdware.nocode.viewmodel.ProjectState
 import coil3.compose.AsyncImage
 import org.jcodec.api.FrameGrab
 import org.jcodec.common.model.Picture
@@ -50,7 +51,14 @@ import java.net.URI
 
 
 @Composable
-actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: Any) {
+actual fun dynamicImageFromAssets(
+    modifier: Modifier,
+    node: SmlNode,
+    dataItem: Any,
+    clickCount: MutableState<Int>,
+    datasourceId: String,
+    currentProject: ProjectState
+) {
     val src = getStringValue(node, "src", "")
     val scale = getStringValue(node, "scale", "")
     val link = getStringValue(node, "link", "")
@@ -59,7 +67,7 @@ actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: A
     val padding = getPadding(node)
     var fileName = src
     //var isExternal  = false
-    //var _link = link
+    var _link = link
 
     if (src.startsWith("<") && src.endsWith(">")) {
         val fieldName = src.substring(1, src.length - 1)
@@ -73,7 +81,7 @@ actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: A
         val fieldName = link.substring(1, link.length - 1)
         if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
             val value = dataItem[fieldName] as? String
-            //_link = "$value"
+            _link = "$value"
         }
     }
     val ps = GlobalProjectState.projectState
@@ -101,9 +109,9 @@ actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: A
                 else -> ContentScale.Fit
             },
             modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp)
+                .clickable { handleButtonClick(_link, dataItem, clickCount, datasourceId, currentProject)}
                 .then(if(height > 0) Modifier.height(height.dp) else Modifier)
                 .then(if(width > 0) Modifier.width(width.dp) else Modifier),
-
         )
     } else {
         Text(text = "Image not found: ${fileName}", style = TextStyle(color = MaterialTheme.colors.onPrimary))
@@ -114,7 +122,10 @@ actual fun dynamicImageFromAssets(modifier: Modifier, node: SmlNode, dataItem: A
 actual fun asyncImage(
     modifier: Modifier,
     node: SmlNode,
-    dataItem: Any
+    dataItem: Any,
+    clickCount: MutableState<Int>,
+    datasourceId: String,
+    currentProject: ProjectState
 ) {
     val width = getIntValue(node, "width", 0)
     val height = getIntValue(node, "height", 0)
@@ -139,6 +150,7 @@ actual fun asyncImage(
 
     AsyncImage(
         modifier = modifier.padding(padding.left.dp, padding.top.dp, padding.right.dp,padding.bottom.dp)
+            .clickable { handleButtonClick(link, dataItem, clickCount, datasourceId, currentProject)}
             .then(if(height > 0) Modifier.height(height.dp) else Modifier)
             .then(if(width > 0) Modifier.width(width.dp) else Modifier),
         model = src,
@@ -191,11 +203,8 @@ actual fun dynamicVideofromUrl(modifier: Modifier) {
 
 actual fun loadPage(pageId: String) {
     val ps = GlobalProjectState.projectState
-    // TODO choose right folder e.g. pages-de, pages-en
-
     val folder = ps?.path?.substringBeforeLast("/")
     val id = pageId.substringAfter("app.")
-    println("folder: $folder, page: $id")
     ps?.LoadFile("$folder/$id")
 }
 
