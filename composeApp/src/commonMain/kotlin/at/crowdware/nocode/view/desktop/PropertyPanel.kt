@@ -89,163 +89,19 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
                                     color = MaterialTheme.colors.onPrimary
                                 )
 
-                                for(properties in parsedElement.children) {
-                                    if(properties.name == "Properties") {
-                                        for(property in properties.children) {
-                                            renderAnnotation(getStringValue(property, "name", ""), getStringValue(property, "description", ""))
-                                        }
-                                    }
 
+                                for (property in parsedElement.children) {
+                                    if(property.name == "Property") {
+                                        renderAnnotation(
+                                            getStringValue(property, "name", ""),
+                                            getStringValue(property, "description", "")
+                                        )
+                                    }
                                 }
                             }
-
-                            /*
-                            element.members.forEach { member ->
-                                if (member is KProperty<*>) {
-                                    if (member.annotations.any { it is IgnoreForDocumentation }) {
-                                        return@forEach
-                                    }
-
-                                    member.annotations.forEach { annotation ->
-                                        when (annotation) {
-                                            is WeightAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is HexColorAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is PaddingAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description,)
-                                            }
-
-                                            is MarkdownAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is IntAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is StringAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is LinkAnnotation -> {
-                                                renderAnnotation(member.name, annotation.description)
-                                            }
-
-                                            is ChildrenAnnotation -> {
-                                                renderAnnotation(
-                                                    member.name,
-                                                    annotation.description,
-                                                    isChildrenAnnotation = true
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }*/
                         }
                     }
                 }
-                /*
-                if (element != null) {
-                    if (element.simpleName == "App") {
-                        Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {
-                            Column() {
-
-                                Text(
-                                    text = "Theme",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ExtendedTheme.colors.syntaxColor
-                                )
-                                renderAnnotation(
-                                    "colorName",
-                                    "A definition of all available colors. The colors are entered as hex values.\nSample:\nTheme {\n\tprimary: \"#825500\"\n}",
-                                    false
-                                )
-                            }
-                        }
-                    }
-                    else if (element.simpleName == "Ebook") {
-                        Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {
-                            Column() {
-
-                                Text(
-                                    text = "Part",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ExtendedTheme.colors.syntaxColor
-                                )
-                                val md = parseMarkdown("The list of the parts will also organise the order in the ebook.")
-                                Text(
-                                    text = md,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = MaterialTheme.colors.onPrimary
-                                )
-                                renderAnnotation(
-                                    "src", "A part of the ebook.\nSample:\nPart {\n\tsrc: \"home.md\"\n}\n\nPart {\n" +
-                                            "\tsrc: \"second.md\"\n" +
-                                            "}", false
-                                )
-                            }
-                        }
-                    }
-                    else if (element.simpleName == "Page" || element.simpleName == "ColumnElement" || element.simpleName == "RowElement") {
-
-                        Row(modifier = Modifier.background(MaterialTheme.colors.primary).fillMaxWidth().padding(8.dp)) {
-                            Column() {
-                                Text(
-                                    text = "Available Elements",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ExtendedTheme.colors.syntaxColor
-                                )
-
-
-                                val sealedClass: KClass<UIElement> = UIElement::class
-                                val subclasses = sealedClass.sealedSubclasses
-
-                                subclasses.forEach { subclass ->
-                                    subclass.simpleName?.let {
-                                        if (it != "Zero") {
-                                            var clsName = ""
-                                            if (it == "Page") {
-                                                clsName = "at.crowdware.nocode.utils.Page"
-                                            } else {
-                                                clsName = "at.crowdware.nocode.utils.UIElement\$${it}"
-                                            }
-                                            val clazz = Class.forName(clsName).kotlin
-                                            // Retrieve the MyCustomAnnotation from the class
-                                            val annotation = clazz.findAnnotation<ElementAnnotation>()
-                                            Text(
-                                                text = it.substringBefore("Element"),
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ExtendedTheme.colors.attributeNameColor
-                                            )
-                                            if (annotation != null) {
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                val md = parseMarkdown(annotation.description)
-                                                Text(
-                                                    text = md,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Normal,
-                                                    color = MaterialTheme.colors.onPrimary
-                                                )
-                                            }
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }*/
             }
             VerticalScrollbar(
                 adapter = rememberScrollbarAdapter(scrollState),
