@@ -75,6 +75,7 @@ fun RowScope.syntaxEditor(
                     backgroundColor = MaterialTheme.colors.surface,
                     cursorColor = MaterialTheme.colors.onSurface,
                     gutterTextColor = MaterialTheme.colors.onPrimary,
+                    selectionColor = ExtendedTheme.colors.selectionColor.copy(alpha = 0.5f),
                 )
                 CodeEditor(modifier = Modifier
                     .fillMaxSize(),
