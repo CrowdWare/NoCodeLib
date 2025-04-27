@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -37,12 +38,17 @@ import at.crowdware.nocode.utils.*
 import at.crowdware.nocode.viewmodel.ProjectState
 import at.crowdware.nocode.viewmodel.listResourceFiles
 import at.crowdware.nocode.viewmodel.loadTextFromResource
+import java.io.File
 
 @Composable
 fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
     Column(
         modifier = modifier.fillMaxHeight().background(color = MaterialTheme.colors.primary)
     ) {
+        val nodes = remember {
+            getAllElements()
+        }
+
         BasicText(
             text = "Properties",
             modifier = Modifier.padding(8.dp),
@@ -106,7 +112,6 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
                                 color = ExtendedTheme.colors.attributeValueColor
                             )
 
-                            val nodes = getAllElements()
                             for (node in nodes) {
                                 val elementName = getStringValue(node, "name", "")
                                 for (child in node.children) {
@@ -138,8 +143,9 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
 
 fun getAllElements(): List<SmlNode> {
     val list = mutableListOf<SmlNode>()
-    val files = listResourceFiles("sml")
 
+    // 1. Laden aus Ressourcen (im JAR oder im Dev-Mode)
+    val files = listResourceFiles("sml")
     for (file in files) {
         val content = loadTextFromResource("sml/$file")
         val (parsedElement, error) = parseSML(content)
@@ -147,6 +153,26 @@ fun getAllElements(): List<SmlNode> {
             list.add(parsedElement)
         }
     }
+
+    // 2. Laden aus Plugin-Verzeichnissen
+    val pluginCacheDir = File(System.getProperty("user.home"), "Library/Application Support/NoCodeDesigner/plugin-cache/")
+    if (pluginCacheDir.exists() && pluginCacheDir.isDirectory) {
+        pluginCacheDir.listFiles()?.forEach { pluginFolder ->
+            if (pluginFolder.isDirectory) {
+                val smlFolder = File(pluginFolder, "sml")
+                if (smlFolder.exists() && smlFolder.isDirectory) {
+                    smlFolder.listFiles { file -> file.isFile && file.extension == "sml" }?.forEach { smlFile ->
+                        val content = smlFile.readText()
+                        val (parsedElement, error) = parseSML(content)
+                        if (parsedElement != null) {
+                            list.add(parsedElement)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     return list
 }
 
