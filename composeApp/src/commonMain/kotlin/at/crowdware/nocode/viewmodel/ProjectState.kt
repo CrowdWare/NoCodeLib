@@ -257,7 +257,7 @@ abstract class ProjectState {
                     properties.put("description", PropertyValue.StringValue(""))
                     properties.put("id", PropertyValue.StringValue("com.example.appname"))
                     properties.put("icon", PropertyValue.StringValue("icon.png"))
-                    loadElementData(SmlNode("App", properties, children))
+                    loadElementData(smlNode)
                 } else {
                     parseError = error
                     if (parsedPage != null) {
@@ -351,11 +351,13 @@ abstract class ProjectState {
     fun mapAppToTreeNode(node: SmlNode): TreeNode {
         val rootNode = TreeNode(
             title = mutableStateOf("App"),
-            type = mutableStateOf("App"),
+            type = NodeType.DIRECTORY,
             path = "",
             children = mutableStateListOf(),
             expanded = mutableStateOf(true)
         )
+        println("App: ${node.children}")
+        mapSmlNodeToTreeItem(rootNode, node)
         return rootNode
     }
 

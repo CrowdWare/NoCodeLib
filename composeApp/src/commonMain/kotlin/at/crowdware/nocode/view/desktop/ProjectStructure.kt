@@ -270,7 +270,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
         )
 
         BasicText(
-            text = "Page Structure",
+            text = "Object Structure",
             modifier = Modifier.padding(8.dp),
             maxLines = 1,
             style = TextStyle(color = MaterialTheme.colors.onPrimary),
