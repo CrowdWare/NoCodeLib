@@ -220,13 +220,10 @@ abstract class ProjectState {
             var fileText = loadFileContent(path, "", "")
             fileText = fileText.replace("\t", "    ")
             if (extension == "sml") {
-
                 val (smlNode, error) = parseSML(fileText)
                 parsedPage = smlNode
-
                 if (path.substringAfterLast(File.separator) == "app.sml") {
                     val properties = mutableMapOf<String, PropertyValue>()
-                    val children = mutableListOf<SmlNode>()
                     properties.put("smlVersion", PropertyValue.StringValue("1.1"))
                     properties.put("name", PropertyValue.StringValue(""))
                     properties.put("description", PropertyValue.StringValue(""))
@@ -270,6 +267,15 @@ abstract class ProjectState {
                 cachedPage = parsedPage
                 isPageLoaded = true
                 loadElementData(parsedPage)
+            }
+        }
+    }
+
+    fun reloadApp() {
+        if ( fileName == "app.sml") {
+            val (smlNode, error) = parseSML(currentFileContent.text)
+            if (smlNode != null) {
+                loadElementData(smlNode)
             }
         }
     }
@@ -331,7 +337,7 @@ abstract class ProjectState {
             children = mutableStateListOf(),
             expanded = mutableStateOf(true)
         )
-        println("App: ${node.children}")
+
         mapSmlNodeToTreeItem(rootNode, node)
         return rootNode
     }

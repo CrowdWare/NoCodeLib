@@ -99,11 +99,10 @@ fun RowScope.syntaxEditor(
                         currentProject.currentFileContent = TextFieldValue(newText)
 
                         if (oldText != newText) {
-                            //delay(500)
                             currentProject.saveFileContent()
                             when (currentProject.path.substringAfterLast("/")) {
                                 "app.sml" -> {
-                                    currentProject.loadApp()
+                                    currentProject.reloadApp()
                                 }
                                 else -> {
                                     currentProject.reloadPage()

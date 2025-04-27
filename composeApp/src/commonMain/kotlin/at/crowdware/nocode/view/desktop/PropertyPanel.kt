@@ -82,7 +82,7 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
                                 fontWeight = FontWeight.Bold,
                                 color = ExtendedTheme.colors.syntaxColor
                             )
-                          
+
                             for (node in nodes) {
                                 val name = getStringValue(node, "name", "")
                                 if (name == element) {
