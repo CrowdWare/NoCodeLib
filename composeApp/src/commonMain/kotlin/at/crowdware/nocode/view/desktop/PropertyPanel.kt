@@ -38,6 +38,7 @@ import at.crowdware.nocode.utils.*
 import at.crowdware.nocode.viewmodel.ProjectState
 import at.crowdware.nocode.viewmodel.listResourceFiles
 import at.crowdware.nocode.viewmodel.loadTextFromResource
+import io.ktor.util.reflect.*
 import java.io.File
 
 @Composable
@@ -81,25 +82,26 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
                                 fontWeight = FontWeight.Bold,
                                 color = ExtendedTheme.colors.syntaxColor
                             )
-                            val content = loadTextFromResource("sml/${element}.sml")
-                            val (parsedElement, error) = parseSML(content)
-                            if (parsedElement != null) {
-                                val description = getStringValue(parsedElement, "description", "")
-                                val md = parseMarkdown(description)
-                                Text(
-                                    text = md,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = MaterialTheme.colors.onPrimary
-                                )
+                          
+                            for (node in nodes) {
+                                val name = getStringValue(node, "name", "")
+                                if (name == element) {
+                                    val description = getStringValue(node, "description", "")
+                                    val md = parseMarkdown(description)
+                                    Text(
+                                        text = md,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = MaterialTheme.colors.onPrimary
+                                    )
 
-
-                                for (property in parsedElement.children) {
-                                    if (property.name == "Property") {
-                                        renderAnnotation(
-                                            getStringValue(property, "name", ""),
-                                            getStringValue(property, "description", "")
-                                        )
+                                    for (property in node.children) {
+                                        if (property.name == "Property") {
+                                            renderAnnotation(
+                                                getStringValue(property, "name", ""),
+                                                getStringValue(property, "description", "")
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -161,9 +163,11 @@ fun getAllElements(): List<SmlNode> {
     val files = listResourceFiles("sml")
     for (file in files) {
         val content = loadTextFromResource("sml/$file")
-        val (parsedElement, error) = parseSML(content)
-        if (parsedElement != null) {
-            list.add(parsedElement)
+        if (content != null) {
+            val (parsedElement, error) = parseSML(content)
+            if (parsedElement != null) {
+                list.add(parsedElement)
+            }
         }
     }
 

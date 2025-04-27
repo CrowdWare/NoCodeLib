@@ -48,7 +48,7 @@ expect fun createData(path: String)
 expect fun renameFile(pathBefore: String, pathAfter: String)
 expect fun copyAssetFile(path: String, target: String)
 expect fun copyResourceToFile(resourcePath: String, outputPath: String)
-expect fun loadTextFromResource(fileName: String): String
+expect fun loadTextFromResource(fileName: String): String?
 expect fun listResourceFiles(path: String): List<String>
 
 abstract class ProjectState {
@@ -115,31 +115,6 @@ abstract class ProjectState {
             loadProjectFiles(path, uuid, pid)
         }
     }
-    /*
-    fun ImportImageFile(list: List<MPFile<Any>>) {
-        for (file in list) {
-            val filename = file.path.substringAfterLast(File.separator)
-            val target = "${folder}images/$filename"
-            copyAssetFile(file.path, target)
-            val pngTarget = if (!target.endsWith(".png")) {
-                val pngPath = target.substringBeforeLast(".") + ".png"
-                val tar = File(target)
-                convertToPng(File(target), File(pngPath))
-                tar.delete()
-                pngPath
-            } else {
-                target
-            }
-            val node = TreeNode(
-                title = mutableStateOf(pngTarget.substringAfterLast(File.separator)),
-                path = pngTarget,
-                type = getNodeType(
-                    pngTarget
-                )
-            )
-            imagesNode.children.add(node)
-        }
-    }*/
 
     fun ImportImageFile(list: List<MPFile<Any>>) {
         for (file in list) {

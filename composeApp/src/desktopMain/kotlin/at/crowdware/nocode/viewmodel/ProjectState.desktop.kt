@@ -64,9 +64,12 @@ actual fun saveFileContent(path: String, uuid: String, pid: String, content: Str
     }
 }
 
-actual fun loadTextFromResource(fileName: String): String {
-    return object {}.javaClass.getResource("/$fileName")
-        ?.readText() ?: error("File not found: $fileName")
+actual fun loadTextFromResource(fileName: String): String? {
+    return try {
+        object {}.javaClass.getResource("/$fileName")?.readText()
+    } catch (e: Exception) {
+        null
+    }
 }
 
 actual fun listResourceFiles(path: String): List<String> {
