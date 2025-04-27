@@ -103,28 +103,41 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
                                     }
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Available Elements",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ExtendedTheme.colors.attributeValueColor
-                            )
-
+                            // first count allowed elements
+                            var elementCount = 0
                             for (node in nodes) {
-                                val elementName = getStringValue(node, "name", "")
                                 for (child in node.children) {
                                     if (child.name == "AllowedRoot") {
                                         val name = getStringValue(child, "name", "")
                                         if (name == element) {
-                                            Text(
-                                                text = elementName,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = MaterialTheme.colors.onPrimary
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
+                                            elementCount++
+                                        }
+                                    }
+                                }
+                            }
+                            if(elementCount > 0) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Available Elements",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ExtendedTheme.colors.attributeValueColor
+                                )
+
+                                for (node in nodes) {
+                                    val elementName = getStringValue(node, "name", "")
+                                    for (child in node.children) {
+                                        if (child.name == "AllowedRoot") {
+                                            val name = getStringValue(child, "name", "")
+                                            if (name == element) {
+                                                Text(
+                                                    text = elementName,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = MaterialTheme.colors.onPrimary
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                            }
                                         }
                                     }
                                 }
