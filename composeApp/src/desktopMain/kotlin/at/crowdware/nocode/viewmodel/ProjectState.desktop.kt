@@ -29,9 +29,11 @@ import at.crowdware.nocode.utils.parseSML
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.net.URLDecoder
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.util.jar.JarFile
 
 actual fun getNodeType(path: String): NodeType {
     val file = File(path)
@@ -65,6 +67,35 @@ actual fun saveFileContent(path: String, uuid: String, pid: String, content: Str
 actual fun loadTextFromResource(fileName: String): String {
     return object {}.javaClass.getResource("/$fileName")
         ?.readText() ?: error("File not found: $fileName")
+}
+
+actual fun listResourceFiles(path: String): List<String> {
+    val resource = object {}.javaClass.getResource("/$path") ?: return emptyList()
+
+    return when (resource.protocol) {
+        "file" -> {
+            File(resource.toURI()).listFiles()?.map { it.name } ?: emptyList()
+        }
+        "jar" -> {
+            val jarPath = resource.path.substringBefore("!").removePrefix("file:")
+            val jarFile = JarFile(URLDecoder.decode(jarPath, "UTF-8"))
+            val entries = jarFile.entries()
+            val result = mutableListOf<String>()
+
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                val name = entry.name
+                if (name.startsWith(path) && !entry.isDirectory) {
+                    val relativeName = name.removePrefix("$path/") // Nur Dateiname ohne Pfad
+                    if (!relativeName.contains("/")) { // Keine Subfolder
+                        result.add(relativeName)
+                    }
+                }
+            }
+            result
+        }
+        else -> emptyList()
+    }
 }
 
 class DesktopProjectState : ProjectState() {

@@ -30,7 +30,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,15 +39,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import at.crowdware.nocode.viewmodel.ProjectState
 import at.crowdware.nocode.texteditor.codeeditor.CodeEditor
-import at.crowdware.nocode.texteditor.codeeditor.CodeEditorStyle
 import at.crowdware.nocode.texteditor.codeeditor.rememberCodeEditorStyle
-import at.crowdware.nocode.texteditor.state.SpanClickType
 import at.crowdware.nocode.texteditor.state.TextEditorState
 import at.crowdware.nocode.texteditor.syntax.SyntaxMode
-import at.crowdware.nocode.theme.ExtendedColors
 import at.crowdware.nocode.theme.ExtendedTheme
+import at.crowdware.nocode.viewmodel.ProjectState
 import kotlinx.coroutines.delay
 
 

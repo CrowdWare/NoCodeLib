@@ -35,10 +35,8 @@ import androidx.compose.ui.unit.sp
 import at.crowdware.nocode.theme.ExtendedTheme
 import at.crowdware.nocode.utils.*
 import at.crowdware.nocode.viewmodel.ProjectState
+import at.crowdware.nocode.viewmodel.listResourceFiles
 import at.crowdware.nocode.viewmodel.loadTextFromResource
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
-import kotlin.reflect.full.findAnnotation
 
 @Composable
 fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
@@ -91,11 +89,28 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
 
 
                                 for (property in parsedElement.children) {
-                                    if(property.name == "Property") {
+                                    if (property.name == "Property") {
                                         renderAnnotation(
                                             getStringValue(property, "name", ""),
                                             getStringValue(property, "description", "")
                                         )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Available Elements",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ExtendedTheme.colors.syntaxColor
+                            )
+
+                            val nodes = getAllElements()
+                            for (node in nodes) {
+                                for (child in node.children) {
+                                    if (child.name == "AllowedRoot") {
+
                                     }
                                 }
                             }
@@ -109,6 +124,20 @@ fun propertyPanel(modifier: Modifier,currentProject: ProjectState?) {
             )
         }
     }
+}
+
+fun getAllElements(): List<SmlNode> {
+    val list = mutableListOf<SmlNode>()
+    val files = listResourceFiles("sml")
+
+    for (file in files) {
+        val content = loadTextFromResource("sml/$file")
+        val (parsedElement, error) = parseSML(content)
+        if (parsedElement != null) {
+            list.add(parsedElement)
+        }
+    }
+    return list
 }
 
 @Composable

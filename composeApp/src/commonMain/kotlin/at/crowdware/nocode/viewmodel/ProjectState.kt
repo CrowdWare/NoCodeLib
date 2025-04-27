@@ -49,6 +49,7 @@ expect fun renameFile(pathBefore: String, pathAfter: String)
 expect fun copyAssetFile(path: String, target: String)
 expect fun copyResourceToFile(resourcePath: String, outputPath: String)
 expect fun loadTextFromResource(fileName: String): String
+expect fun listResourceFiles(path: String): List<String>
 
 abstract class ProjectState {
     var currentFileContent by mutableStateOf(TextFieldValue(""))
