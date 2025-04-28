@@ -48,13 +48,11 @@ fun createProjectDialog(
     lang: String,
     userFolder: String,
     onDismissRequest: () -> Unit,
-    onCreateRequest: (List<String>, String) -> Unit
+    onCreateRequest: (String) -> Unit
 ) {
     val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
-
     var projectFolder by remember { mutableStateOf(TextFieldValue("$userFolder/Apps")) }
     var folderManuallyChanged by remember { mutableStateOf(false) }
-    var internalSelectedType by remember { mutableStateOf(selectedType) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -98,9 +96,6 @@ fun createProjectDialog(
                         hasIcon = true
                     )
                 }
-
-
-
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -122,25 +117,6 @@ fun createProjectDialog(
                         onClick = { onThemeChanged("Dark") }
                     )
                 }
-
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Languages")
-                Column {
-                    lang.split(",").map { it.trim() }.forEach { langCode ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(4.dp)
-                        ) {
-                            Checkbox(
-                                checked = checkedStates[langCode] ?: false,
-                                onCheckedChange = { checkedStates[langCode] = it },
-                                colors = CheckboxDefaults.colors(checkedColor = ExtendedTheme.colors.accentColor)
-                            )
-                            Text(text = langCode.uppercase(), modifier = Modifier.padding(start = 8.dp))
-                        }
-                    }
-                }
             }
         },
         confirmButton = {
@@ -148,11 +124,9 @@ fun createProjectDialog(
                 Text("Cancel")
             }
             Button(
-                enabled = name.text.isNotEmpty() && projectFolder.text.isNotEmpty() && id.text.isNotEmpty() && checkedStates.filterValues { it }.keys.toList()
-                    .isNotEmpty(),
+                enabled = name.text.isNotEmpty() && projectFolder.text.isNotEmpty() && id.text.isNotEmpty(),
                 onClick = {
-                    val selectedLanguages = checkedStates.filterValues { it }.keys.toList()
-                    onCreateRequest(selectedLanguages, projectFolder.text)
+                    onCreateRequest(projectFolder.text)
                 },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = ExtendedTheme.colors.accentColor,

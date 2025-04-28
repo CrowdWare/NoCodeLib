@@ -120,19 +120,10 @@ class DesktopProjectState : ProjectState() {
                 "videos",
                 "sounds",
                 "models",
-                "pages-en",
-                "pages-de",
-                "pages-es",
-                "pages-pt",
-                "pages-fr",
-                "pages-eo",
-                "parts-en",
-                "parts-de",
-                "parts-es",
-                "parts-pt",
-                "parts-fr",
-                "parts-eo",
-                "data"
+                "pages",
+                "parts",
+                "data",
+                "translations"
             )
             val nodeType = getNodeType(file)
             val children = if (file.isDirectory) {
@@ -160,7 +151,7 @@ class DesktopProjectState : ProjectState() {
                 type = nodeType,
                 children = statefulChildren
             )
-            if (node.title.value.startsWith("pages")) {
+            if (node.title.value == "pages") {
                 pageNode = node
             } else if (node.title.value == "images") {
                 imagesNode = node
@@ -168,12 +159,14 @@ class DesktopProjectState : ProjectState() {
                 videosNode = node
             } else if (node.title.value == "sounds") {
                 soundsNode = node
-            } else if (node.title.value.startsWith("parts")) {
+            } else if (node.title.value == "parts") {
                 partsNode = node
             } else if (node.title.value == "models") {
                 modelsNode = node
             } else if (node.title.value == "textures") {
                 texturesNode = node
+            } else if (node.title.value == "translations") {
+                translationsNode = node
             } else if (node.title.value == "data") {
                 dataNode = node
             }
@@ -191,18 +184,9 @@ class DesktopProjectState : ProjectState() {
                             "videos",
                             "models",
                             "textures",
-                            "pages-en",
-                            "pages-de",
-                            "pages-es",
-                            "pages-pt",
-                            "pages-fr",
-                            "pages-eo",
-                            "parts-en",
-                            "parts-de",
-                            "parts-es",
-                            "parts-pt",
-                            "parts-fr",
-                            "parts-eo",
+                            "translations",
+                            "pages",
+                            "parts",
                             "data"
                         )) ||
                         (it.isFile && it.name in listOf("app.sml"))
@@ -227,20 +211,16 @@ class DesktopProjectState : ProjectState() {
 
         treeData = sortedNodes.toList()
         folder = path
-        val supportedLanguages = listOf("de", "en", "es", "pt", "fr", "eo")
 
         // app.sml load and parse
         val appFile = File("$folder/app.sml")
         if (appFile.exists()) {
             loadApp()
 
-            for (lang in supportedLanguages) {
-                val langDir = File(folder, "pages-$lang")
-                val homeFile = File(langDir, "home.sml")
-                if (homeFile.exists()) {
-                    LoadFile("$folder/pages-$lang/home.sml")
-                    break
-                }
+            val langDir = File(folder, "pages")
+            val homeFile = File(langDir, "home.sml")
+            if (homeFile.exists()) {
+                LoadFile("$folder/pages/home.sml")
             }
         }
     }
@@ -264,16 +244,12 @@ class DesktopProjectState : ProjectState() {
         pid: String,
         name: String,
         appId: String,
-        theme: String,
-        langs: List<String>
+        theme: String
     ) {
         val dir = File("$path$name")
         dir.mkdirs()
-
-        for (lang in langs) {
-            val pages = File("$path$name/pages-$lang")
-            pages.mkdirs()
-        }
+        val pages = File("$path$name/pages")
+        pages.mkdirs()
         val videos = File("$path$name/videos")
         videos.mkdirs()
         val sounds = File("$path$name/sounds")
@@ -284,9 +260,11 @@ class DesktopProjectState : ProjectState() {
         models.mkdirs()
         val textures = File("$path$name/textures")
         textures.mkdirs()
+        val translations = File("$path$name/translations")
+        translations.mkdirs()
         val data = File("$path$name/data")
         data.mkdirs()
-        createParts(path, name, langs)
+        createParts(path, name)
         val app = File("$path$name/app.sml")
         var appContent = """
                 App {
@@ -304,7 +282,7 @@ class DesktopProjectState : ProjectState() {
             writeDarkTheme()
         appContent += "// deployment start - don't edit here\n\n// deployment end\n}\n\n"
         app.writeText(appContent)
-        createPages(path, name, langs)
+        createPages(path, name)
         copyResourceToFile("python/server.py", "$path/$name/server.py")
         copyResourceToFile("python/upd_deploy.py", "$path/$name/upd_deploy.py")
         copyResourceToFile("icons/default.icon.png", "$path/$name/images/icon.png")
@@ -316,48 +294,29 @@ class DesktopProjectState : ProjectState() {
     }
 }
 
-fun createParts( path: String, name: String, langs: List<String>): String {
-    var booklang = ""
-    for(lang in langs) {
-        val pages = File("$path$name/parts-$lang")
-        pages.mkdirs()
-        val homemd = File("$path$name/parts-$lang/home.md")
-        homemd.writeText("# Headline in $lang\nLorem ipsum dolor\n")
-        if (booklang.length > 0)
-            booklang += ","
-        booklang += lang
-    }
-    return booklang
+fun createParts( path: String, name: String) {
+    val parts = File("$path$name/parts")
+    parts.mkdirs()
+    val homemd = File("$path$name/parts/home.md")
+    homemd.writeText("# Headline\nLorem ipsum dolor\n")
 }
 
-val welcomeTranslations = mapOf(
-    "en" to "Welcome to the home screen",
-    "de" to "Willkommen auf der Startseite",
-    "pt" to "Bem-vindo à tela inicial",
-    "fr" to "Bienvenue sur l'écran d'accueil",
-    "eo" to "Bonvenon al la hejmekrano",
-    "es" to "Bienvenido a la pantalla principal"
-)
+fun createPages(path: String, name: String) {
 
-fun createPages(path: String, name: String, langs: List<String>) {
-    for (lang in langs) {
-        val home = File("$path$name/pages-$lang/home.sml")
-        val welcomeText = welcomeTranslations[lang] ?: "Welcome Home" // fallback
+    val home = File("$path$name/pages/home.sml")
 
-        val homeContent = """
+    val homeContent = """
             Page {
                 padding: "8"
 
                 Column {
                     padding: "8"
 
-                    Markdown { text: "# $welcomeText" }
+                    Markdown { text: "# Welcome" }
                 }
             }
             """.trimIndent()
-
-        home.writeText(homeContent)
-    }
+    home.writeText(homeContent)
 }
 
 fun writeDarkTheme(): String {

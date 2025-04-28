@@ -135,7 +135,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                     properties = PopupProperties(focusable = true)
                 ) {
                     if (treeNode.type != NodeType.DIRECTORY) {
-                        if (treeNode.title.value != "home.sml" && treeNode.title.value != "app.sml" && treeNode.title.value != "home.md") {
+                        if (treeNode.title.value != "home.sml" && treeNode.title.value != "app.sml") {
                             DropdownMenuItem(onClick = {
                                 expanded = false
                                 currentProject.currentTreeNode = treeNode
@@ -178,7 +178,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                                 }
                             }
                         }
-                    } else if (treeNode.title.value.startsWith("pages")) {
+                    } else if (treeNode.title.value == "pages") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -186,7 +186,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "New", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("parts")) {
+                    } else if (treeNode.title.value == "parts") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -194,7 +194,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "New", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("images")) {
+                    } else if (treeNode.title.value == "images") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -202,7 +202,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "Import", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("videos")) {
+                    } else if (treeNode.title.value == "videos") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -210,7 +210,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "Import", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("sounds")) {
+                    } else if (treeNode.title.value == "sounds") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -218,7 +218,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "Import", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("models")) {
+                    } else if (treeNode.title.value == "models") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode
@@ -226,7 +226,7 @@ fun projectStructure(currentProject: ProjectState, state: TextEditorState) {
                         }) {
                             Text(text = "Import", fontSize = 12.sp)
                         }
-                    } else if (treeNode.title.value.startsWith("textures")) {
+                    } else if (treeNode.title.value == "textures") {
                         DropdownMenuItem(onClick = {
                             expanded = false
                             currentProject.currentTreeNode = treeNode

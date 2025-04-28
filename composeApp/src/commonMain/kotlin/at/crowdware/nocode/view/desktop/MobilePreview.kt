@@ -30,6 +30,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,8 +68,8 @@ fun mobilePreview(
 ) {
     var node: SmlNode? = if (currentProject?.isPageLoaded == true) currentProject.parsedPage else null
     val scrollState = rememberScrollState()
-    val lang = currentProject?.lang
     val clickCount = remember { mutableStateOf(0) }
+    var lang by remember { mutableStateOf("en") }
 
     if (node == null && currentProject != null) {
         // in case of syntax error we keep showing the last page
@@ -75,6 +77,9 @@ fun mobilePreview(
     }
 
     Column(modifier = Modifier.width(430.dp).fillMaxHeight().background(color = MaterialTheme.colors.primary)) {
+        var expanded by remember { mutableStateOf(false) }
+        val languages = currentProject?.getLanguages().orEmpty()
+
         Row() {
             BasicText(
                 text = "Mobile Preview",
@@ -83,6 +88,46 @@ fun mobilePreview(
                 style = TextStyle(color = MaterialTheme.colors.onPrimary),
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.width(8.dp))
+            Box {
+                Box(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .background(MaterialTheme.colors.surface.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                        .clickable { expanded = true }
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = lang,
+                            style = TextStyle(color = MaterialTheme.colors.onPrimary),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Dropdown Arrow",
+                            tint = MaterialTheme.colors.onPrimary
+                        )
+                    }
+                }
+
+                // Dropdown-Content
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    languages.forEach { language ->
+                        DropdownMenuItem(onClick = {
+                            lang = language
+                            expanded = false
+                        }) {
+                            Text(text = language)
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.weight(1f))
             Box(modifier = Modifier.height(24.dp)) {
                 HoverableIcon(
@@ -198,13 +243,15 @@ fun mobilePreview(
 }
 
 @Composable
-fun renderText(node: SmlNode) {
+fun renderText(node: SmlNode, currentProject: ProjectState, lang: String) {
     CustomText(
         text = getStringValue(node,"text", ""),
         color = hexToColor( getStringValue(node, "color", "onBackground")),
         fontSize = getIntValue(node, "fontSize", 14).sp,
         fontWeight = getFontWeight(node),
-        textAlign = getTextAlign(node)
+        textAlign = getTextAlign(node),
+        currentProject = currentProject,
+        lang = lang
     )
 }
 
@@ -212,33 +259,34 @@ fun renderText(node: SmlNode) {
 fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    val part = getStringValue(node, "part", "")
+    //val part = getStringValue(node, "part", "")
     var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
-    if (part.isNotEmpty() && currentProject != null) {
-        var dir = "parts"
-        if(lang.isNotEmpty()) {
-            dir += "-$lang"
-        }
-
-        try {
-            txt = File(currentProject.folder + "/$dir", part).readText()
-        } catch(e: Exception) {
-            println("An error occurred in RenderMarkdown: ${e.message}")
-        }
-    } else {
-        text = text.trim()
-        if (text.startsWith("<") && text.endsWith(">")) {
+    if (text.startsWith("part:")) {
+        val part = text.substringAfter("part:")
+        if (part.isNotEmpty() && currentProject != null) {
+            try {
+                val file = File(currentProject.folder, "parts/$part-$lang.md")
+                txt = file.readText()
+            } catch (e: Exception) {
+                println("An error occurred in RenderMarkdown: ${e.message}")
+            }
+        } else if (text.startsWith("string:")) {
+            if(currentProject != null) {
+                txt = translate(text.substringAfter("string:"), currentProject, lang)
+            }
+        } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
                 val des = dataItem[fieldName] as? String
                 text = "$des"
             }
+            txt = text
         }
-        txt = text
     }
+
     val parsedMarkdown = parseMarkdown(txt)
     Text(modifier = modifier.fillMaxWidth(),
         text = parsedMarkdown,
@@ -253,31 +301,31 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, 
 fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    val part = getStringValue(node, "part", "")
     var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
-    if (part.isNotEmpty() && currentProject != null) {
-        var dir = "parts"
-        if (lang.isNotEmpty()) {
-            dir += "-$lang"
-        }
-        try {
-            txt = File(currentProject.folder + "/$dir", part).readText()
-        } catch(e: Exception) {
-            println("An error occurred in RenderMarkdown: ${e.message}")
-        }
-    } else {
-        text = text.trim()
-        if (text.startsWith("<") && text.endsWith(">")) {
+    if (text.startsWith("part:")) {
+        val part = text.substringAfter("part:")
+        if (part.isNotEmpty() && currentProject != null) {
+            try {
+                val file = File(currentProject.folder, "parts/$part-$lang.md")
+                txt = file.readText()
+            } catch (e: Exception) {
+                println("An error occurred in RenderMarkdown: ${e.message}")
+            }
+        } else if (text.startsWith("string:")) {
+            if(currentProject != null) {
+                txt = translate(text.substringAfter("string:"), currentProject, lang)
+            }
+        } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
                 val des = dataItem[fieldName] as? String
                 text = "$des"
             }
+            txt = text
         }
-        txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
     Text(modifier = modifier,
@@ -293,31 +341,31 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dat
 fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    val part = getStringValue(node, "part", "")
     var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
 
-    if (part.isNotEmpty() && currentProject != null) {
-        var dir = "parts"
-        if (lang.isNotEmpty()) {
-            dir += "-$lang"
-        }
-        try {
-            txt = File(currentProject.folder + "/$dir", part).readText()
-        } catch(e: Exception) {
-            println("An error occurred in RenderMarkdown: ${e.message}")
-        }
-    } else {
-        text = text.trim()
-        if (text.startsWith("<") && text.endsWith(">")) {
+    if (text.startsWith("part:")) {
+        val part = text.substringAfter("part:")
+        if (part.isNotEmpty() && currentProject != null) {
+            try {
+                val file = File(currentProject.folder, "parts/$part-$lang.md")
+                txt = file.readText()
+            } catch (e: Exception) {
+                println("An error occurred in RenderMarkdown: ${e.message}")
+            }
+        } else if (text.startsWith("string:")) {
+            if(currentProject != null) {
+                txt = translate(text.substringAfter("string:"), currentProject, lang)
+            }
+        } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
                 val des = dataItem[fieldName] as? String
                 text = "$des"
             }
+            txt = text
         }
-        txt = text
     }
     val parsedMarkdown = parseMarkdown(txt)
     Text(
@@ -330,7 +378,7 @@ fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
 }
 
 @Composable
-fun renderButton(modifier: Modifier, node: SmlNode, dataItem: Any, clickCount: MutableState<Int>, datasourceId: String, currentProject: ProjectState) {
+fun renderButton(modifier: Modifier, node: SmlNode, dataItem: Any, clickCount: MutableState<Int>, datasourceId: String, currentProject: ProjectState, lang: String) {
     var colors: ButtonColors
     val width = getIntValue(node, "width", 0)
     val height = getIntValue(node, "height", 0)
@@ -356,7 +404,8 @@ fun renderButton(modifier: Modifier, node: SmlNode, dataItem: Any, clickCount: M
             datasourceId = datasourceId,
             currentProject = currentProject) }
     ) {
-        Text(text = getStringValue(node, "label", ""))
+        val label = translate(getStringValue(node, "label", ""), currentProject, lang)
+        Text(text = label)
     }
 }
 
@@ -664,13 +713,13 @@ fun RowScope.RenderUIElement(
             Spacer(modifier = mod)
         }
         "Text" -> {
-            renderText(node)
+            renderText(node, currentProject, lang)
         }
         "Markdown" -> {
             renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang = lang, dataItem = dataItem)
         }
         "Button" -> {
-            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node, dataItem, clickCount, datasourceId, currentProject)
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier.weight(1f), node, dataItem, clickCount, datasourceId, currentProject, lang)
         }
         "Image" -> {
             dynamicImageFromAssets(
@@ -788,13 +837,13 @@ fun BoxScope.RenderUIElement(
 ) {
     when (node.name) {
         "Text" -> {
-           renderText(node)
+           renderText(node, currentProject, lang)
         }
         "Markdown" -> {
             renderMarkdown(node, lang, dataItem)
         }
         "Button" -> {
-            renderButton(modifier = Modifier, node, dataItem, clickCount, datasourceId, currentProject)
+            renderButton(modifier = Modifier, node, dataItem, clickCount, datasourceId, currentProject, lang)
         }
         "Column" -> {
             renderColumn(modifier = Modifier, node, lang, dataItem = dataItem, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
@@ -904,10 +953,10 @@ fun ColumnScope.RenderUIElement(
             renderMarkdown(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, lang, dataItem)
         }
         "Text" -> {
-            renderText(node)
+            renderText(node, currentProject, lang)
         }
         "Button" -> {
-            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, dataItem, clickCount, datasourceId, currentProject)
+            renderButton(modifier = if(weight > 0)Modifier.weight(weight.toFloat()) else Modifier, node, dataItem, clickCount, datasourceId, currentProject, lang)
         }
         "Box" -> {
             renderBox(node, lang, dataItem = dataItem, datasourceId = datasourceId, currentProject = currentProject, clickCount = clickCount)
@@ -1441,7 +1490,9 @@ fun CustomText(
     color: Color,
     fontSize: TextUnit = 16.sp,
     fontWeight: FontWeight = FontWeight.Normal,
-    textAlign: TextAlign = TextAlign.Start
+    textAlign: TextAlign = TextAlign.Start,
+    currentProject: ProjectState,
+    lang: String
 ) {
     // Determine the alignment for the Text
     val alignment = when (textAlign) {
@@ -1450,18 +1501,39 @@ fun CustomText(
         else -> Alignment.TopStart
     }
 
+    val txt = translate(text, currentProject, lang)
+
     // Use a Box to apply the desired alignment
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = alignment as Alignment
     ) {
         Text(
-            text = text,
+            text = txt,
             color = color,
             fontSize = fontSize,
             fontWeight = fontWeight
         )
     }
+}
+
+private fun translate(
+    text: String,
+    currentProject: ProjectState,
+    lang: String
+): String {
+    var txt = text
+    if (text.startsWith("string:")) {
+        val file = File(currentProject.folder, "translations/Strings-$lang.sml")
+        if (file.exists()) {
+            val content = file.readText()
+            val (parsedStrings, _) = parseSML(content)
+            if (parsedStrings != null) {
+                txt = getStringValue(parsedStrings, text.substringAfter("string:"), "")
+            }
+        }
+    }
+    return txt
 }
 
 expect fun loadPage(pageId: String)

@@ -92,6 +92,7 @@ abstract class ProjectState {
     lateinit var partsNode: TreeNode
     lateinit var modelsNode: TreeNode
     lateinit var texturesNode: TreeNode
+    lateinit var translationsNode: TreeNode
     lateinit var dataNode: TreeNode
     var app: App? by mutableStateOf(null)
     var parsedPage: SmlNode? by mutableStateOf(null)
@@ -105,8 +106,7 @@ abstract class ProjectState {
         pid: String,
         name: String,
         appId: String,
-        theme: String,
-        langs: List<String>
+        theme: String
     )
 
     fun LoadProject(path: String = folder, uuid: String, pid: String) {
@@ -477,6 +477,31 @@ abstract class ProjectState {
         } catch(e: Exception) {
             println("An exception occured converting to PNG: ${e.message}")
         }
+    }
+
+    fun getLanguages(): List<String> {
+        val languages = mutableSetOf<String>()
+
+        val regex = Regex("-(.+)\\.(sml|md)")
+
+        val dirsAndExtensions = listOf(
+            "translations" to "sml",
+            "parts" to "md"
+        )
+
+        for ((dirName, expectedExtension) in dirsAndExtensions) {
+            val dir = File(folder, dirName)
+            if (dir.exists() && dir.isDirectory) {
+                dir.listFiles()
+                    ?.filter { it.isFile && it.name.contains("-") && it.name.endsWith(".$expectedExtension") }
+                    ?.forEach { file ->
+                        regex.find(file.name)?.groupValues?.get(1)?.let { lang ->
+                            languages.add(lang)
+                        }
+                    }
+            }
+        }
+        return languages.sorted()
     }
 }
 
