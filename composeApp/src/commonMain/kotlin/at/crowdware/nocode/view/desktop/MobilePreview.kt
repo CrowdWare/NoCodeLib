@@ -273,7 +273,7 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, 
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.startsWith("string:")) {
+        } else if (text.contains("string:")) {
             if(currentProject != null) {
                 txt = translate(text.substringAfter("string:"), currentProject, lang)
             }
@@ -314,7 +314,7 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dat
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.startsWith("string:")) {
+        } else if (text.contains("string:")) {
             if(currentProject != null) {
                 txt = translate(text.substringAfter("string:"), currentProject, lang)
             }
@@ -354,7 +354,7 @@ fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.startsWith("string:")) {
+        } else if (text.contains("string:")) {
             if(currentProject != null) {
                 txt = translate(text.substringAfter("string:"), currentProject, lang)
             }
@@ -1523,13 +1523,14 @@ private fun translate(
     lang: String
 ): String {
     var txt = text
-    if (text.startsWith("string:")) {
-        val file = File(currentProject.folder, "translations/Strings-$lang.sml")
-        if (file.exists()) {
-            val content = file.readText()
-            val (parsedStrings, _) = parseSML(content)
-            if (parsedStrings != null) {
-                txt = getStringValue(parsedStrings, text.substringAfter("string:"), "")
+    val file = File(currentProject.folder, "translations/Strings-$lang.sml")
+    if (file.exists()) {
+        val content = file.readText()
+        val (parsedStrings, _) = parseSML(content)
+        if (parsedStrings != null) {
+            val regex = Regex("""string:([A-Za-z0-9_\-]+)""") // Änderung: Regex für alle string:keys
+            txt = regex.replace(txt) { matchResult ->
+                getStringValue(parsedStrings, matchResult.groupValues[1], matchResult.value)
             }
         }
     }
