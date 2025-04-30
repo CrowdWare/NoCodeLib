@@ -245,7 +245,7 @@ fun mobilePreview(
 @Composable
 fun renderText(node: SmlNode, currentProject: ProjectState, lang: String) {
     CustomText(
-        text = getStringValue(node,"text", ""),
+        text = translate(getStringValue(node,"text", ""), currentProject, lang),
         color = hexToColor( getStringValue(node, "color", "onBackground")),
         fontSize = getIntValue(node, "fontSize", 14).sp,
         fontWeight = getFontWeight(node),
@@ -259,7 +259,6 @@ fun renderText(node: SmlNode, currentProject: ProjectState, lang: String) {
 fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dataItem: Any) {
     var txt = ""
     val currentProject = GlobalProjectState.projectState
-    //val part = getStringValue(node, "part", "")
     var text = getStringValue(node, "text", "")
     val color = getStringValue(node, "color", "onBackground")
     val fontSize = getIntValue(node, "fontSize", 16)
@@ -273,10 +272,6 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, 
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.contains("string:")) {
-            if(currentProject != null) {
-                txt = translate(text.substringAfter("string:"), currentProject, lang)
-            }
         } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
@@ -285,16 +280,21 @@ fun ColumnScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, 
             }
             txt = text
         }
+    } else {
+        txt = text
     }
 
-    val parsedMarkdown = parseMarkdown(txt)
-    Text(modifier = modifier.fillMaxWidth(),
-        text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(color)),
-        fontSize = fontSize.sp,
-        fontWeight = getFontWeight(node),
-        textAlign = getTextAlign(node)
-    )
+    if(currentProject != null) {
+        val parsedMarkdown = parseMarkdown(translate(txt, currentProject, lang))
+        Text(
+            modifier = modifier.fillMaxWidth(),
+            text = parsedMarkdown,
+            style = TextStyle(color = hexToColor(color)),
+            fontSize = fontSize.sp,
+            fontWeight = getFontWeight(node),
+            textAlign = getTextAlign(node)
+        )
+    }
 }
 
 @Composable
@@ -314,10 +314,6 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dat
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.contains("string:")) {
-            if(currentProject != null) {
-                txt = translate(text.substringAfter("string:"), currentProject, lang)
-            }
         } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
@@ -326,15 +322,21 @@ fun RowScope.renderMarkdown(modifier: Modifier, node: SmlNode, lang: String, dat
             }
             txt = text
         }
+    } else {
+        txt = text
     }
-    val parsedMarkdown = parseMarkdown(txt)
-    Text(modifier = modifier,
-        text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
-        fontSize = fontSize.sp,
-        fontWeight = getFontWeight(node),
-        textAlign = getTextAlign(node)
-    )
+
+    if (currentProject != null) {
+        val parsedMarkdown = parseMarkdown(translate(txt, currentProject, lang))
+        Text(
+            modifier = modifier,
+            text = parsedMarkdown,
+            style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
+            fontSize = fontSize.sp,
+            fontWeight = getFontWeight(node),
+            textAlign = getTextAlign(node)
+        )
+    }
 }
 
 @Composable
@@ -354,10 +356,6 @@ fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
             } catch (e: Exception) {
                 println("An error occurred in RenderMarkdown: ${e.message}")
             }
-        } else if (text.contains("string:")) {
-            if(currentProject != null) {
-                txt = translate(text.substringAfter("string:"), currentProject, lang)
-            }
         } else if (text.startsWith("<") && text.endsWith(">")) {
             val fieldName = text.substring(1, text.length - 1)
             if (dataItem is Map<*, *> && fieldName.isNotEmpty()) {
@@ -366,15 +364,20 @@ fun renderMarkdown(node: SmlNode, lang: String, dataItem: Any) {
             }
             txt = text
         }
+    } else {
+        txt = text
     }
-    val parsedMarkdown = parseMarkdown(txt)
-    Text(
-        text = parsedMarkdown,
-        style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
-        fontSize = fontSize.sp,
-        fontWeight = getFontWeight(node),
-        textAlign = getTextAlign(node)
-    )
+
+    if (currentProject != null) {
+        val parsedMarkdown = parseMarkdown(translate(txt, currentProject, lang))
+        Text(
+            text = parsedMarkdown,
+            style = TextStyle(color = hexToColor(color, colorNameToHex("onBackground"))),
+            fontSize = fontSize.sp,
+            fontWeight = getFontWeight(node),
+            textAlign = getTextAlign(node)
+        )
+    }
 }
 
 @Composable

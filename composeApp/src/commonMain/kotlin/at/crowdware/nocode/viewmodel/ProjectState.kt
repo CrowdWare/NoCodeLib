@@ -286,7 +286,7 @@ abstract class ProjectState {
         val (parsedApp, error) = parseSML(sml)
         if (parsedApp != null) {
             for (node in parsedApp.children) {
-                if (node.name == "DataSource") {
+                if (node.name == "RestDatasource") {
                     val datasourceId = getStringValue(node, "id", "")
                     val mock = getStringValue(node, "mock", "")
                     val mockFile = File(folder, "data/$mock")
