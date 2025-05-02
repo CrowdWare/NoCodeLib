@@ -105,7 +105,7 @@ fun createExportDialog(
                             }
 
                             withContext(Dispatchers.Main) {
-                                outputLines.add("✅ Export abgeschlossen")
+                                outputLines.add("✅ Export finished")
                                 jobDone = true
                             }
                         }
