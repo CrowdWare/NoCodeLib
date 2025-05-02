@@ -131,7 +131,7 @@ fun desktopPreview(currentProject: ProjectState?) {
             Box(
                 modifier = Modifier
                     .padding(16.dp)
-                    .size(960.dp, 540.dp )
+                    .size(1280.dp, 800.dp )
                     .aspectRatio(16f/9f)
                     .clip(RoundedCornerShape(15.dp))
                     .background(Color(0xFF353739))
