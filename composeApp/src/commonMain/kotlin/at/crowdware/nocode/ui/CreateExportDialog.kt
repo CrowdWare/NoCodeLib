@@ -32,7 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import at.crowdware.nocode.plugin.SmlExportPlugin
+import at.crowdware.nocode.plugin.ExportPlugin
+import at.crowdware.nocode.plugin.NoCodePlugin
 import at.crowdware.nocode.theme.ExtendedTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -46,7 +47,7 @@ fun createExportDialog(
     folder: TextFieldValue,
     caption: String,
     source: String,
-    plugin: SmlExportPlugin,
+    plugin: NoCodePlugin,
     onFolderChange: (TextFieldValue) -> Unit,
     onDismissRequest: () -> Unit
 ) {
@@ -92,28 +93,32 @@ fun createExportDialog(
                 Button(
                     enabled = folder.text.isNotEmpty(),
                     onClick = {
-                        showList = true
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val folderPath = if (folder.text.endsWith(File.separator)) folder.text else folder.text + File.separator
-                            val outputDir = File(folderPath)
-                            outputDir.mkdirs()
+                        if (plugin is ExportPlugin) {
+                            showList = true
+                            coroutineScope.launch(Dispatchers.IO) {
+                                val folderPath =
+                                    if (folder.text.endsWith(File.separator)) folder.text else folder.text + File.separator
+                                val outputDir = File(folderPath)
+                                outputDir.mkdirs()
 
-                            plugin.export(source, outputDir) { line ->
-                                coroutineScope.launch(Dispatchers.Main) {
-                                    outputLines.add(line)
+
+                                plugin.export(source, outputDir) { line ->
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        outputLines.add(line)
+                                    }
+                                }
+
+                                withContext(Dispatchers.Main) {
+                                    outputLines.add("✅ Export finished")
+                                    jobDone = true
                                 }
                             }
-
-                            withContext(Dispatchers.Main) {
-                                outputLines.add("✅ Export finished")
-                                jobDone = true
-                            }
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = ExtendedTheme.colors.accentColor,
-                        contentColor = ExtendedTheme.colors.onAccentColor
-                    )
+                              },
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = ExtendedTheme.colors.accentColor,
+                            contentColor = ExtendedTheme.colors.onAccentColor
+                        )
                 ) {
                     Text("Create")
                 }

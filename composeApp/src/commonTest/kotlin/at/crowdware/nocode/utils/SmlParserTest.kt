@@ -1,5 +1,6 @@
 package at.crowdware.nocode.utils
 
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -21,9 +22,8 @@ class SmlParserTest {
         val (node, error) = parseSML(sml)
         assertNotNull(node, "Parsed node should not be null")
         assertNull(error, "Error should be null for valid SML")
-        
-        // Verify getBoolValue, getIntValue, and getStringValue on the parsed node.
-        val boolVal = getBoolValue(node!!, "enabled", false)
+
+        val boolVal = getBooleanValue(node!!, "enabled", false)
         assertTrue(boolVal, "The 'enabled' property should be true")
         
         val intVal = getIntValue(node, "value", 0)
@@ -47,11 +47,11 @@ class SmlParserTest {
         // Create a SmlNode manually where the property is not a BooleanValue.
         val node = SmlNode("TestNode", mapOf("flag" to PropertyValue.IntValue(0)), emptyList())
         // Since 'flag' is not a BooleanValue, getBoolValue should return the default.
-        val boolVal = getBoolValue(node, "flag", true)
+        val boolVal = getBooleanValue(node, "flag", true)
         assertTrue(boolVal, "Default value should be returned for a non-boolean property")
         
         // Test retrieval for a non-existent property.
-        val missingBool = getBoolValue(node, "nonexistent", false)
+        val missingBool = getBooleanValue(node, "nonexistent", false)
         assertFalse(missingBool, "Default value should be returned for a missing property")
     }
 
@@ -128,5 +128,33 @@ third line"
         
         val linkVal = getStringValue(node!!, "link", "")
         assertEquals("web:https://example.com", linkVal, "The link property should be parsed correctly")
+    }
+
+    @Test
+    fun testSaveSmlToFile() {
+        val node = SmlNode(
+            name = "Page",
+            properties = mapOf(
+                "title" to PropertyValue.StringValue("My Page"),
+                "enabled" to PropertyValue.BooleanValue(true),
+                "count" to PropertyValue.IntValue(5)
+            ),
+            children = listOf(
+                SmlNode("Text", mapOf("value" to PropertyValue.StringValue("Hello World")), emptyList())
+            )
+        )
+
+        val tempFile = Files.createTempFile("test", ".sml")
+        node.saveToFile(tempFile)
+
+        assertTrue(Files.exists(tempFile), "File should have been created")
+        val content = Files.readString(tempFile)
+        assertTrue(content.contains("Page"), "Content should include node name")
+        assertTrue(content.contains("title=\"My Page\""), "Content should include string property")
+        assertTrue(content.contains("enabled=true"), "Content should include boolean property")
+        assertTrue(content.contains("count=5"), "Content should include number property")
+        assertTrue(content.contains("Text"), "Content should include child node")
+
+        Files.deleteIfExists(tempFile)
     }
 }

@@ -165,7 +165,7 @@ fun desktopPreview(currentProject: ProjectState?) {
                             ) {
                                 var modifier = Modifier as Modifier
                                 //val scrollableProperty = node.properties["scrollable"] as? PropertyValue.StringValue
-                                val scrollableProperty = getBoolValue(node, "scrollable", false)
+                                val scrollableProperty = getBooleanValue(node, "scrollable", false)
                                 if (scrollableProperty) {
                                     modifier = modifier.verticalScroll(scrollState)
                                 }

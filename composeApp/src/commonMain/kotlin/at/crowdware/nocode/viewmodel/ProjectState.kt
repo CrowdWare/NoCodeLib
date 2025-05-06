@@ -24,7 +24,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
-import at.crowdware.nocode.plugin.SmlExportPlugin
+import at.crowdware.nocode.plugin.NoCodePlugin
 import at.crowdware.nocode.utils.*
 import com.darkrockstudios.libraries.mpfilepicker.MPFile
 import kotlinx.coroutines.CoroutineScope
@@ -82,7 +82,7 @@ abstract class ProjectState {
     var actualElement: String by mutableStateOf("")
     var parseError: String? by mutableStateOf(null)
     var lang: String by mutableStateOf("")
-    var exportPlugin: SmlExportPlugin? by mutableStateOf(null)
+    var exportPlugin: NoCodePlugin? by mutableStateOf(null)
     val prefsFile = File(System.getProperty("user.home"), ".nocode_lists.properties")
     var data by mutableStateOf<Map<String, List<Any>>>(emptyMap())
     lateinit var pageNode: TreeNode
@@ -97,6 +97,7 @@ abstract class ProjectState {
     var app: App? by mutableStateOf(null)
     var parsedPage: SmlNode? by mutableStateOf(null)
     var cachedPage: SmlNode? by mutableStateOf(null)
+    var parsedApp: SmlNode? by mutableStateOf(null)
 
     abstract fun loadApp()
     abstract suspend fun loadProjectFiles(path: String, uuid: String, pid: String)

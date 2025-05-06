@@ -26,6 +26,9 @@ import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.lexer.*
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.utils.Tuple7
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 
 fun convertTupleToSmlNode(tuple: Any): SmlNode? {
     if (tuple !is Tuple7<*, *, *, *, *, *, *>) return null
@@ -101,6 +104,42 @@ data class SmlNode(
     val children: List<SmlNode>
 )
 
+fun SmlNode.save(indent: String = ""): String {
+    val builder = StringBuilder()
+    builder.append("$indent$name {\n")
+
+    // Properties direkt untereinander ohne Leerzeilen
+    for ((key, value) in properties) {
+        val formattedValue = when (value) {
+            is PropertyValue.StringValue -> "\"${value.value}\""
+            is PropertyValue.IntValue -> value.value.toString()
+            is PropertyValue.BooleanValue -> value.value.toString()
+            is PropertyValue.FloatValue -> value.value.toString()
+        }
+        builder.append("$indent  $key: $formattedValue\n")
+    }
+
+    // Leerzeile vor jedem Kind-Element
+    for (child in children) {
+        builder.append("\n") // <- nur hier Leerzeile
+        builder.append(child.save(indent + "  "))
+    }
+
+    builder.append("$indent}\n")
+    return builder.toString()
+}
+
+fun SmlNode.saveToFile(path: Path) {
+    val content = this.save().trimEnd() + "\n"
+    Files.writeString(
+        path,
+        content,
+        StandardOpenOption.CREATE,
+        StandardOpenOption.TRUNCATE_EXISTING,
+        StandardOpenOption.WRITE
+    )
+}
+
 sealed class PropertyValue {
     data class StringValue(val value: String) : PropertyValue()
     data class IntValue(val value: Int) : PropertyValue()
@@ -146,7 +185,8 @@ fun getIntValue(node: SmlNode, key: String, default: Int): Int {
         else -> default
     }
 }
-fun getBoolValue(node: SmlNode, key: String, default: Boolean): Boolean {
+
+fun getBooleanValue(node: SmlNode, key: String, default: Boolean): Boolean {
     val value = node.properties[key]
     return when {
         value is PropertyValue.BooleanValue -> value.value

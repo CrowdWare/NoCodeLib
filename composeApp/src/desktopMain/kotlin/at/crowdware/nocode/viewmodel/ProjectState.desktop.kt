@@ -229,8 +229,9 @@ class DesktopProjectState : ProjectState() {
         val appFile = File("$folder/app.sml")
         try {
             val uiSml = appFile.readText()
-            val (parsedApp, error) = parseSML(uiSml)
-            app = parsedApp?.let { fillAppFromSmlNode(it) }
+            val (parsed, error) = parseSML(uiSml)
+            app = parsed?.let { fillAppFromSmlNode(it) }
+            parsedApp = parsed
 
             loadDatasources()
         } catch (e: Exception) {

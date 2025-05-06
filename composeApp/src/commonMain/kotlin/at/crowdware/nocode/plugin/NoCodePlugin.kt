@@ -1,6 +1,8 @@
 package at.crowdware.nocode.plugin
 
 
+import androidx.compose.runtime.Composable
+import at.crowdware.nocode.utils.SmlNode
 import java.io.File
 
 
@@ -18,9 +20,10 @@ interface ExportPlugin {
     ): ExportStatus
 }
 
-interface EditorPlugin {
-    suspend fun editor(
+interface AppEditorPlugin {
+    @Composable
+    fun editor(
         source: File,
-        onLog: (String) -> Unit = {}
+        node: SmlNode
     )
 }

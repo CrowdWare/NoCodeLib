@@ -17,7 +17,7 @@
  *  along with NoCodeLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package at.crowdware.nocodedesigner.view.desktop
+package at.crowdware.nocode.view.desktop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

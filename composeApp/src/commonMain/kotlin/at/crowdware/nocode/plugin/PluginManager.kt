@@ -7,19 +7,19 @@ import java.util.zip.ZipFile
 
 
 object PluginManager {
-    private val plugins = mutableListOf<SmlExportPlugin>()
+    private val plugins = mutableListOf<NoCodePlugin>()
 
-    fun register(plugin: SmlExportPlugin) {
+    fun register(plugin: NoCodePlugin) {
         plugins.add(plugin)
     }
 
-    fun all(): List<SmlExportPlugin> = plugins.toList()
+    fun all(): List<NoCodePlugin> = plugins.toList()
 
-    fun getById(id: String): SmlExportPlugin? =
+    fun getById(id: String): NoCodePlugin? =
         plugins.find { it.id == id }
 
-    fun loadAllFromPluginsFolder(folder: File): List<SmlExportPlugin> {
-        val plugins = mutableListOf<SmlExportPlugin>()
+    fun loadAllFromPluginsFolder(folder: File): List<NoCodePlugin> {
+        val plugins = mutableListOf<NoCodePlugin>()
         if (!folder.exists() || !folder.isDirectory) return plugins
 
         // create an empty folder for the plugins
@@ -43,7 +43,7 @@ object PluginManager {
         return plugins
     }
 
-    fun loadPluginFromZip(zipFile: File, pluginDir: File): SmlExportPlugin? {
+    fun loadPluginFromZip(zipFile: File, pluginDir: File): NoCodePlugin? {
         try {
             // Entpacken
             ZipFile(zipFile).use { zip ->
@@ -81,7 +81,7 @@ object PluginManager {
             val clazz = Class.forName(metadata.mainClass, true, loader)
             val instance = clazz.getDeclaredConstructor().newInstance()
 
-            if (instance is SmlExportPlugin) {
+            if (instance is NoCodePlugin) {
                 println("✅ Plugin geladen: ${metadata.label} (${metadata.id})")
                 return instance
             } else {

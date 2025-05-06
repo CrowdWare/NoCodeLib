@@ -183,7 +183,7 @@ fun mobilePreview(
 
                             ) {
                                 var modifier = Modifier as Modifier
-                                val scrollableProperty = getBoolValue(node, "scrollable", false)
+                                val scrollableProperty = getBooleanValue(node, "scrollable", false)
                                 if (scrollableProperty) {
                                     modifier = modifier.verticalScroll(scrollState)
                                 }

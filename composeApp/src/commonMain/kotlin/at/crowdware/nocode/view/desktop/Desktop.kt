@@ -30,7 +30,18 @@ import androidx.compose.ui.unit.dp
 import at.crowdware.nocode.model.NodeType
 import at.crowdware.nocode.model.TreeNode
 import at.crowdware.nocode.theme.ExtendedTheme
-
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.AnnotatedString
+import at.crowdware.nocode.plugin.AppEditorPlugin
+import at.crowdware.nocode.plugin.ExportPlugin
+import at.crowdware.nocode.plugin.PluginManager
+import at.crowdware.nocode.texteditor.state.TextEditorState
+import at.crowdware.nocode.texteditor.state.rememberTextEditorState
+import at.crowdware.nocode.view.desktop.*
+import at.crowdware.nocode.viewmodel.GlobalProjectState
+import java.io.File
 
 @Composable
 fun fileTreeIconProvider(node: TreeNode) {
@@ -41,5 +52,44 @@ fun fileTreeIconProvider(node: TreeNode) {
         NodeType.SOUND -> Icon(Icons.Default.MusicNote, modifier = Modifier.size(16.dp), contentDescription = null, tint = ExtendedTheme.colors.soundColor)
         NodeType.XML -> Icon(Icons.Default.InsertDriveFile, modifier = Modifier.size(16.dp), contentDescription = null, tint = ExtendedTheme.colors.xmlColor)
         else -> Icon(Icons.Default.InsertDriveFile, modifier = Modifier.size(16.dp), contentDescription = null, tint = MaterialTheme.colors.onSurface) // Default file icon
+    }
+}
+
+@Composable
+fun desktop() {
+    val currentProject = GlobalProjectState.projectState
+    val state: TextEditorState = rememberTextEditorState(AnnotatedString(""))
+
+    LaunchedEffect(currentProject?.currentFileContent) {
+        currentProject?.currentFileContent?.let { state.setText(it.text) }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(color = MaterialTheme.colors.primary)
+    ) {
+        toolbar(currentProject)
+        if (currentProject?.isProjectStructureVisible == true || currentProject?.extension == "md")
+            projectStructure(currentProject, state)
+        else
+            widgetPalette(currentProject, state)
+        PluginManager.all().forEach { plugin ->
+            if (currentProject != null && plugin is AppEditorPlugin && currentProject.fileName == "app.sml") {
+                    plugin.editor(File(currentProject.folder, currentProject.fileName), currentProject.parsedApp!!)
+            } else {
+                syntaxEditor(currentProject, state = state)
+                if (currentProject?.isPortrait == true) {
+                    mobilePreview(currentProject)
+                    propertyPanel(Modifier.width(320.dp), currentProject)
+                } else if (currentProject?.isPortrait == false) {
+                    Column() {
+                        desktopPreview(currentProject)
+                        propertyPanel(Modifier.width(960.dp),currentProject)
+                    }
+                }
+            }
+        }
     }
 }
