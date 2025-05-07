@@ -59,7 +59,7 @@ fun fileTreeIconProvider(node: TreeNode) {
 fun desktop() {
     val currentProject = GlobalProjectState.projectState
     val state: TextEditorState = rememberTextEditorState(AnnotatedString(""))
-
+    var foundAppEditor by remember { mutableStateOf(false) }
     LaunchedEffect(currentProject?.currentFileContent) {
         currentProject?.currentFileContent?.let { state.setText(it.text) }
     }
@@ -77,21 +77,24 @@ fun desktop() {
             widgetPalette(currentProject, state)
         PluginManager.all().forEach { plugin ->
             if (currentProject != null && plugin is AppEditorPlugin && currentProject.fileName == "app.sml") {
-                    plugin.editor(
-                        File(currentProject.folder, currentProject.fileName),
-                        currentProject.parsedApp!!,
-                        onChange = {currentProject.parsedApp = it},
-                        ExtendedTheme.colors.accentColor)
-            } else {
-                syntaxEditor(currentProject, state = state)
-                if (currentProject?.isPortrait == true) {
-                    mobilePreview(currentProject)
-                    propertyPanel(Modifier.width(320.dp), currentProject)
-                } else if (currentProject?.isPortrait == false) {
-                    Column() {
-                        desktopPreview(currentProject)
-                        propertyPanel(Modifier.width(960.dp),currentProject)
-                    }
+                foundAppEditor = true
+                plugin.editor(
+                    File(currentProject.folder, currentProject.fileName),
+                    currentProject.parsedApp!!,
+                    onChange = { currentProject.parsedApp = it },
+                    ExtendedTheme.colors.accentColor
+                )
+            }
+        }
+        if (!foundAppEditor) {
+            syntaxEditor(currentProject, state = state)
+            if (currentProject?.isPortrait == true) {
+                mobilePreview(currentProject)
+                propertyPanel(Modifier.width(320.dp), currentProject)
+            } else if (currentProject?.isPortrait == false) {
+                Column() {
+                    desktopPreview(currentProject)
+                    propertyPanel(Modifier.width(960.dp),currentProject)
                 }
             }
         }
