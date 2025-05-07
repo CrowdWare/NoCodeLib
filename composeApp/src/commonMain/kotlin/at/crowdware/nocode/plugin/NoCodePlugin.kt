@@ -2,6 +2,7 @@ package at.crowdware.nocode.plugin
 
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import at.crowdware.nocode.utils.SmlNode
 import java.io.File
 
@@ -24,6 +25,8 @@ interface AppEditorPlugin {
     @Composable
     fun editor(
         source: File,
-        node: SmlNode
+        node: SmlNode,
+        onChange: (SmlNode) -> Unit,
+        accentColor: Color
     )
 }

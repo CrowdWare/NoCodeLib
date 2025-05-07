@@ -77,7 +77,11 @@ fun desktop() {
             widgetPalette(currentProject, state)
         PluginManager.all().forEach { plugin ->
             if (currentProject != null && plugin is AppEditorPlugin && currentProject.fileName == "app.sml") {
-                    plugin.editor(File(currentProject.folder, currentProject.fileName), currentProject.parsedApp!!)
+                    plugin.editor(
+                        File(currentProject.folder, currentProject.fileName),
+                        currentProject.parsedApp!!,
+                        onChange = {currentProject.parsedApp = it},
+                        ExtendedTheme.colors.accentColor)
             } else {
                 syntaxEditor(currentProject, state = state)
                 if (currentProject?.isPortrait == true) {
